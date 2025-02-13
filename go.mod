@@ -1,4 +1,4 @@
-module MySite
+module github.com/MoshKillaPit/GrimishJe
 
 go 1.22.7
 
