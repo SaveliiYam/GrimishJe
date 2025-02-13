@@ -9,21 +9,21 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
-	"github.com/gin-gonic/gin" // можно использовать другой драйвер (postgres, mysql и т.д.)
+	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func initDB() *gorm.DB {
-	// Формируем строку подключения (DSN). Измените параметры в соответствии с настройками вашей базы данных.
+	// Строка подключения – измените параметры по необходимости.
 	dsn := "host=localhost user=postgres password=secret123 dbname=mydb port=5432 sslmode=disable TimeZone=Europe/Moscow"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Не удалось подключиться к базе данных:", err)
 	}
 
-	// Автоматическая миграция модели пользователя (и других, если необходимо)
-	if err := db.AutoMigrate(&models.User{}); err != nil {
+	// Мигрируем модели пользователя и заказа
+	if err := db.AutoMigrate(&models.User{}, &models.Order{}); err != nil {
 		log.Fatal("Ошибка миграции:", err)
 	}
 	return db
@@ -31,28 +31,28 @@ func initDB() *gorm.DB {
 
 func main() {
 	db := initDB()
-
 	r := gin.Default()
 
-	// Инициализация хранилища сессий с секретным ключом
+	// Инициализация хранилища сессий
 	store := cookie.NewStore([]byte("super-secret-key"))
 	r.Use(sessions.Sessions("mysession", store))
 
-	// Раздача статических файлов (например, для главного сайта и dashboard)
+	// Раздача статических файлов
+	r.Static("/static", "./static")
 	r.Static("/", "./static")
 
-	// Группа API для авторизации
-	api := r.Group("/api")
-	{
-		api.POST("/register", handlers.Register(db))
-		api.POST("/login", handlers.Login(db))
-	}
+	// Загружаем HTML-шаблон для личного кабинета
+	r.LoadHTMLFiles("./static/dashboard.html")
 
-	// Защищённый маршрут (только для авторизованных пользователей)
+	// Маршруты для авторизации и регистрации (принимают данные из HTML-форм)
+	r.POST("/login", middleware.Login(db))
+	r.POST("/register", middleware.Register(db))
+
+	// Защищённый маршрут для создания заказа (обработчик ожидает данные из формы)
+	r.POST("/api/order", middleware.AuthRequired(), handlers.CreateOrder(db))
+
+	// Защищённый маршрут для личного кабинета (отображается dashboard.html)
 	r.GET("/dashboard", middleware.AuthRequired(), handlers.Dashboard())
-
-	// Если хотите сделать редирект сразу после успешной авторизации или регистрации,
-	// можно использовать метод c.Redirect внутри обработчиков.
 
 	// Запуск сервера
 	if err := r.Run(":8080"); err != nil {

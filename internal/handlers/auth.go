@@ -97,11 +97,3 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": "Вход выполнен успешно"})
 	}
 }
-
-// Dashboard – пример защищённого обработчика, который доступен только авторизованным пользователям.
-func Dashboard() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// Здесь можно вернуть HTML-страницу или JSON, в данном случае – JSON-ответ.
-		c.JSON(http.StatusOK, gin.H{"message": "Добро пожаловать на защищенную страницу!"})
-	}
-}

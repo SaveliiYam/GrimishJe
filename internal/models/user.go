@@ -12,7 +12,7 @@ type User struct {
 	// Другие поля: Name, Phone, Telegram и т.д.
 }
 
-// SetPassword хэширует пароль и сохраняет его в модели.
+// SetPassword – хэширует пароль и сохраняет его в модели.
 func (u *User) SetPassword(password string) error {
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -22,7 +22,7 @@ func (u *User) SetPassword(password string) error {
 	return nil
 }
 
-// CheckPassword сравнивает предоставленный пароль с хэшированным.
+// CheckPassword – сравнивает предоставленный пароль с хэшированным.
 func (u *User) CheckPassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
 	return err == nil
