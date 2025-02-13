@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"MYSITE/handlers"
-	"MYSITE/middleware"
-	"MYSITE/models"
+	"MySite/handlers"
+	"MySite/middleware"
+	"MySite/models"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
