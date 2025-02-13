@@ -1,0 +1,203 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+/* Сброс стилей */
+body, h1, p, ul, li, a {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Фон для всей страницы */
+body {
+    margin-top: 5em; /* Отступ сверху, чтобы контент не перекрывался навигацией */
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.6;
+    background-image: url('images/hero-image.jpg'); /* Путь к вашему изображению */
+    background-size: cover; /* Изображение на весь экран */
+    background-position: center; /* Центрирование изображения */
+    background-attachment: fixed; /* Фиксация фона, чтобы не двигался при прокрутке */
+    color: #333;
+    overflow-x: hidden;
+}
+
+/* Навигационное меню */
+nav {
+    position: fixed; /* Закрепляем навигацию сверху */
+    top: 0;
+    width: 100%;
+    background-color: rgba(30, 144, 255, 0.2); /* Более прозрачный фон для лучшего эффекта */ /* Более насыщенный полупрозрачный фон для лучшей видимости */
+    padding: 1em;
+    text-align: center;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000; /* Обеспечиваем, чтобы навигация всегда была выше других элементов */
+    transition: background-color 0.3s ease; /* Плавное изменение цвета фона при прокрутке */
+}
+
+nav ul {
+    list-style: none;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+}
+
+nav ul li {
+    margin: 0 1em;
+}
+
+.circle-link {
+    background-color: rgba(255, 255, 255, 0.9); /* Увеличение прозрачности для лучшей читаемости */
+    color: #333; /* Цвет текста */
+    padding: 0.5em 2em; /* Отступы для придания формы кнопке */
+    border-radius: 10px; /* Слегка закругленные углы */
+    text-decoration: none; /* Убирает подчеркивание */
+    font-weight: bold; /* Жирный текст */
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease; /* Анимация при наведении */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Более выраженная тень для эффекта подъема */
+}
+
+.circle-link:hover {
+    background-color: #ffdd57; /* Изменение фона при наведении */
+    color: #1e90ff; /* Изменение цвета текста при наведении */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25); /* Усиление тени при наведении */
+}
+
+/* Header Section */
+header {
+    text-align: center;
+    padding: 2em;
+    background-color: rgba(135, 206, 250, 0.9); /* Более насыщенный фон для лучшей читаемости */
+    color: white;
+    border-radius: 10px; /* Лёгкие закругления */
+    margin-top: 5em; /* Отступ сверху, чтобы не перекрывать навигацию */
+}
+
+header h1 {
+    font-size: 2.5em;
+    margin-bottom: 0.5em;
+}
+
+header p {
+    font-size: 1.2em;
+}
+
+/* Services Section */
+.services-list {
+    padding: 2em;
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.95); /* Более насыщенный полупрозрачный фон */
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    margin: 2em auto; /* Центрирование секции и добавление отступов */
+}
+
+.services-list h2, .services-list h3 {
+    font-size: 1.8em;
+    margin-bottom: 1em;
+}
+
+.services-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.services-list ul li {
+    font-size: 1.2em;
+    padding: 0.5em;
+    margin: 0.5em 0;
+    background-color: rgba(249, 249, 249, 0.95); /* Более насыщенный фон элементов списка */
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Подвал */
+footer {
+    text-align: center;
+    background-color: rgba(30, 144, 255, 0.9); /* Более насыщенный фон */
+    color: white;
+    padding: 1em 0;
+    margin-top: 2em;
+}
+
+/* Секция Hero с изображением на весь экран */
+.hero {
+    position: relative;
+    height: 100vh;
+    background-image: url('images/hero-image.jpg'); /* Путь к вашему изображению */
+    background-size: cover; /* Изображение на весь экран */
+    background-position: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+}
+
+.hero-content {
+    background-color: rgba(0, 0, 0, 0.6); /* Более насыщенный фон для лучшей читаемости текста */
+    padding: 2em;
+    border-radius: 10px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.hero h1 {
+    font-size: 3em;
+    margin-bottom: 0.5em;
+}
+
+.hero p {
+    font-size: 1.5em;
+    margin-bottom: 1em;
+}
+
+/* Кнопка заказа */
+.order-button {
+    background-color: #ffdd57;
+    color: #1e90ff;
+    padding: 1em 2em;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-top: 1em;
+}
+
+.order-button:hover {
+    background-color: #ffc107;
+    color: #fff;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Медиа-запросы для адаптивности */
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 2em;
+    }
+    .hero p {
+        font-size: 1.2em;
+    }
+    .circle-link {
+        padding: 0.5em 1em;
+    }
+    .order-button {
+        padding: 0.8em 1.5em;
+    }
+}
+
+@media (max-width: 480px) {
+    nav ul {
+        flex-direction: column;
+    }
+    nav ul li {
+        margin: 0.5em 0;
+    }
+    .hero-content {
+        padding: 1em;
+    }
+    .services-list {
+        padding: 1em;
+    }
+}
