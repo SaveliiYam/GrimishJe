@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/MoshKillaPit/GrimishJe/internal/handlers"
 	"github.com/MoshKillaPit/GrimishJe/internal/middleware"
@@ -22,7 +23,7 @@ func initDB() *gorm.DB {
 		log.Fatal("Не удалось подключиться к базе данных:", err)
 	}
 
-	// Мигрируем модели пользователя и заказа
+	// Миграция моделей пользователя и заказа
 	if err := db.AutoMigrate(&models.User{}, &models.Order{}); err != nil {
 		log.Fatal("Ошибка миграции:", err)
 	}
@@ -37,21 +38,23 @@ func main() {
 	store := cookie.NewStore([]byte("super-secret-key"))
 	r.Use(sessions.Sessions("mysession", store))
 
-	// Раздача статических файлов
+	// Раздача статических файлов только по /static
 	r.Static("/static", "./static")
-	r.Static("/", "./static")
 
-	// Загружаем HTML-шаблон для личного кабинета
+	// Определяем маршрут для главной страницы (корневой адрес)
 	r.LoadHTMLFiles("./static/dashboard.html")
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "dashboard.html", gin.H{
+			"title": "Личный кабинет",
+		})
+	})
 
-	// Маршруты для авторизации и регистрации (принимают данные из HTML-форм)
+	// Маршруты для авторизации и регистрации
 	r.POST("/login", middleware.Login(db))
 	r.POST("/register", middleware.Register(db))
 
-	// Защищённый маршрут для создания заказа (обработчик ожидает данные из формы)
+	// Защищённые маршруты
 	r.POST("/api/order", middleware.AuthRequired(), handlers.CreateOrder(db))
-
-	// Защищённый маршрут для личного кабинета (отображается dashboard.html)
 	r.GET("/dashboard", middleware.AuthRequired(), handlers.Dashboard())
 
 	// Запуск сервера

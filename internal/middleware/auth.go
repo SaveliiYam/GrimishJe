@@ -10,12 +10,11 @@ import (
 	"gorm.io/gorm"
 )
 
-// AuthRequired – проверяет наличие user_id в сессии.
+// AuthRequired проверяет наличие user_id в сессии.
 func AuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
-		userID := session.Get("user_id")
-		if userID == nil {
+		if session.Get("user_id") == nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходимо авторизоваться"})
 			c.Abort()
 			return
@@ -24,7 +23,7 @@ func AuthRequired() gin.HandlerFunc {
 	}
 }
 
-// Login – обработчик входа, сохраняет user_id в сессии и перенаправляет на /dashboard.
+// Login – обработчик входа, использующий form‑binding и перенаправляющий на /dashboard.
 func Login(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input struct {
@@ -43,6 +42,7 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверный email или пароль"})
 			return
 		}
+
 		if !user.CheckPassword(input.Password) {
 			log.Printf("Login: Неверный пароль для %s", input.Email)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверный email или пароль"})
@@ -56,18 +56,20 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка сохранения сессии"})
 			return
 		}
+
 		log.Printf("Login: Пользователь успешно вошел: %s", user.Email)
 		c.Redirect(http.StatusFound, "/dashboard")
 	}
 }
 
-// Register – обработчик регистрации, сохраняет нового пользователя и перенаправляет на /dashboard.
+// Register – обработчик регистрации с form‑binding и редиректом на /dashboard.
 func Register(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Если нужно добавить поля (например, имя, телефон, Telegram),
+		// необходимо расширить структуру input и обновить модель User.
 		var input struct {
 			Email    string `form:"email" binding:"required,email"`
 			Password string `form:"password" binding:"required,min=6"`
-			// Можно добавить и другие поля (например, имя, телефон)
 		}
 		if err := c.ShouldBind(&input); err != nil {
 			log.Printf("Register: Ошибка привязки: %v", err)
@@ -81,6 +83,7 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка установки пароля"})
 			return
 		}
+
 		if err := db.Create(&user).Error; err != nil {
 			log.Printf("Register: Ошибка создания пользователя: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Пользователь с таким email уже существует"})
@@ -94,6 +97,7 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка сохранения сессии"})
 			return
 		}
+
 		log.Printf("Register: Пользователь успешно зарегистрирован: %s", user.Email)
 		c.Redirect(http.StatusFound, "/dashboard")
 	}

@@ -7,12 +7,13 @@ import (
 
 type User struct {
 	gorm.Model
-	Email    string `gorm:"uniqueIndex"`
-	Password string
-	// Другие поля: Name, Phone, Telegram и т.д.
+	// Указываем имя индекса, совпадающее с тем, что создал PostgreSQL
+	Email    string `gorm:"uniqueIndex:users_email_key;size:255" json:"email"`
+	Password string `json:"password"`
+	// Дополнительно можно добавить: Name, Phone, Telegram и т.д.
 }
 
-// SetPassword – хэширует пароль и сохраняет его в модели.
+// SetPassword хэширует пароль и сохраняет его.
 func (u *User) SetPassword(password string) error {
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -22,8 +23,7 @@ func (u *User) SetPassword(password string) error {
 	return nil
 }
 
-// CheckPassword – сравнивает предоставленный пароль с хэшированным.
+// CheckPassword сравнивает введённый пароль с сохранённым хэшем.
 func (u *User) CheckPassword(password string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
-	return err == nil
+	return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)) == nil
 }

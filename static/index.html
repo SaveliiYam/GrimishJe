@@ -1,401 +1,312 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Громыш | Помощь студентам</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f0f0;
-        }
-
-        nav {
-            padding: 1em;
-        }
-
-        nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-        }
-
-        nav ul li {
-            margin: 0 1em;
-        }
-
-        nav ul li a {
-            color: #fff;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        nav ul li a:hover {
-            color: #ff6347;
-        }
-
-        .hero {
-            position: relative;
-            height: 100vh;
-            background: url('hero-background.jpg') no-repeat center center/cover;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            text-align: center;
-        }
-
-        .hero-content {
-            max-width: 600px;
-            animation: fadeIn 2s ease-in-out;
-        }
-
-        .hero-content h1 {
-            font-size: 3em;
-            margin-bottom: 0.5em;
-        }
-
-        .hero-content p {
-            font-size: 1.5em;
-            margin-bottom: 1em;
-        }
-
-        .order-button {
-            display: inline-block;
-            padding: 1em 2em;
-            font-size: 1.2em;
-            color: #ffffff;
-            background-color: transparent;
-            text-decoration: none;
-            border: 2px solid #00bfff;
-            border-radius: 10px;
-            position: relative;
-            overflow: hidden;
-            font-weight: bold;
-            transition: color 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
-        }
-
-        .order-button::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 0;
-            height: 100%;
-            background-color: #00bfff;
-            z-index: -1;
-            transition: width 0.4s ease;
-        }
-
-        .order-button:hover::before {
-            width: 100%;
-        }
-
-        .order-button:hover {
-            color: #fff;
-            background-color: transparent;
-            transform: scale(1.05);
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-    width: 300px;
-    min-height: 200px; /* Минимальная высота */
-    max-height: 90vh; /* Ограничиваем высоту экрана */
-    transition: all 0.3s ease; /* Плавное изменение */
-    overflow: hidden; /* Скрываем лишнее содержимое */
-}
-
-
-        .modal-content h2 {
-            margin-bottom: 20px;
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 20px;
-        }
-
-        .switch-button {
-            padding: 10px 20px;
-            font-size: 1em;
-            color: #ffffff;
-            background-color: #00bfff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .switch-button:hover {
-            background-color: #007acc;
-        }
-
-        .auth-form {
-    display: none;
-    flex-direction: column;
-    gap: 10px;
-    padding-bottom: 20px; /* Добавляем 2 см (20px) снизу */
-}
-
-
-   .auth-form input {
-    padding: 10px;
-    font-size: 1em;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
-
-.auth-form button {
-    padding: 12px 20px;
-    font-size: 1em;
-    font-weight: bold;
-    background-color: #00bfff;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.auth-form button:hover {
-    background-color: #007acc;
-    transform: scale(1.05);
-}
-
-.auth-form button:active {
-    background-color: #005f99;
-    transform: scale(1);
-}
-
-.close-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 20px;
-    cursor: pointer;
-    color: #333;
-}
-
-.input-with-icon {
-    position: relative;
-}
-
-.input-with-icon img {
-    position: absolute;
-    top: 50%;
-    left: 10px; /* Отступ от левого края */
-    transform: translateY(-50%);
-    width: 20px;
-    height: 20px;
-}
-
-.input-with-icon input {
-    padding-left: 40px; /* Делаем отступ, чтобы текст не перекрывал иконку */
-    padding-right: 10px; /* Обычный отступ справа */
-    font-size: 1em;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    width: 100%;
-}
-
-.telegram-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 10px; /* Расстояние между иконкой и полем */
-    margin-bottom: 15px; /* Отступ снизу для равномерного расположения */
-}
-
-.telegram-wrapper img {
-    width: auto; /* Автоматическая ширина для адаптации */
-    max-height: 30px; /* Максимальная высота иконки */
-}
-
-.telegram-wrapper input {
-    flex-grow: 1; /* Поле занимает всё доступное место */
-    padding: 10px;
-    font-size: 1em;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
-
-
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Громыш | Помощь студентам</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* Основные стили страницы (при необходимости можно вынести в отдельный файл) */
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f0f0;
+    }
+    nav {
+      padding: 1em;
+    }
+    nav ul {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+    }
+    nav ul li {
+      margin: 0 1em;
+    }
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav ul li a:hover {
+      color: #ff6347;
+    }
+    .hero {
+      position: relative;
+      height: 100vh;
+      background: url('hero-background.jpg') no-repeat center center/cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      text-align: center;
+    }
+    .hero-content {
+      max-width: 600px;
+      animation: fadeIn 2s ease-in-out;
+    }
+    .hero-content h1 {
+      font-size: 3em;
+      margin-bottom: 0.5em;
+    }
+    .hero-content p {
+      font-size: 1.5em;
+      margin-bottom: 1em;
+    }
+    .order-button {
+      display: inline-block;
+      padding: 1em 2em;
+      font-size: 1.2em;
+      color: #ffffff;
+      background-color: transparent;
+      text-decoration: none;
+      border: 2px solid #00bfff;
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+      font-weight: bold;
+      transition: color 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
+    }
+    .order-button::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 100%;
+      background-color: #00bfff;
+      z-index: -1;
+      transition: width 0.4s ease;
+    }
+    .order-button:hover::before {
+      width: 100%;
+    }
+    .order-button:hover {
+      color: #fff;
+      background-color: transparent;
+      transform: scale(1.05);
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      width: 300px;
+      min-height: 200px;
+      max-height: 90vh;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    .modal-content h2 {
+      margin-bottom: 20px;
+    }
+    .modal-buttons {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+    .switch-button {
+      padding: 10px 20px;
+      font-size: 1em;
+      color: #ffffff;
+      background-color: #00bfff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .switch-button:hover {
+      background-color: #007acc;
+    }
+    .auth-form {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      padding-bottom: 20px;
+    }
+    .auth-form input {
+      padding: 10px;
+      font-size: 1em;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .auth-form button {
+      padding: 12px 20px;
+      font-size: 1em;
+      font-weight: bold;
+      background-color: #00bfff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    .auth-form button:hover {
+      background-color: #007acc;
+      transform: scale(1.05);
+    }
+    .auth-form button:active {
+      background-color: #005f99;
+      transform: scale(1);
+    }
+    .close-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 20px;
+      cursor: pointer;
+      color: #333;
+    }
+    .telegram-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .telegram-wrapper img {
+      width: auto;
+      max-height: 30px;
+    }
+    .telegram-wrapper input {
+      flex-grow: 1;
+      padding: 10px;
+      font-size: 1em;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
-    <nav>
-        <ul>
-            <li><a href="index.html" class="circle-link">Главная</a></li>
-            <li><a href="about.html" class="circle-link">О нас</a></li>
-            <li><a href="services.html" class="circle-link">Виды работ</a></li>
-            <li><a href="reviews.html" class="circle-link">Отзывы</a></li>
-        </ul>
-    </nav>
+  <nav>
+    <ul>
+      <li><a href="index.html" class="circle-link">Главная</a></li>
+      <li><a href="about.html" class="circle-link">О нас</a></li>
+      <li><a href="services.html" class="circle-link">Виды работ</a></li>
+      <li><a href="reviews.html" class="circle-link">Отзывы</a></li>
+    </ul>
+  </nav>
 
-    <section class="hero">
-        <div class="hero-content">
-            <h1>Добро пожаловать на Громыш!</h1>
-            <p>Мы помогаем студентам и школьникам достичь успеха в учёбе.</p>
-            <a href="#" class="order-button" id="openModal">Сделать заказ</a>
-        </div>
-    </section>
-
-    <div class="modal" id="authModal">
-        <div class="modal-content" id="modalContent">
-            <span class="close-button" id="closeModal">&times;</span>
-            <h2 id="modal-title">Выберите действие</h2>
-            <div class="modal-buttons">
-                <button class="switch-button" id="showLogin">Авторизация</button>
-                <button class="switch-button" id="showRegister">Регистрация</button>
-            </div>
-            <form id="loginForm" class="auth-form" action="/login" method="POST">
-                <label for="loginEmail">Email:</label>
-                <input type="email" id="loginEmail" name="email" required>
-                <label for="loginPassword">Пароль:</label>
-                <input type="password" id="loginPassword" name="password" required>
-                <button type="submit">Войти</button>
-            </form>
-           <form id="registerForm" class="auth-form" action="/register" method="POST">
-    <label for="registerName">Имя:</label>
-    <input type="text" id="registerName" name="name" required>
-    
-    <label for="registerEmail">Email:</label>
-    <input type="email" id="registerEmail" name="email" required>
-    
-    <label for="registerPassword">Пароль:</label>
-    <input type="password" id="registerPassword" name="password" required>
-
-    <label for="registerPhone">Телефон:</label>
-    <input type="tel" id="registerPhone" name="phone" placeholder="+7 (___) ___-____" required>
-    
-    <label for="registerTelegram">Telegram:</label>
-    <div class="telegram-wrapper">
-        <img src="images/TG.png" alt="Telegram Icon">
-        <input type="text" id="registerTelegram" name="telegram" placeholder="@username" required>
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Добро пожаловать на Громыш!</h1>
+      <p>Мы помогаем студентам и школьникам достичь успеха в учёбе.</p>
+      <a href="#" class="order-button" id="openModal">Сделать заказ</a>
     </div>
-    
-    
-    
-    <button type="submit">Зарегистрироваться</button>
-</form>
+  </section>
 
+  <div class="modal" id="authModal">
+    <div class="modal-content" id="modalContent">
+      <span class="close-button" id="closeModal">&times;</span>
+      <h2 id="modal-title">Выберите действие</h2>
+      <div class="modal-buttons">
+        <button class="switch-button" id="showLogin">Авторизация</button>
+        <button class="switch-button" id="showRegister">Регистрация</button>
+      </div>
+      <form id="loginForm" class="auth-form" action="/login" method="POST">
+        <label for="loginEmail">Email:</label>
+        <input type="email" id="loginEmail" name="email" required>
+        <label for="loginPassword">Пароль:</label>
+        <input type="password" id="loginPassword" name="password" required>
+        <button type="submit">Войти</button>
+      </form>
+      <form id="registerForm" class="auth-form" action="/register" method="POST">
+        <label for="registerName">Имя:</label>
+        <input type="text" id="registerName" name="name" required>
+        <label for="registerEmail">Email:</label>
+        <input type="email" id="registerEmail" name="email" required>
+        <label for="registerPassword">Пароль:</label>
+        <input type="password" id="registerPassword" name="password" required>
+        <label for="registerPhone">Телефон:</label>
+        <input type="tel" id="registerPhone" name="phone" placeholder="+7 (___) ___-____" required>
+        <label for="registerTelegram">Telegram:</label>
+        <div class="telegram-wrapper">
+          <img src="images/TG.png" alt="Telegram Icon">
+          <input type="text" id="registerTelegram" name="telegram" placeholder="@username" required>
         </div>
+        <button type="submit">Зарегистрироваться</button>
+      </form>
     </div>
+  </div>
 
-    <footer>
-        <p>&copy; Громыш | Поддержка студентов и школьников</p>
-    </footer>
+  <footer>
+    <p>&copy; Громыш | Поддержка студентов и школьников</p>
+  </footer>
 
-    <script>
-        const modal = document.getElementById('authModal');
-        const modalContent = document.getElementById('modalContent');
-        const openModal = document.getElementById('openModal');
-        const closeModal = document.getElementById('closeModal');
-        const showLogin = document.getElementById('showLogin');
-        const showRegister = document.getElementById('showRegister');
-        const loginForm = document.getElementById('loginForm');
-        const registerForm = document.getElementById('registerForm');
-        const modalTitle = document.getElementById('modal-title');
-        const phoneInput = document.getElementById('registerPhone');
-        
+  <script>
+    const modal = document.getElementById('authModal');
+    const modalContent = document.getElementById('modalContent');
+    const openModal = document.getElementById('openModal');
+    const closeModal = document.getElementById('closeModal');
+    const showLogin = document.getElementById('showLogin');
+    const showRegister = document.getElementById('showRegister');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const modalTitle = document.getElementById('modal-title');
+    const phoneInput = document.getElementById('registerPhone');
 
-phoneInput.addEventListener('input', (e) => {
-    const value = e.target.value.replace(/\D/g, ''); // Убираем всё, кроме цифр
-    const formatted = value
-        .replace(/^(\d{1})(\d{3})(\d{3})(\d{2})(\d{2})$/, "+7 ($2) $3-$4-$5") // Форматируем номер
-        .substring(0, 17); // Ограничиваем длину до 17 символов
-    e.target.value = formatted;
-});
+    // Форматирование номера телефона
+    phoneInput.addEventListener('input', (e) => {
+      const value = e.target.value.replace(/\D/g, '');
+      const formatted = value
+        .replace(/^(\d{1})(\d{3})(\d{3})(\d{2})(\d{2})$/, "+7 ($2) $3-$4-$5")
+        .substring(0, 17);
+      e.target.value = formatted;
+    });
 
-    
-        // Функция для установки высоты окна на основе содержимого
-        function adjustModalHeight() {
-    const activeForm = loginForm.style.display === 'flex' ? loginForm : registerForm;
-    const formHeight = activeForm.offsetHeight + 120; // Высота формы + 2 см (20px)
-    modalContent.style.height = formHeight + 'px';
-}
+    function adjustModalHeight() {
+      const activeForm = loginForm.style.display === 'flex' ? loginForm : registerForm;
+      const formHeight = activeForm.offsetHeight + 120;
+      modalContent.style.height = formHeight + 'px';
+    }
 
-    
-        // Открытие модального окна
-        openModal.addEventListener('click', (e) => {
-            e.preventDefault();
-            modal.style.display = 'flex';
-            modalTitle.textContent = 'Выберите действие';
-            loginForm.style.display = 'none';
-            registerForm.style.display = 'none';
-            modalContent.style.height = '200px'; // Начальная высота
-        });
-    
-        // Закрытие модального окна
-        closeModal.addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
-    
-        window.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-    
-        // Показать форму авторизации
-        showLogin.addEventListener('click', () => {
-            loginForm.style.display = 'flex';
-            registerForm.style.display = 'none';
-            modalTitle.textContent = 'Авторизация';
-            adjustModalHeight();
-        });
-    
-        // Показать форму регистрации
-        showRegister.addEventListener('click', () => {
-            registerForm.style.display = 'flex';
-            loginForm.style.display = 'none';
-            modalTitle.textContent = 'Регистрация';
-            adjustModalHeight();
-        });
-        // Открытие модального окна
-openModal.addEventListener('click', (e) => {
-    e.preventDefault();
-    modal.style.display = 'flex';
-    modalTitle.textContent = 'Выберите действие';
-    loginForm.style.display = 'none';
-    registerForm.style.display = 'none';
-    modalContent.style.height = '200px'; // Начальная высота
-});
+    openModal.addEventListener('click', (e) => {
+      e.preventDefault();
+      modal.style.display = 'flex';
+      modalTitle.textContent = 'Выберите действие';
+      loginForm.style.display = 'none';
+      registerForm.style.display = 'none';
+      modalContent.style.height = '200px';
+    });
 
-// Ваш код для форматирования телефона
+    closeModal.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
 
-phoneInput.addEventListener('input', (e) => {
-    const value = e.target.value.replace(/\D/g, ''); // Убираем всё, кроме цифр
-    const formatted = value
-        .replace(/^(\d{1})(\d{3})(\d{3})(\d{2})(\d{2})$/, "+7 ($2) $3-$4-$5") // Форматируем номер
-        .substring(0, 17); // Ограничиваем длину
-    e.target.value = formatted;
-});
+    window.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
 
-    </script>
-    
+    showLogin.addEventListener('click', () => {
+      loginForm.style.display = 'flex';
+      registerForm.style.display = 'none';
+      modalTitle.textContent = 'Авторизация';
+      adjustModalHeight();
+    });
+
+    showRegister.addEventListener('click', () => {
+      registerForm.style.display = 'flex';
+      loginForm.style.display = 'none';
+      modalTitle.textContent = 'Регистрация';
+      adjustModalHeight();
+    });
+  </script>
 </body>
 </html>
