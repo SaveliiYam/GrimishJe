@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/MoshKillaPit/GrimishJe/models"
+	"github.com/MoshKillaPit/GrimishJe/internal/models"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -95,13 +95,5 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 		// Можно сделать редирект на /dashboard
 		// c.Redirect(http.StatusFound, "/dashboard")
 		c.JSON(http.StatusOK, gin.H{"message": "Вход выполнен успешно"})
-	}
-}
-
-// Dashboard – пример защищённого обработчика, который доступен только авторизованным пользователям.
-func Dashboard() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// Здесь можно вернуть HTML-страницу или JSON, в данном случае – JSON-ответ.
-		c.JSON(http.StatusOK, gin.H{"message": "Добро пожаловать на защищенную страницу!"})
 	}
 }
