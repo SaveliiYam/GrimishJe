@@ -38,26 +38,26 @@ func main() {
 	store := cookie.NewStore([]byte("super-secret-key"))
 	r.Use(sessions.Sessions("mysession", store))
 
-	// Раздача статических файлов только по /static
-	r.Static("/static", "./static")
+	// Отдаем статические файлы через Gin (файлы из папки static будут доступны по /static)
+	r.Static("/static", "../static") // если папка static находится на уровень выше
 
-	// Определяем маршрут для главной страницы (корневой адрес)
-	r.LoadHTMLFiles("./static/dashboard.html")
+	// Загружаем HTML-шаблоны из папки static
+	r.LoadHTMLGlob("../static/*.html")
+
+	// Определяем маршрут для главной страницы (например, отдаём dashboard.html)
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "dashboard.html", gin.H{
 			"title": "Личный кабинет",
 		})
 	})
 
-	// Маршруты для авторизации и регистрации
+	// Остальные маршруты
 	r.POST("/login", middleware.Login(db))
 	r.POST("/register", middleware.Register(db))
-
-	// Защищённые маршруты
 	r.POST("/api/order", middleware.AuthRequired(), handlers.CreateOrder(db))
 	r.GET("/dashboard", middleware.AuthRequired(), handlers.Dashboard())
 
-	// Запуск сервера
+	// Запуск сервера на порту 8080
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal("Не удалось запустить сервер:", err)
 	}
