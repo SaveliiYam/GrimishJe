@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"MySite/models"
+	"github.com/MoshKillaPit/GrimishJe/models"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
