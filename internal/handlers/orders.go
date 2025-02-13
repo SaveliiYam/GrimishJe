@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/MoshKillaPit/GrimishJe/models"
+	"github.com/MoshKillaPit/GrimishJe/internal/models"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"

@@ -1,22 +1,23 @@
-package middleware
+package handlers
 
 import (
 	"log"
 	"net/http"
 
-	"github.com/MoshKillaPit/GrimishJe/models"
+	"github.com/MoshKillaPit/GrimishJe/internal/models"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-// Register обрабатывает регистрацию пользователя, сохраняет сессию и перенаправляет на /dashboard.
+// Register обрабатывает регистрацию пользователя, сохраняет сессию и отправляет ответ.
 func Register(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input struct {
 			Email    string `json:"email" binding:"required,email"`
 			Password string `json:"password" binding:"required,min=6"`
+			// Можно добавить и другие поля, например имя, телефон и т.д.
 		}
 
 		if err := c.ShouldBindJSON(&input); err != nil {
@@ -38,6 +39,7 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		// Сохраняем сессию
 		session := sessions.Default(c)
 		session.Set("user_id", user.ID)
 		if err := session.Save(); err != nil {
@@ -47,25 +49,13 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		log.Printf("Register: Пользователь успешно зарегистрирован: %s", user.Email)
-		// Перенаправление на /dashboard только при успешной регистрации
-		c.Redirect(http.StatusFound, "/dashboard")
+		// Можно сделать редирект на /dashboard
+		// c.Redirect(http.StatusFound, "/dashboard")
+		c.JSON(http.StatusCreated, gin.H{"message": "Регистрация прошла успешно"})
 	}
 }
 
-func AuthRequired() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		session := sessions.Default(c)
-		userID := session.Get("user_id")
-		if userID == nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходимо авторизоваться"})
-			c.Abort()
-			return
-		}
-		c.Next()
-	}
-}
-
-// Login обрабатывает вход пользователя, сохраняет сессию и перенаправляет на /dashboard.
+// Login обрабатывает вход пользователя, сохраняет сессию и отправляет ответ.
 func Login(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input struct {
@@ -92,6 +82,7 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		// Сохраняем сессию
 		session := sessions.Default(c)
 		session.Set("user_id", user.ID)
 		if err := session.Save(); err != nil {
@@ -101,14 +92,16 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		log.Printf("Login: Пользователь успешно вошел: %s", user.Email)
-		// Перенаправление на /dashboard только при успешном входе
-		c.Redirect(http.StatusFound, "/dashboard")
+		// Можно сделать редирект на /dashboard
+		// c.Redirect(http.StatusFound, "/dashboard")
+		c.JSON(http.StatusOK, gin.H{"message": "Вход выполнен успешно"})
 	}
 }
 
 // Dashboard – пример защищённого обработчика, который доступен только авторизованным пользователям.
 func Dashboard() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Здесь можно вернуть HTML-страницу или JSON, в данном случае – JSON-ответ.
 		c.JSON(http.StatusOK, gin.H{"message": "Добро пожаловать на защищенную страницу!"})
 	}
 }

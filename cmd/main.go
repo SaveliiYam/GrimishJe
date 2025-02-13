@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"github.com/MoshKillaPit/GrimishJe/handlers"
-	"github.com/MoshKillaPit/GrimishJe/middleware"
-	"github.com/MoshKillaPit/GrimishJe/models"
+	"github.com/MoshKillaPit/GrimishJe/internal/handlers"
+	"github.com/MoshKillaPit/GrimishJe/internal/middleware"
+	"github.com/MoshKillaPit/GrimishJe/internal/models"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
