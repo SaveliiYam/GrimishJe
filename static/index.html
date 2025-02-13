@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Громыш | Помощь студентам</title>
-  <link rel="stylesheet" href="styles.css">
+  <!-- Подключаем CSS через абсолютный путь -->
+  <link rel="stylesheet" href="/static/styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <style>
     /* Основные стили страницы (при необходимости можно вынести в отдельный файл) */
@@ -38,7 +39,7 @@
     .hero {
       position: relative;
       height: 100vh;
-      background: url('hero-background.jpg') no-repeat center center/cover;
+      background: url('/images/hero-background.jpg') no-repeat center center/cover;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -112,6 +113,7 @@
       max-height: 90vh;
       transition: all 0.3s ease;
       overflow: hidden;
+      position: relative;
     }
     .modal-content h2 {
       margin-bottom: 20px;
@@ -190,15 +192,27 @@
       border: 1px solid #ddd;
       border-radius: 5px;
     }
+    /* Единый стиль для сообщений об ошибках */
+    .error-message {
+      color: #D8000C;
+      background-color: #FFBABA;
+      border: 1px solid #D8000C;
+      padding: 5px 10px;
+      border-radius: 4px;
+      margin-top: 5px;
+      font-size: 0.9em;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
   <nav>
     <ul>
-      <li><a href="index.html" class="circle-link">Главная</a></li>
-      <li><a href="about.html" class="circle-link">О нас</a></li>
-      <li><a href="services.html" class="circle-link">Виды работ</a></li>
-      <li><a href="reviews.html" class="circle-link">Отзывы</a></li>
+      <!-- Обновлённые ссылки: используем чистые URL -->
+      <li><a href="/" class="circle-link">Главная</a></li>
+      <li><a href="/about" class="circle-link">О нас</a></li>
+      <li><a href="/services" class="circle-link">Виды работ</a></li>
+      <li><a href="/reviews" class="circle-link">Отзывы</a></li>
     </ul>
   </nav>
 
@@ -218,14 +232,18 @@
         <button class="switch-button" id="showLogin">Авторизация</button>
         <button class="switch-button" id="showRegister">Регистрация</button>
       </div>
+      <!-- Форма авторизации с блоком для общей ошибки -->
       <form id="loginForm" class="auth-form" action="/login" method="POST">
+        <div id="loginGeneralError" class="error-message" style="display: none;"></div>
         <label for="loginEmail">Email:</label>
         <input type="email" id="loginEmail" name="email" required>
         <label for="loginPassword">Пароль:</label>
         <input type="password" id="loginPassword" name="password" required>
         <button type="submit">Войти</button>
       </form>
+      <!-- Форма регистрации с блоком для ошибок -->
       <form id="registerForm" class="auth-form" action="/register" method="POST">
+        <div id="registerGeneralError" class="error-message" style="display: none;"></div>
         <label for="registerName">Имя:</label>
         <input type="text" id="registerName" name="name" required>
         <label for="registerEmail">Email:</label>
@@ -236,7 +254,7 @@
         <input type="tel" id="registerPhone" name="phone" placeholder="+7 (___) ___-____" required>
         <label for="registerTelegram">Telegram:</label>
         <div class="telegram-wrapper">
-          <img src="images/TG.png" alt="Telegram Icon">
+          <img src="/images/TG.png" alt="Telegram Icon">
           <input type="text" id="registerTelegram" name="telegram" placeholder="@username" required>
         </div>
         <button type="submit">Зарегистрироваться</button>
@@ -259,6 +277,8 @@
     const registerForm = document.getElementById('registerForm');
     const modalTitle = document.getElementById('modal-title');
     const phoneInput = document.getElementById('registerPhone');
+    const loginGeneralError = document.getElementById('loginGeneralError');
+    const registerGeneralError = document.getElementById('registerGeneralError');
 
     // Форматирование номера телефона
     phoneInput.addEventListener('input', (e) => {
@@ -281,6 +301,8 @@
       modalTitle.textContent = 'Выберите действие';
       loginForm.style.display = 'none';
       registerForm.style.display = 'none';
+      loginGeneralError.style.display = 'none';
+      registerGeneralError.style.display = 'none';
       modalContent.style.height = '200px';
     });
 
@@ -307,6 +329,34 @@
       modalTitle.textContent = 'Регистрация';
       adjustModalHeight();
     });
+
+    // Перехват отправки формы авторизации через AJAX
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      loginGeneralError.style.display = 'none';
+      const formData = new FormData(loginForm);
+      try {
+        const response = await fetch('/login', {
+          method: 'POST',
+          body: formData
+        });
+        if (!response.ok) {
+          const data = await response.json();
+          // Показываем сообщение об ошибке
+          loginGeneralError.textContent = data.error || 'Ошибка авторизации';
+          loginGeneralError.style.display = 'block';
+        } else {
+          // При успешной авторизации можно, например, закрыть модальное окно и перезагрузить страницу
+          modal.style.display = 'none';
+          window.location.reload();
+        }
+      } catch (err) {
+        loginGeneralError.textContent = 'Ошибка соединения с сервером';
+        loginGeneralError.style.display = 'block';
+      }
+    });
+
+    // Аналогично можно сделать перехват отправки формы регистрации, если требуется
   </script>
 </body>
 </html>

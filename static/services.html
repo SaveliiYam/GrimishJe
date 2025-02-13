@@ -1,299 +1,272 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Виды работ</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        .reveal {
-            opacity: 0;
-            transform: translateY(50px);
-            transition: all 1s ease-in-out;
-        }
-
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        body {
-            color: #f0f0f0;
-        }
-
-        .header-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding: 4em 2em;
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            border: 2px solid #555;
-            border-radius: 15px;
-            max-width: 1200px;
-            margin: 2em auto;
-        }
-
-        .header-section-content {
-            position: relative;
-            z-index: 1;
-            text-shadow: 3px 3px 10px rgba(0, 0, 0, 1), 0 0 5px #fff;
-        }
-
-        .header-section h1 {
-            font-size: 3em;
-            margin-bottom: 0.5em;
-        }
-
-        .header-section p {
-            font-size: 1.25em;
-            max-width: 800px;
-            line-height: 1.6;
-        }
-
-        .services-section {
-            padding: 2em;
-            text-align: center;
-        }
-
-        .services-section h2 {
-            font-size: 3em;
-            margin-bottom: 1em;
-            text-transform: uppercase;
-            color: #ffffff;
-            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.8);
-            letter-spacing: 0.1em;
-            padding: 0.5em 1em;
-            display: inline-block;
-        }
-
-        .services-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5em;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .service-card {
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid #777;
-            border-radius: 10px;
-            padding: 1.5em;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .service-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.7);
-        }
-
-        .service-card h3 {
-            font-size: 1.5em;
-            margin-bottom: 0.5em;
-            color: #ffffff;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
-        }
-
-        .service-card p,
-        .service-card .price,
-        .service-card .deadline {
-            font-size: 1.1em;
-            margin-bottom: 1em;
-            color: #e0e0e0;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
-        }
-
-        .service-card .price {
-            font-weight: bold;
-            color: #ffd700;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
-        }
-
-        .service-card .deadline {
-            font-weight: bold;
-            color: #00ff00;
-            margin-top: 0.5em;
-        }
-
-        .custom-request {
-            margin-top: 2em;
-            font-size: 1.5em;
-            color: #ffd700;
-            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.8);
-            font-weight: bold;
-        }
-
-        .contact-button {
-            display: inline-block;
-            margin-top: 1em;
-            padding: 1em 2em;
-            font-size: 1.2em;
-            color: #ffffff;
-            background-color: transparent;
-            text-decoration: none;
-            border: 2px solid #00bfff;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-            position: relative;
-            transition: color 0.5s ease, transform 0.3s ease, box-shadow 0.3s ease;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
-        }
-
-        .contact-button::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 0;
-            height: 100%;
-            background-color: #00bfff;
-            transition: width 0.5s ease;
-            z-index: -1;
-        }
-
-        .contact-button:hover::before {
-            width: 100%;
-        }
-
-        .contact-button:hover {
-            color: #ffffff;
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.5);
-        }
-
-        .counter {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #ffffff;
-            margin-top: 0.5em;
-        }
-        .count-value {
-            color: #ffffff;
-        }
-
-    
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Виды работ</title>
+  <!-- Подключаем CSS через абсолютный путь -->
+  <link rel="stylesheet" href="/static/styles.css">
+  <style>
+    .reveal {
+      opacity: 0;
+      transform: translateY(50px);
+      transition: all 1s ease-in-out;
+    }
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    body {
+      color: #f0f0f0;
+    }
+    .header-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 4em 2em;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 2px solid #555;
+      border-radius: 15px;
+      max-width: 1200px;
+      margin: 2em auto;
+    }
+    .header-section-content {
+      position: relative;
+      z-index: 1;
+      text-shadow: 3px 3px 10px rgba(0, 0, 0, 1), 0 0 5px #fff;
+    }
+    .header-section h1 {
+      font-size: 3em;
+      margin-bottom: 0.5em;
+    }
+    .header-section p {
+      font-size: 1.25em;
+      max-width: 800px;
+      line-height: 1.6;
+    }
+    .services-section {
+      padding: 2em;
+      text-align: center;
+    }
+    .services-section h2 {
+      font-size: 3em;
+      margin-bottom: 1em;
+      text-transform: uppercase;
+      color: #ffffff;
+      text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.8);
+      letter-spacing: 0.1em;
+      padding: 0.5em 1em;
+      display: inline-block;
+    }
+    .services-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5em;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .service-card {
+      background: rgba(0, 0, 0, 0.8);
+      border: 1px solid #777;
+      border-radius: 10px;
+      padding: 1.5em;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .service-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.7);
+    }
+    .service-card h3 {
+      font-size: 1.5em;
+      margin-bottom: 0.5em;
+      color: #ffffff;
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+    }
+    .service-card p,
+    .service-card .price,
+    .service-card .deadline {
+      font-size: 1.1em;
+      margin-bottom: 1em;
+      color: #e0e0e0;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+    }
+    .service-card .price {
+      font-weight: bold;
+      color: #ffd700;
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+    }
+    .service-card .deadline {
+      font-weight: bold;
+      color: #00ff00;
+      margin-top: 0.5em;
+    }
+    .custom-request {
+      margin-top: 2em;
+      font-size: 1.5em;
+      color: #ffd700;
+      text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.8);
+      font-weight: bold;
+    }
+    .contact-button {
+      display: inline-block;
+      margin-top: 1em;
+      padding: 1em 2em;
+      font-size: 1.2em;
+      color: #ffffff;
+      background-color: transparent;
+      text-decoration: none;
+      border: 2px solid #00bfff;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      position: relative;
+      transition: color 0.5s ease, transform 0.3s ease, box-shadow 0.3s ease;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+    }
+    .contact-button::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 100%;
+      background-color: #00bfff;
+      transition: width 0.5s ease;
+      z-index: -1;
+    }
+    .contact-button:hover::before {
+      width: 100%;
+    }
+    .contact-button:hover {
+      color: #ffffff;
+      transform: translateY(-5px);
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.5);
+    }
+    .counter {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #ffffff;
+      margin-top: 0.5em;
+    }
+    .count-value {
+      color: #ffffff;
+    }
+  </style>
 </head>
 <body>
-    <nav>
-        <ul>
-            <li><a href="index.html" class="circle-link">Главная</a></li>
-            <li><a href="about.html" class="circle-link">О нас</a></li>
-            <li><a href="services.html" class="circle-link">Виды работ</a></li>
-            <li><a href="reviews.html" class="circle-link">Отзывы</a></li>
-        </ul>
-    </nav>
+  <nav>
+    <ul>
+      <!-- Абсолютные ссылки -->
+      <li><a href="/" class="circle-link">Главная</a></li>
+      <li><a href="/about" class="circle-link">О нас</a></li>
+      <li><a href="/services" class="circle-link">Виды работ</a></li>
+      <li><a href="/reviews" class="circle-link">Отзывы</a></li>
+    </ul>
+  </nav>
 
-    <header class="header-section reveal">
-        <div class="header-section-content">
-            <h1>Виды работ</h1>
-            <p>Мы предоставляем профессиональную помощь в написании научных работ различного уровня сложности. Ознакомьтесь с нашими услугами ниже.</p>
-        </div>
-    </header>
+  <header class="header-section reveal">
+    <div class="header-section-content">
+      <h1>Виды работ</h1>
+      <p>Мы предоставляем профессиональную помощь в написании научных работ различного уровня сложности. Ознакомьтесь с нашими услугами ниже.</p>
+    </div>
+  </header>
 
-    <section class="services-section reveal">
-        <h2>Наши услуги</h2>
-        <div class="services-container">
-            <div class="service-card">
-                <h3>Курсовые работы</h3>
-                <p>Комплексное выполнение курсовых работ по всем дисциплинам с учетом ваших требований и стандартов учебного заведения.</p>
-                <span class="price">Стоимость: от 5 000 ₽</span>
-                <div class="deadline">Срок выполнения: 2-4 дня</div>
-                <div class="counter" id="coursework-counter">Завершено: <span class="count-value">0</span></div>
-            </div>
-            <div class="service-card">
-                <h3>Дипломные проекты</h3>
-                <p>Разработка дипломных работ с глубокой проработкой темы, качественным анализом и обоснованными выводами.</p>
-                <span class="price">Стоимость: от 30 000 ₽</span>
-                <div class="deadline">Срок выполнения: 7-14 дней</div>
-                <div class="counter" id="diploma-counter">Завершено: <span class="count-value">0</span></div>
-            </div>
-<div class="service-card">
-    <h3>Рефераты</h3>
-    <p>Быстрое и качественное выполнение рефератов на любые темы. Гарантируем оригинальность и грамотное оформление.</p>
-    <span class="price">Стоимость: от 3 000 ₽</span>
-    <div class="deadline">Срок выполнения: 2 дня</div>
-    <div class="counter" id="referat">Завершено: <span class="count-value">0</span></div>
-</div>
-<div class="service-card">
-    <h3>Эссе</h3>
-    <p>Написание оригинальных и креативных эссе, которые выделят вашу работу на фоне других.</p>
-    <span class="price">Стоимость: от 700 ₽</span>
-    <div class="deadline">Срок выполнения: в этот же день</div>
-    <div class="counter" id="esse">Завершено: <span class="count-value">0</span></div>
-</div>
-<div class="service-card">
-    <h3>Научные статьи</h3>
-    <p>Подготовка статей для публикации в журналах и сборниках, включая оформление по требованиям издательства.</p>
-    <span class="price">Стоимость: от 8 000 ₽</span>
-    <div class="deadline">Срок выполнения: от 14 дней</div>
-    <div class="counter" id="states">Завершено: <span class="count-value">0</span></div>
-</div>
-<div class="service-card">
-    <h3>Презентации и доклады</h3>
-    <p>Создание визуально привлекательных презентаций и написание текстов для устных выступлений.</p>
-    <span class="price">Стоимость: от 1 000 ₽</span>
-    <div class="deadline">Срок выполнения: в этот же день</div>
-    <div class="counter" id="doclad">Завершено: <span class="count-value">0</span></div>
-</div>
-</div>
-<p class="custom-request">Не нашли то, что искали или у вас срочная работа? Свяжитесь с нами, и мы обсудим индивидуальные условия выполнения.</p>
-<a href="contact.html" class="contact-button">Связаться с нами</a>
-</section>
+  <section class="services-section reveal">
+    <h2>Наши услуги</h2>
+    <div class="services-container">
+      <div class="service-card">
+        <h3>Курсовые работы</h3>
+        <p>Комплексное выполнение курсовых работ по всем дисциплинам с учетом ваших требований и стандартов учебного заведения.</p>
+        <span class="price">Стоимость: от 5 000 ₽</span>
+        <div class="deadline">Срок выполнения: 2-4 дня</div>
+        <div class="counter" id="coursework-counter">Завершено: <span class="count-value">0</span></div>
+      </div>
+      <div class="service-card">
+        <h3>Дипломные проекты</h3>
+        <p>Разработка дипломных работ с глубокой проработкой темы, качественным анализом и обоснованными выводами.</p>
+        <span class="price">Стоимость: от 30 000 ₽</span>
+        <div class="deadline">Срок выполнения: 7-14 дней</div>
+        <div class="counter" id="diploma-counter">Завершено: <span class="count-value">0</span></div>
+      </div>
+      <div class="service-card">
+        <h3>Рефераты</h3>
+        <p>Быстрое и качественное выполнение рефератов на любые темы. Гарантируем оригинальность и грамотное оформление.</p>
+        <span class="price">Стоимость: от 3 000 ₽</span>
+        <div class="deadline">Срок выполнения: 2 дня</div>
+        <div class="counter" id="referat">Завершено: <span class="count-value">0</span></div>
+      </div>
+      <div class="service-card">
+        <h3>Эссе</h3>
+        <p>Написание оригинальных и креативных эссе, которые выделят вашу работу на фоне других.</p>
+        <span class="price">Стоимость: от 700 ₽</span>
+        <div class="deadline">Срок выполнения: в этот же день</div>
+        <div class="counter" id="esse">Завершено: <span class="count-value">0</span></div>
+      </div>
+      <div class="service-card">
+        <h3>Научные статьи</h3>
+        <p>Подготовка статей для публикации в журналах и сборниках, включая оформление по требованиям издательства.</p>
+        <span class="price">Стоимость: от 8 000 ₽</span>
+        <div class="deadline">Срок выполнения: от 14 дней</div>
+        <div class="counter" id="states">Завершено: <span class="count-value">0</span></div>
+      </div>
+      <div class="service-card">
+        <h3>Презентации и доклады</h3>
+        <p>Создание визуально привлекательных презентаций и написание текстов для устных выступлений.</p>
+        <span class="price">Стоимость: от 1 000 ₽</span>
+        <div class="deadline">Срок выполнения: в этот же день</div>
+        <div class="counter" id="doclad">Завершено: <span class="count-value">0</span></div>
+      </div>
+    </div>
+    <p class="custom-request">Не нашли то, что искали или у вас срочная работа? Свяжитесь с нами, и мы обсудим индивидуальные условия выполнения.</p>
+    <!-- Если имеется контактная страница, ссылка может быть абсолютной, например, "/contact" -->
+    <a href="/contact" class="contact-button">Связаться с нами</a>
+  </section>
 
-<footer class="footer">
-    <p>&copy; Громыш | Поддержка студентов и школьников </p>
-</footer>
+  <footer class="footer">
+    <p>&copy; Громыш | Поддержка студентов и школьников</p>
+  </footer>
 
+  <script>
+    function revealOnScroll() {
+      const reveals = document.querySelectorAll('.reveal');
+      reveals.forEach((reveal) => {
+        const windowHeight = window.innerHeight;
+        const revealTop = reveal.getBoundingClientRect().top;
+        if (revealTop < windowHeight - 100) {
+          reveal.classList.add('active');
+        }
+      });
+    }
+    window.addEventListener('scroll', revealOnScroll);
+    window.addEventListener('load', revealOnScroll);
 
-<script>
-function revealOnScroll() {
-const reveals = document.querySelectorAll('.reveal');
-reveals.forEach((reveal) => {
-const windowHeight = window.innerHeight;
-const revealTop = reveal.getBoundingClientRect().top;
-if (revealTop < windowHeight - 100) {
-reveal.classList.add('active');
-}
-});
-}
-
-window.addEventListener('scroll', revealOnScroll);
-window.addEventListener('load', revealOnScroll);
-
-function animateCounter(id, start, end, duration) {
-let startTime = null;
-
-function animation(currentTime) {
-if (startTime === null) {
-startTime = currentTime;
-}
-const progress = Math.min((currentTime - startTime) / duration, 1);
-const value = Math.floor(progress * (end - start) + start);
-document.getElementById(id).querySelector('.count-value').textContent = value;
-if (progress < 1) {
-requestAnimationFrame(animation);
-}
-}
-
-requestAnimationFrame(animation);
-}
-
-// Запускаем счётчики для каждого блока
-window.addEventListener('load', () => {
-animateCounter('coursework-counter', 0, 124, 3000); // Счётчик для Курсовых работ
-animateCounter('diploma-counter', 0, 36, 3000); // Счётчик для Дипломных проектов
-animateCounter('referat', 0, 212, 3000); // Счётчик для Рефератов
-animateCounter('esse', 0, 133, 3000); // Счётчик для Эссе
-animateCounter('states', 0, 26, 3000); // Счётчик для Научных статей
-animateCounter('doclad', 0, 362, 3000); // Счётчик для Презентаций
-
-});
-</script>
+    function animateCounter(id, start, end, duration) {
+      let startTime = null;
+      function animation(currentTime) {
+        if (startTime === null) {
+          startTime = currentTime;
+        }
+        const progress = Math.min((currentTime - startTime) / duration, 1);
+        const value = Math.floor(progress * (end - start) + start);
+        document.getElementById(id).querySelector('.count-value').textContent = value;
+        if (progress < 1) {
+          requestAnimationFrame(animation);
+        }
+      }
+      requestAnimationFrame(animation);
+    }
+    window.addEventListener('load', () => {
+      animateCounter('coursework-counter', 0, 124, 3000);
+      animateCounter('diploma-counter', 0, 36, 3000);
+      animateCounter('referat', 0, 212, 3000);
+      animateCounter('esse', 0, 133, 3000);
+      animateCounter('states', 0, 26, 3000);
+      animateCounter('doclad', 0, 362, 3000);
+    });
+  </script>
 </body>
 </html>

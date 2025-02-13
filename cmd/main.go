@@ -16,7 +16,7 @@ import (
 )
 
 func initDB() *gorm.DB {
-	// Строка подключения – измените параметры по необходимости.
+	// Измените параметры подключения при необходимости.
 	dsn := "host=localhost user=postgres password=secret123 dbname=mydb port=5432 sslmode=disable TimeZone=Europe/Moscow"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -38,22 +38,47 @@ func main() {
 	store := cookie.NewStore([]byte("super-secret-key"))
 	r.Use(sessions.Sessions("mysession", store))
 
-	// Отдаем статические файлы через Gin (файлы из папки static будут доступны по /static)
-	r.Static("/static", "../static") // если папка static находится на уровень выше
+	// Отдаем статические файлы:
+	// Все файлы из папки ../static доступны по URL /static (в т.ч. CSS, JS и пр.)
+	r.Static("/static", "../static")
+	// Отдаем изображения отдельно: файлы из ../static/images доступны по URL /images
+	r.Static("/images", "../static/images")
 
 	// Загружаем HTML-шаблоны из папки static
+	// Если вы запускаете из папки cmd, шаблоны расположены на уровень выше: ../static/*.html
 	r.LoadHTMLGlob("../static/*.html")
 
-	// Определяем маршрут для главной страницы (например, отдаём dashboard.html)
+	// Маршрут для главной страницы (index.html)
 	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "dashboard.html", gin.H{
-			"title": "Личный кабинет",
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"title": "Главная страница",
 		})
 	})
 
-	// Остальные маршруты
+	// Дополнительные маршруты для остальных страниц
+	r.GET("/about", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "about.html", gin.H{
+			"title": "О нас",
+		})
+	})
+
+	r.GET("/reviews", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "reviews.html", gin.H{
+			"title": "Отзывы",
+		})
+	})
+
+	r.GET("/services", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "services.html", gin.H{
+			"title": "Услуги",
+		})
+	})
+
+	// Маршруты для авторизации и регистрации
 	r.POST("/login", middleware.Login(db))
 	r.POST("/register", middleware.Register(db))
+
+	// Маршруты, требующие авторизации
 	r.POST("/api/order", middleware.AuthRequired(), handlers.CreateOrder(db))
 	r.GET("/dashboard", middleware.AuthRequired(), handlers.Dashboard())
 

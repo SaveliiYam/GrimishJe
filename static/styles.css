@@ -13,10 +13,10 @@ body {
     margin-top: 5em; /* Отступ сверху, чтобы контент не перекрывался навигацией */
     font-family: 'Roboto', sans-serif;
     line-height: 1.6;
-    background-image: url('images/hero-image.jpg'); /* Путь к вашему изображению */
+    background-image: url('/images/hero-image.jpg'); /* Абсолютный путь к изображению */
     background-size: cover; /* Изображение на весь экран */
     background-position: center; /* Центрирование изображения */
-    background-attachment: fixed; /* Фиксация фона, чтобы не двигался при прокрутке */
+    background-attachment: fixed; /* Фиксация фона при прокрутке */
     color: #333;
     overflow-x: hidden;
 }
@@ -26,12 +26,12 @@ nav {
     position: fixed; /* Закрепляем навигацию сверху */
     top: 0;
     width: 100%;
-    background-color: rgba(30, 144, 255, 0.2); /* Более прозрачный фон для лучшего эффекта */ /* Более насыщенный полупрозрачный фон для лучшей видимости */
+    background-color: rgba(30, 144, 255, 0.2); /* Прозрачный фон */
     padding: 1em;
     text-align: center;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    z-index: 1000; /* Обеспечиваем, чтобы навигация всегда была выше других элементов */
-    transition: background-color 0.3s ease; /* Плавное изменение цвета фона при прокрутке */
+    z-index: 1000;
+    transition: background-color 0.3s ease;
 }
 
 nav ul {
@@ -47,30 +47,30 @@ nav ul li {
 }
 
 .circle-link {
-    background-color: rgba(255, 255, 255, 0.9); /* Увеличение прозрачности для лучшей читаемости */
-    color: #333; /* Цвет текста */
-    padding: 0.5em 2em; /* Отступы для придания формы кнопке */
-    border-radius: 10px; /* Слегка закругленные углы */
-    text-decoration: none; /* Убирает подчеркивание */
-    font-weight: bold; /* Жирный текст */
-    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease; /* Анимация при наведении */
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Более выраженная тень для эффекта подъема */
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #333;
+    padding: 0.5em 2em;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .circle-link:hover {
-    background-color: #ffdd57; /* Изменение фона при наведении */
-    color: #1e90ff; /* Изменение цвета текста при наведении */
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25); /* Усиление тени при наведении */
+    background-color: #ffdd57;
+    color: #1e90ff;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
 }
 
 /* Header Section */
 header {
     text-align: center;
     padding: 2em;
-    background-color: rgba(135, 206, 250, 0.9); /* Более насыщенный фон для лучшей читаемости */
+    background-color: rgba(135, 206, 250, 0.9);
     color: white;
-    border-radius: 10px; /* Лёгкие закругления */
-    margin-top: 5em; /* Отступ сверху, чтобы не перекрывать навигацию */
+    border-radius: 10px;
+    margin-top: 5em;
 }
 
 header h1 {
@@ -86,11 +86,11 @@ header p {
 .services-list {
     padding: 2em;
     text-align: center;
-    background-color: rgba(255, 255, 255, 0.95); /* Более насыщенный полупрозрачный фон */
+    background-color: rgba(255, 255, 255, 0.95);
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     max-width: 800px;
-    margin: 2em auto; /* Центрирование секции и добавление отступов */
+    margin: 2em auto;
 }
 
 .services-list h2, .services-list h3 {
@@ -107,7 +107,7 @@ header p {
     font-size: 1.2em;
     padding: 0.5em;
     margin: 0.5em 0;
-    background-color: rgba(249, 249, 249, 0.95); /* Более насыщенный фон элементов списка */
+    background-color: rgba(249, 249, 249, 0.95);
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -115,18 +115,18 @@ header p {
 /* Подвал */
 footer {
     text-align: center;
-    background-color: rgba(30, 144, 255, 0.9); /* Более насыщенный фон */
+    background-color: rgba(30, 144, 255, 0.9);
     color: white;
     padding: 1em 0;
     margin-top: 2em;
 }
 
-/* Секция Hero с изображением на весь экран */
+/* Секция Hero */
 .hero {
     position: relative;
     height: 100vh;
-    background-image: url('images/hero-image.jpg'); /* Путь к вашему изображению */
-    background-size: cover; /* Изображение на весь экран */
+    background-image: url('/images/hero-image.jpg');
+    background-size: cover;
     background-position: center;
     display: flex;
     justify-content: center;
@@ -136,7 +136,7 @@ footer {
 }
 
 .hero-content {
-    background-color: rgba(0, 0, 0, 0.6); /* Более насыщенный фон для лучшей читаемости текста */
+    background-color: rgba(0, 0, 0, 0.6);
     padding: 2em;
     border-radius: 10px;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
@@ -171,7 +171,7 @@ footer {
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
 }
 
-/* Медиа-запросы для адаптивности */
+/* Медиа-запросы */
 @media (max-width: 768px) {
     .hero h1 {
         font-size: 2em;
@@ -200,4 +200,16 @@ footer {
     .services-list {
         padding: 1em;
     }
+}
+
+/* Единый стиль для сообщений об ошибках */
+.error-message {
+  color: #D8000C;
+  background-color: #FFBABA;
+  border: 1px solid #D8000C;
+  padding: 5px 10px;
+  border-radius: 4px;
+  margin-top: 5px;
+  font-size: 0.9em;
+  text-align: left;
 }

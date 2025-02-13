@@ -1,203 +1,190 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>О нас</title>
-    <link rel="stylesheet" href="styles.css">
-<style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>О нас</title>
+  <!-- Подключаем CSS через абсолютный путь -->
+  <link rel="stylesheet" href="/static/styles.css">
+  <style>
     .reveal {
-        opacity: 0;
-        transform: translateY(50px);
-        transition: all 1s ease-in-out;
+      opacity: 0;
+      transform: translateY(50px);
+      transition: all 1s ease-in-out;
     }
-
     .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .header-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 4em 2em;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 2px solid #fff;
+      border-radius: 15px;
+      position: relative;
+      overflow: hidden;
+      max-width: 1200px;
+      margin: 2em auto;
+    }
+    .header-section-content {
+      position: relative;
+      z-index: 1;
+      text-shadow: 3px 3px 10px rgba(0, 0, 0, 1), 0 0 5px #fff;
+    }
+    .header-section h1 {
+      font-size: 3em;
+      margin-bottom: 0.5em;
+      animation: fadeIn 1.5s ease forwards;
+    }
+    .header-section p {
+      font-size: 1.25em;
+      max-width: 800px;
+      line-height: 1.6;
+      animation: fadeIn 2s ease forwards;
+      animation-delay: 0.5s;
+    }
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
         opacity: 1;
         transform: translateY(0);
+      }
     }
-
-    .header-section {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        padding: 4em 2em;
-        background: rgba(255, 255, 255, 0.1); /* Полупрозрачный фон */
-        color: #fff;
-        border: 2px solid #fff; /* Белая рамка */
-        border-radius: 15px;
-        position: relative;
-        overflow: hidden;
-        max-width: 1200px;
-        margin: 2em auto;
-    }
-
-    .header-section-content {
-        position: relative;
-        z-index: 1;
-        text-shadow: 3px 3px 10px rgba(0, 0, 0, 1), 0 0 5px #fff; /* Более выразительная тень и свечение для выделения текста */
-    }
-
-    .header-section h1 {
-        font-size: 3em;
-        margin-bottom: 0.5em;
-        animation: fadeIn 1.5s ease forwards;
-    }
-
-    .header-section p {
-        font-size: 1.25em;
-        max-width: 800px;
-        line-height: 1.6;
-        animation: fadeIn 2s ease forwards;
-        animation-delay: 0.5s;
-    }
-
-    @keyframes fadeIn {
-        0% {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        100% {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
     .image-text-block {
-        display: flex;
-        align-items: center;
-        margin: 2em 0;
-        background: rgba(100, 100, 100, 0.5); /* Полупрозрачный сероватый фон */
-        padding: 1em;
-        border-radius: 10px;
+      display: flex;
+      align-items: center;
+      margin: 2em 0;
+      background: rgba(100, 100, 100, 0.5);
+      padding: 1em;
+      border-radius: 10px;
     }
-
     .image {
-        width: auto; /* Автоматическая ширина */
-        height: auto; /* Сохраняет пропорции изображения */
-        max-height: 300px; /* Ограничение максимальной высоты */
-        object-fit: contain; /* Изображение сохраняет свои пропорции и полностью вписывается в контейнер */
-        border-radius: 10px;
-        opacity: 0.8; /* Прозрачность изображения */
+      width: auto;
+      height: auto;
+      max-height: 300px;
+      object-fit: contain;
+      border-radius: 10px;
+      opacity: 0.8;
     }
-
     .text {
-        width: auto;
-        padding: 1em;
-        color: #fff; /* Белый текст */
-        text-shadow: 3px 3px 10px rgba(0, 0, 0, 1), 0 0 5px #fff; /* Более выразительная тень и свечение для выделения текста */
+      width: auto;
+      padding: 1em;
+      color: #fff;
+      text-shadow: 3px 3px 10px rgba(0, 0, 0, 1), 0 0 5px #fff;
     }
-
-    /* Стили для больших блоков */
     .large-block {
-        display: flex;
-        align-items: flex-start;
-        margin: 2em auto;
-        max-width: 1200px; /* Ограничение ширины блока */
-        background: rgba(100, 100, 100, 0.5); /* Полупрозрачный сероватый фон */
-        padding: 1em;
-        border-radius: 10px;
-        flex-wrap: wrap;
+      display: flex;
+      align-items: flex-start;
+      margin: 2em auto;
+      max-width: 1200px;
+      background: rgba(100, 100, 100, 0.5);
+      padding: 1em;
+      border-radius: 10px;
+      flex-wrap: wrap;
     }
-
     .large-block.left .image {
-        order: 2;
-        flex: 1;
-        max-width: 50%;
+      order: 2;
+      flex: 1;
+      max-width: 50%;
     }
-
     .large-block.left .text {
-        order: 2;
-        flex: 1;
-        max-width: 50%;
+      order: 2;
+      flex: 1;
+      max-width: 50%;
     }
-
     .large-block.right .image {
-        order: 2;
-        flex: 1;
-        max-width: 50%;
+      order: 2;
+      flex: 1;
+      max-width: 50%;
     }
-
     .large-block.right .text {
-        order: 1;
-        flex: 1;
-        max-width: 50%;
+      order: 1;
+      flex: 1;
+      max-width: 50%;
     }
-
     .large-block.right .text {
-        font-size: 1.5em; /* Уменьшение текста в два раза */
-        text-shadow: 3px 3px 10px rgba(0, 0, 0, 1), 0 0 5px #fff; /* Более выразительная тень и свечение для выделения текста */
+      font-size: 1.5em;
+      text-shadow: 3px 3px 10px rgba(0, 0, 0, 1), 0 0 5px #fff;
     }
-</style>
+  </style>
 </head>
 <body>
-    <nav>
-        <ul>
-            <li><a href="index.html" class="circle-link">Главная</a></li>
-            <li><a href="about.html" class="circle-link">О нас</a></li>
-            <li><a href="services.html" class="circle-link">Виды работ</a></li>
-            <li><a href="reviews.html" class="circle-link">Отзывы</a></li>
-        </ul>
-    </nav>
+  <nav>
+    <ul>
+      <!-- Используем абсолютные ссылки для маршрутов -->
+      <li><a href="/" class="circle-link">Главная</a></li>
+      <li><a href="/about" class="circle-link">О нас</a></li>
+      <li><a href="/services" class="circle-link">Виды работ</a></li>
+      <li><a href="/reviews" class="circle-link">Отзывы</a></li>
+    </ul>
+  </nav>
 
-    <header class="header-section reveal">
-        <div class="header-section-content">
-            <h1>О нашей команде</h1>
-            <p>Мы — команда профессионалов, объединенных общей целью: помогать нашим клиентам добиваться успеха. Мы создаем комфортные условия, ориентируемся на ваши потребности и гарантируем высокое качество наших услуг.</p>
-        </div>
-    </header>
+  <header class="header-section reveal">
+    <div class="header-section-content">
+      <h1>О нашей команде</h1>
+      <p>Мы — команда профессионалов, объединенных общей целью: помогать нашим клиентам добиваться успеха. Мы создаем комфортные условия, ориентируемся на ваши потребности и гарантируем высокое качество наших услуг.</p>
+    </div>
+  </header>
 
-    <!-- Первый блок -->
-    <section class="large-block left reveal">
-        <img src="images/coop-work.png" alt="Работа в команде" class="image" />
-        <div class="text">
-            <h2>Работаем вместе для вашего успеха</h2>
-            <p>Наша команда работает слаженно, чтобы каждый проект был выполнен на высшем уровне и в срок. Мы всегда на связи, готовы услышать ваши пожелания и адаптироваться под ваши задачи.</p>
-            <h2>Профессионализм и внимание к деталям</h2>
-            <p>Мы уделяем особое внимание каждой детали, чтобы результат соответствовал вашим ожиданиям и даже превосходил их. Каждый наш шаг продуман и направлен на достижение лучшего результата.</p>
-        </div>
-    </section>
+  <!-- Первый блок -->
+  <section class="large-block left reveal">
+    <!-- Абсолютный путь к изображению -->
+    <img src="/images/coop-work.png" alt="Работа в команде" class="image" />
+    <div class="text">
+      <h2>Работаем вместе для вашего успеха</h2>
+      <p>Наша команда работает слаженно, чтобы каждый проект был выполнен на высшем уровне и в срок. Мы всегда на связи, готовы услышать ваши пожелания и адаптироваться под ваши задачи.</p>
+      <h2>Профессионализм и внимание к деталям</h2>
+      <p>Мы уделяем особое внимание каждой детали, чтобы результат соответствовал вашим ожиданиям и даже превосходил их. Каждый наш шаг продуман и направлен на достижение лучшего результата.</p>
+    </div>
+  </section>
 
-    <!-- Второй блок -->
-    <section class="large-block right reveal">
-        <div class="text">
-            <h2>Наши компетенции</h2>
-            <p>Мы специализируемся на рефератах, курсовых, дипломных работах и задачах по многим предметам. Все специалисты имеют профильное образование и обеспечивают высокое качество работы.</p>
-        </div>
-        <img src="images/working.png" alt="Рабочий процесс" class="image" />
-    </section>
+  <!-- Второй блок -->
+  <section class="large-block right reveal">
+    <div class="text">
+      <h2>Наши компетенции</h2>
+      <p>Мы специализируемся на рефератах, курсовых, дипломных работах и задачах по многим предметам. Все специалисты имеют профильное образование и обеспечивают высокое качество работы.</p>
+    </div>
+    <img src="/images/working.png" alt="Рабочий процесс" class="image" />
+  </section>
 
-    <!-- Третий блок -->
-    <section class="large-block left reveal">
-        <img src="images/garantie.png" alt="Командная работа" class="image" />
-        <div class="text">
-            <h2>Наши ценности</h2>
-            <ul>
-                <li>Индивидуальный подход — мы внимательно прислушиваемся к каждому клиенту и учитываем его потребности.</li>
-                <li>Ответственность и профессионализм — мы берем на себя полную ответственность за каждый этап работы.</li>
-                <li>Прозрачность и доверие — мы строим долгосрочные отношения на основе честности и открытости.</li>
-            </ul>
-        </div>
-    </section>
+  <!-- Третий блок -->
+  <section class="large-block left reveal">
+    <img src="/images/garantie.png" alt="Командная работа" class="image" />
+    <div class="text">
+      <h2>Наши ценности</h2>
+      <ul>
+        <li>Индивидуальный подход — мы внимательно прислушиваемся к каждому клиенту и учитываем его потребности.</li>
+        <li>Ответственность и профессионализм — мы берем на себя полную ответственность за каждый этап работы.</li>
+        <li>Прозрачность и доверие — мы строим долгосрочные отношения на основе честности и открытости.</li>
+      </ul>
+    </div>
+  </section>
 
-    <footer>
-        <p>&copy; Громыш | Поддержка студентов и школьников</p>
-    </footer>
-<script>
-function revealOnScroll() {
-    const reveals = document.querySelectorAll('.reveal');
-    reveals.forEach((reveal) => {
+  <footer>
+    <p>&copy; Громыш | Поддержка студентов и школьников</p>
+  </footer>
+
+  <script>
+    function revealOnScroll() {
+      const reveals = document.querySelectorAll('.reveal');
+      reveals.forEach((reveal) => {
         const windowHeight = window.innerHeight;
         const revealTop = reveal.getBoundingClientRect().top;
         if (revealTop < windowHeight - 100) {
-            reveal.classList.add('active');
+          reveal.classList.add('active');
         }
-    });
-}
-
-window.addEventListener('scroll', revealOnScroll);
-window.addEventListener('load', revealOnScroll);
-</script>
+      });
+    }
+    window.addEventListener('scroll', revealOnScroll);
+    window.addEventListener('load', revealOnScroll);
+  </script>
 </body>
 </html>
