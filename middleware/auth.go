@@ -1,4 +1,4 @@
-package handlers
+package middleware
 
 import (
 	"log"
@@ -49,6 +49,19 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 		log.Printf("Register: Пользователь успешно зарегистрирован: %s", user.Email)
 		// Перенаправление на /dashboard только при успешной регистрации
 		c.Redirect(http.StatusFound, "/dashboard")
+	}
+}
+
+func AuthRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		session := sessions.Default(c)
+		userID := session.Get("user_id")
+		if userID == nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходимо авторизоваться"})
+			c.Abort()
+			return
+		}
+		c.Next()
 	}
 }
 
