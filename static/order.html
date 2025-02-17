@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{.Order.Topic}}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* Общие стили */
+    body {
+      margin: 0;
+      padding: 10px;
+      background: #f7f9fc;
+      font-family: 'Roboto', sans-serif;
+      color: #333;
+    }
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    header {
+      background: linear-gradient(135deg, #00bfff, #007acc);
+      color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.5em;
+    }
+    .order-details {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+    }
+    .order-details h2 {
+      margin-top: 0;
+      font-size: 1.8em;
+      color: #007acc;
+      border-bottom: 2px solid #e1e8f0;
+      padding-bottom: 5px;
+    }
+    .order-details p {
+      margin: 10px 0;
+      line-height: 1.5;
+      font-size: 1.1em;
+    }
+    .order-number {
+      font-weight: bold;
+      color: #d35400;
+    }
+    .copy-btn {
+      background: #007acc;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 0.9em;
+      cursor: pointer;
+      margin-left: 8px;
+      transition: background-color 0.3s ease;
+    }
+    .copy-btn:hover {
+      background: #005f99;
+    }
+    .order-files {
+      margin-top: 20px;
+    }
+    .order-files h3 {
+      font-size: 1.3em;
+      margin-bottom: 10px;
+      color: #00bfff;
+    }
+    .order-files #filesContainer {
+      margin-bottom: 10px;
+    }
+    .chat-section {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-section h3 {
+      font-size: 1.6em;
+      margin-bottom: 15px;
+      color: #00bfff;
+      border-bottom: 2px solid #e1e8f0;
+      padding-bottom: 5px;
+    }
+    .chat-window {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: #f9f9f9;
+      padding: 15px;
+      height: 300px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .chat-message {
+      padding: 10px;
+      border-radius: 6px;
+      max-width: 70%;
+      font-size: 0.95em;
+      line-height: 1.4;
+    }
+    .chat-message.sent {
+      background: #e0f7fa;
+      align-self: flex-end;
+    }
+    .chat-message.received {
+      background: #f1f8e9;
+      align-self: flex-start;
+    }
+    .chat-input {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1em;
+    }
+    .chat-input button {
+      padding: 10px 20px;
+      background: #00bfff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .chat-input button:hover {
+      background: #007acc;
+    }
+    /* Toast уведомления */
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 4px;
+      display: none;
+      font-size: 1em;
+      z-index: 3000;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>{{.Order.Topic}}</h1>
+    </header>
+    
+    <section class="order-details">
+      <h2>Детали заказа</h2>
+      <p>
+        <strong>Номер заказа:</strong> 
+        <span class="order-number">{{.Order.OrderNumber}}</span>
+        <button class="copy-btn" onclick="copyOrderNumber()" aria-label="Скопировать номер заказа">Копировать</button>
+      </p>
+      <p><strong>Статус:</strong> {{.Order.Status}}</p>
+      <p><strong>Описание:</strong> {{.Order.Description}}</p>
+      <p><strong>Срок выполнения:</strong> {{.Order.Deadline}}</p>
+      <p><strong>Бюджет:</strong> {{.Order.Budget}} ₽</p>
+      <p><strong>Тип работы:</strong> {{.Order.WorkType}}</p>
+      {{if .Order.PlagiarismRequired}}
+        <p><strong>Антиплагиат:</strong> Требуется, минимальный % оригинальности: {{.Order.PlagiarismPercent}}%</p>
+      {{else}}
+        <p><strong>Антиплагиат:</strong> Не требуется</p>
+      {{end}}
+      {{if .Order.Notes}}
+        <p><strong>Заметки:</strong> {{.Order.Notes}}</p>
+      {{end}}
+      
+      <div class="order-files">
+        <h3>Файлы заказа</h3>
+        <div id="filesContainer">
+          <!-- Здесь будут отображаться файлы заказа -->
+        </div>
+        <form id="uploadForm" action="/api/order/upload" method="POST" enctype="multipart/form-data">
+          <input type="hidden" name="orderID" value="{{.Order.ID}}">
+          <input type="file" name="files" multiple required>
+          <button type="submit">Загрузить файлы</button>
+        </form>
+      </div>
+    </section>
+    
+    <section class="chat-section">
+      <h3>Чат с исполнителем</h3>
+      <div class="chat-window" id="chatWindow">
+        <!-- История чата загружается через WebSocket -->
+      </div>
+      <div class="chat-input">
+        <input type="text" id="chatInput" placeholder="Напишите сообщение...">
+        <button id="sendMessage">Отправить</button>
+      </div>
+    </section>
+  </div>
+  
+  <div id="toast"></div>
+  
+  <script>
+    var currentChatWS = null;
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3000);
+    }
+
+    function copyOrderNumber() {
+      const orderNumber = document.querySelector('.order-number').innerText;
+      navigator.clipboard.writeText(orderNumber)
+        .then(() => showToast('Номер заказа скопирован!'))
+        .catch(() => showToast('Ошибка копирования.'));
+    }
+
+    // Подключение к WebSocket-чату для пользователя
+    function connectChat() {
+      var orderID = "{{.Order.ID}}";
+      var wsUrl = "ws://" + window.location.host + "/ws/chat_user?orderID=" + orderID;
+      currentChatWS = new WebSocket(wsUrl);
+
+      currentChatWS.onopen = function() {
+        console.log("Чат подключён (user)");
+      };
+
+      currentChatWS.onmessage = function(event) {
+        var msg = JSON.parse(event.data);
+        var chatWindow = document.getElementById("chatWindow");
+        var msgDiv = document.createElement("div");
+        // Если сообщение отправлено пользователем, добавляем класс sent, иначе received
+        msgDiv.className = "chat-message " + (msg.sender === "user" ? "sent" : "received");
+        msgDiv.textContent = msg.sender + ": " + msg.message;
+        chatWindow.appendChild(msgDiv);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+      };
+
+      currentChatWS.onerror = function(err) {
+        console.error("WebSocket ошибка:", err);
+        showToast("Ошибка подключения к чату");
+      };
+    }
+
+    window.addEventListener('load', connectChat);
+
+    document.getElementById("sendMessage").addEventListener("click", function() {
+      var input = document.getElementById("chatInput");
+      var message = input.value.trim();
+      if (message === "") return;
+      if (currentChatWS && currentChatWS.readyState === WebSocket.OPEN) {
+        var msgObj = {
+          sender: "user",
+          message: message
+        };
+        currentChatWS.send(JSON.stringify(msgObj));
+        input.value = "";
+      } else {
+        showToast("Чат не подключён");
+      }
+    });
+  </script>
+</body>
+</html>

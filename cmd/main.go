@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/MoshKillaPit/GrimishJe/internal/handlers"
 	"github.com/MoshKillaPit/GrimishJe/internal/middleware"
@@ -23,8 +24,8 @@ func initDB() *gorm.DB {
 		log.Fatal("Не удалось подключиться к базе данных:", err)
 	}
 
-	// Миграция моделей пользователя и заказа
-	if err := db.AutoMigrate(&models.User{}, &models.Order{}); err != nil {
+	// Миграция моделей: User, Order и ChatMessage
+	if err := db.AutoMigrate(&models.User{}, &models.Order{}, &models.ChatMessage{}); err != nil {
 		log.Fatal("Ошибка миграции:", err)
 	}
 	return db
@@ -34,55 +35,125 @@ func main() {
 	db := initDB()
 	r := gin.Default()
 
-	// Инициализация хранилища сессий
+	// Инициализация сессий
 	store := cookie.NewStore([]byte("super-secret-key"))
 	r.Use(sessions.Sessions("mysession", store))
 
-	// Отдаем статические файлы:
-	// Все файлы из папки ../static доступны по URL /static (в т.ч. CSS, JS и пр.)
+	// Отдаем статические файлы
 	r.Static("/static", "../static")
-	// Отдаем изображения отдельно: файлы из ../static/images доступны по URL /images
 	r.Static("/images", "../static/images")
-
 	// Загружаем HTML-шаблоны из папки static
-	// Если вы запускаете из папки cmd, шаблоны расположены на уровень выше: ../static/*.html
 	r.LoadHTMLGlob("../static/*.html")
 
-	// Маршрут для главной страницы (index.html)
+	// Главная и информационные страницы
 	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", gin.H{
-			"title": "Главная страница",
-		})
+		c.HTML(http.StatusOK, "index.html", gin.H{"title": "Главная страница"})
 	})
-
-	// Дополнительные маршруты для остальных страниц
 	r.GET("/about", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "about.html", gin.H{
-			"title": "О нас",
-		})
+		c.HTML(http.StatusOK, "about.html", gin.H{"title": "О нас"})
 	})
-
 	r.GET("/reviews", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "reviews.html", gin.H{
-			"title": "Отзывы",
-		})
+		c.HTML(http.StatusOK, "reviews.html", gin.H{"title": "Отзывы"})
 	})
-
 	r.GET("/services", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "services.html", gin.H{
-			"title": "Услуги",
-		})
+		c.HTML(http.StatusOK, "services.html", gin.H{"title": "Услуги"})
 	})
 
-	// Маршруты для авторизации и регистрации
+	// Авторизация и регистрация
 	r.POST("/login", middleware.Login(db))
 	r.POST("/register", middleware.Register(db))
 
-	// Маршруты, требующие авторизации
+	// Эндпоинты для заказов (пользователь)
 	r.POST("/api/order", middleware.AuthRequired(), handlers.CreateOrder(db))
-	r.GET("/dashboard", middleware.AuthRequired(), handlers.Dashboard())
+	r.POST("/api/order/edit", middleware.AuthRequired(), handlers.EditOrder(db))
 
-	// Запуск сервера на порту 8080
+	// Эндпоинты для администраторских действий
+	r.POST("/api/order/accept", middleware.AdminRequired(db), handlers.AcceptOrder(db))
+	r.POST("/api/order/complete", middleware.AdminRequired(db), handlers.CompleteOrder(db))
+	r.POST("/api/order/cancel", middleware.AdminRequired(db), handlers.CancelOrder(db))
+	r.POST("/api/order/delete", middleware.AdminRequired(db), handlers.DeleteOrder(db))
+
+	// Маршрут для админ-панели (все заказы)
+	r.GET("/admin_dashboard", middleware.AdminRequired(db), handlers.AdminDashboard(db))
+
+	// Dashboard для обычного пользователя (только его заказы)
+	r.GET("/dashboard", middleware.AuthRequired(), func(c *gin.Context) {
+		session := sessions.Default(c)
+		userIDVal := session.Get("user_id")
+		if userIDVal == nil {
+			c.Redirect(http.StatusFound, "/")
+			return
+		}
+		var userID uint
+		switch v := userIDVal.(type) {
+		case uint:
+			userID = v
+		case int:
+			userID = uint(v)
+		default:
+			c.Redirect(http.StatusFound, "/")
+			return
+		}
+		var orders []models.Order
+		if err := db.Where("user_id = ?", userID).Find(&orders).Error; err != nil {
+			c.String(http.StatusInternalServerError, "Ошибка получения заказов")
+			return
+		}
+		var user models.User
+		if err := db.First(&user, userID).Error; err != nil {
+			c.String(http.StatusInternalServerError, "Ошибка получения данных пользователя")
+			return
+		}
+		c.HTML(http.StatusOK, "dashboard.html", gin.H{
+			"User":   user,
+			"Orders": orders,
+		})
+	})
+
+	// Страница заказа для пользователя (проверка принадлежности)
+	r.GET("/order", middleware.AuthRequired(), func(c *gin.Context) {
+		orderIDStr := c.Query("id")
+		if orderIDStr == "" {
+			c.String(http.StatusBadRequest, "Отсутствует ID заказа")
+			return
+		}
+		orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
+		if err != nil {
+			c.String(http.StatusBadRequest, "Неверный ID заказа")
+			return
+		}
+		var order models.Order
+		if err := db.First(&order, orderID).Error; err != nil {
+			c.String(http.StatusNotFound, "Заказ не найден")
+			return
+		}
+		session := sessions.Default(c)
+		userIDVal := session.Get("user_id")
+		var userID uint
+		switch v := userIDVal.(type) {
+		case uint:
+			userID = v
+		case int:
+			userID = uint(v)
+		default:
+			c.String(http.StatusUnauthorized, "Пользователь не авторизован")
+			return
+		}
+		if order.UserID != userID {
+			c.String(http.StatusForbidden, "Нет доступа к этому заказу")
+			return
+		}
+		c.HTML(http.StatusOK, "order.html", gin.H{"Order": order})
+	})
+
+	// Маршрут для WebSocket-чата для администратора
+	r.GET("/ws/chat", middleware.AdminRequired(db), handlers.ChatHandler(db))
+	// Новый маршрут для WebSocket-чата для пользователей
+	r.GET("/ws/chat_user", middleware.AuthRequired(), handlers.ChatHandler(db))
+
+	// Запускаем чат-хаб
+	handlers.RunChatHub()
+
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal("Не удалось запустить сервер:", err)
 	}

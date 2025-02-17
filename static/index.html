@@ -346,9 +346,9 @@
           loginGeneralError.textContent = data.error || 'Ошибка авторизации';
           loginGeneralError.style.display = 'block';
         } else {
-          // При успешной авторизации можно, например, закрыть модальное окно и перезагрузить страницу
+          // При успешной авторизации закрываем модальное окно и переходим в личный кабинет
           modal.style.display = 'none';
-          window.location.reload();
+          window.location.href = '/dashboard';
         }
       } catch (err) {
         loginGeneralError.textContent = 'Ошибка соединения с сервером';
@@ -356,7 +356,31 @@
       }
     });
 
-    // Аналогично можно сделать перехват отправки формы регистрации, если требуется
+    // Перехват отправки формы регистрации через AJAX
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      registerGeneralError.style.display = 'none';
+      const formData = new FormData(registerForm);
+      try {
+        const response = await fetch('/register', {
+          method: 'POST',
+          body: formData
+        });
+        if (!response.ok) {
+          const data = await response.json();
+          // Показываем сообщение об ошибке, например, "email занят"
+          registerGeneralError.textContent = data.error || 'Ошибка регистрации';
+          registerGeneralError.style.display = 'block';
+        } else {
+          // При успешной регистрации закрываем модальное окно и переходим в личный кабинет
+          modal.style.display = 'none';
+          window.location.href = '/dashboard';
+        }
+      } catch (err) {
+        registerGeneralError.textContent = 'Ошибка соединения с сервером';
+        registerGeneralError.style.display = 'block';
+      }
+    });
   </script>
 </body>
 </html>

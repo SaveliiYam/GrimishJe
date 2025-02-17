@@ -3,73 +3,487 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Личный кабинет</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>Личный кабинет | {{.User.Name}}</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* Минималистичные стили для личного кабинета */
+    /* Скрываем модальное окно по умолчанию */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+      justify-content: center;
+      align-items: center;
+    }
+    /* Общие стили для страницы */
     body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      padding: 20px;
+      margin: 0;
+      padding: 10px;
+      background: #fff;
+      font-family: 'Roboto', sans-serif;
       color: #333;
     }
-    .container {
-      max-width: 600px;
-      margin: auto;
-      background: #fff;
+    .dashboard-container, .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 0 auto;
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    h1 {
+    /* Приветственное сообщение (если заказов нет) */
+    .welcome {
+      text-align: center;
+      margin-top: 50px;
+      padding: 40px;
+      background: #f0f8ff;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .welcome h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+    .welcome p {
+      font-size: 1.2em;
+      color: #666;
+    }
+    /* Кнопка "Новый заказ" / "Сделать заказ" */
+    .new-order-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 30px;
+      font-size: 18px;
+      background-color: #00bfff;
+      color: #fff;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .new-order-btn:hover {
+      transform: scale(1.05);
+    }
+    /* Секция сводки заказов */
+    .order-stats {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .order-stats h2 {
+      margin-bottom: 10px;
+    }
+    .stats-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .stat-item {
+      background: #f5f5f5;
+      padding: 10px 15px;
+      border-radius: 5px;
+      font-size: 1em;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    /* Поисковая строка */
+    .order-search {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .order-search input {
+      padding: 8px 12px;
+      width: 300px;
+      max-width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1em;
+    }
+    /* Фильтр заказов */
+    .order-filter {
+      margin-bottom: 20px;
       text-align: center;
     }
-    form {
-      margin-top: 20px;
+    .order-filter button {
+      padding: 8px 16px;
+      margin: 0 5px;
+      border: none;
+      background-color: #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      position: relative;
     }
-    label {
+    .order-filter button.active {
+      background-color: #00bfff;
+      color: #fff;
+    }
+    .order-filter button:hover {
+      background-color: #00bfff;
+      color: #fff;
+    }
+    /* Бейдж для новых заказов во вкладке */
+    .order-filter .badge {
+      background: #F44336;
+      color: #fff;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 0.8em;
+      position: absolute;
+      top: -5px;
+      right: -5px;
+    }
+    /* Сетка заказов */
+    .orders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .order-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      padding: 20px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+    }
+    .order-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    }
+    .order-card h3 {
+      margin-top: 0;
+      font-size: 1.4em;
+      color: #007acc;
+      margin-bottom: 10px;
+    }
+    .order-card p {
+      margin: 5px 0;
+      font-size: 1em;
+      color: #555;
+    }
+    .order-card a {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #00bfff;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+    .order-card a:hover {
+      background: #007acc;
+    }
+    /* Индикатор нового заказа на карточке */
+    .new-indicator {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 10px;
+      height: 10px;
+      background-color: #F44336;
+      border-radius: 50%;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    /* Цветовая палитра для статусов заказов */
+    .order-card.new {
+      border-left: 5px solid #4CAF50;
+    }
+    .order-card.in-progress {
+      border-left: 5px solid #2196F3;
+    }
+    .order-card.completed {
+      border-left: 5px solid #9E9E9E;
+    }
+    .order-card.cancelled {
+      border-left: 5px solid #F44336;
+    }
+    /* Хедер страницы */
+    header {
+      background: linear-gradient(135deg, #00bfff, #007acc);
+      color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.5em;
+    }
+    /* Модальное окно для создания заказа */
+    .modal-content {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: left;
+      width: 350px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .close-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 24px;
+      cursor: pointer;
+      color: #333;
+    }
+    .modal-content h2 {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .modal-content label {
       display: block;
-      margin-bottom: 8px;
+      margin: 10px 0 5px;
       font-weight: bold;
     }
-    input, textarea {
+    .modal-content input,
+    .modal-content textarea,
+    .modal-content select {
       width: 100%;
       padding: 8px;
       margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-sizing: border-box;
+      font-size: 1em;
+      background-color: #fff;
     }
-    button {
+    .modal-content button {
       width: 100%;
       padding: 10px;
-      background: #1e90ff;
+      background-color: #00bfff;
       color: #fff;
       border: none;
-      border-radius: 4px;
+      border-radius: 5px;
       font-size: 16px;
       cursor: pointer;
+      transition: background-color 0.3s ease;
     }
-    button:hover {
-      background: #007acc;
+    .modal-content button:hover {
+      background-color: #007acc;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Личный кабинет</h1>
-    <p>Добро пожаловать! Здесь вы можете сделать заказ.</p>
-    <form action="/api/order" method="POST">
-      <label for="title">Название заказа:</label>
-      <input type="text" id="title" name="title" required>
+    {{if .Orders}}
+      <h1>Ваши заказы, {{.User.Name}}</h1>
       
-      <label for="description">Описание:</label>
-      <textarea id="description" name="description" rows="4"></textarea>
+      <!-- Блок сводки заказов -->
+      <div class="order-stats">
+        <h2>Статистика заказов</h2>
+        <div class="stats-container">
+          <div class="stat-item">Все: <span id="count-all">0</span></div>
+          <div class="stat-item">Новые: <span id="count-new">0</span></div>
+          <div class="stat-item">В работе: <span id="count-inprogress">0</span></div>
+          <div class="stat-item">Завершенные: <span id="count-completed">0</span></div>
+          <div class="stat-item">Отмененные: <span id="count-cancelled">0</span></div>
+        </div>
+      </div>
       
-      <label for="price">Цена:</label>
-      <input type="number" step="0.01" id="price" name="price" required>
+      <!-- Поисковая строка -->
+      <div class="order-search">
+        <input type="text" id="searchInput" placeholder="Поиск заказа по теме...">
+      </div>
       
-      <button type="submit">Создать заказ</button>
-    </form>
+      <!-- Фильтр заказов -->
+      <div class="order-filter">
+        <button class="filter-btn active" data-filter="all">Все</button>
+        <button class="filter-btn" data-filter="новый">Новые</button>
+        <button class="filter-btn" data-filter="в работе">В работе</button>
+        <button class="filter-btn" data-filter="завершён">Завершенные</button>
+        <button class="filter-btn" data-filter="отменён">Отмененные</button>
+      </div>
+      
+      <!-- Сетка заказов -->
+      <div class="orders-grid">
+        {{range .Orders}}
+          <div class="order-card {{if eq .Status "новый"}}new{{else if eq .Status "в работе"}}in-progress{{else if eq .Status "завершён"}}completed{{else if eq .Status "отменён"}}cancelled{{end}}" data-status="{{.Status}}" data-title="{{.Topic}}">
+            <h3>{{.Topic}}</h3>
+            <!-- Отображение номера заказа -->
+            <p><strong>Номер заказа:</strong> {{.OrderNumber}}</p>
+            {{if eq .Status "новый"}}<span class="new-indicator"></span>{{end}}
+            <p><strong>Статус:</strong> {{.Status}}</p>
+            <p><strong>Срок:</strong> {{.Deadline}}</p>
+            <p><strong>Бюджет:</strong> {{.Budget}} ₽</p>
+            <a href="/order?id={{.ID}}">Подробнее</a>
+          </div>
+        {{end}}
+      </div>
+      <div style="text-align: center;">
+        <button class="new-order-btn" id="openOrderModal">Новый заказ</button>
+      </div>
+    {{else}}
+      <div class="welcome">
+        <h1>Добро пожаловать, {{.User.Name}}!</h1>
+        <p>Здесь вы можете создать новый заказ и управлять своими проектами.</p>
+        <button class="new-order-btn" id="openOrderModal">Сделать заказ</button>
+      </div>
+    {{end}}
   </div>
+
+  <!-- Модальное окно для создания заказа -->
+  <div class="modal" id="orderModal">
+    <div class="modal-content">
+      <span class="close-button" id="closeOrderModal">&times;</span>
+      <h2>Создать заказ</h2>
+      <form id="orderForm" action="/api/order" method="POST">
+        <label for="orderTopic">Тема работы:</label>
+        <input type="text" id="orderTopic" name="topic" required>
+        
+        <label for="orderType">Тип работы:</label>
+        <select id="orderType" name="workType" required>
+          <option value="" disabled selected>Выберите тип работы</option>
+          <option value="Эссе">Эссе</option>
+          <option value="Курсовая">Курсовая</option>
+          <option value="Реферат">Реферат</option>
+          <option value="Диплом">Диплом</option>
+          <option value="Диссертация">Диссертация</option>
+          <option value="Контрольная работа">Контрольная работа</option>
+          <option value="Онлайн помощь">Онлайн помощь</option>
+        </select>
+        
+        <label for="orderDescription">Описание:</label>
+        <textarea id="orderDescription" name="description" rows="4" required></textarea>
+        
+        <label for="orderDeadline">Срок выполнения:</label>
+        <input type="date" id="orderDeadline" name="deadline" required>
+        
+        <div class="checkbox-container">
+          <label for="orderPlagiarismCheck" style="margin: 0;">Требуется антиплагиат</label>
+          <input type="checkbox" id="orderPlagiarismCheck" name="plagiarismRequired" value="true">
+        </div>
+        <div id="plagiarismContainer" style="display: none;">
+          <label for="orderPlagiarismPercent">Минимальный % оригинальности:</label>
+          <input type="number" id="orderPlagiarismPercent" name="plagiarismPercent" min="0" max="100">
+        </div>
+        
+        <label for="orderBudget">Бюджет (₽):</label>
+        <input type="number" id="orderBudget" name="budget" step="0.01" required>
+        
+        <button type="submit">Создать заказ</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Модальное окно для создания заказа
+    const orderModal = document.getElementById('orderModal');
+    const openOrderModal = document.getElementById('openOrderModal');
+    const closeOrderModal = document.getElementById('closeOrderModal');
+    const plagiarismCheck = document.getElementById('orderPlagiarismCheck');
+    const plagiarismContainer = document.getElementById('plagiarismContainer');
+
+    openOrderModal.addEventListener('click', (e) => {
+      e.preventDefault();
+      orderModal.style.display = 'flex';
+    });
+    closeOrderModal.addEventListener('click', () => {
+      orderModal.style.display = 'none';
+    });
+    window.addEventListener('click', (e) => {
+      if (e.target === orderModal) {
+        orderModal.style.display = 'none';
+      }
+    });
+    plagiarismCheck.addEventListener('change', () => {
+      plagiarismContainer.style.display = plagiarismCheck.checked ? 'block' : 'none';
+    });
+    document.getElementById('orderForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      try {
+        const response = await fetch(this.action, { method: 'POST', body: formData });
+        const data = await response.json();
+        if (response.ok) {
+          window.location.href = '/order?id=' + data.orderId;
+        } else {
+          alert(data.error || "Ошибка создания заказа");
+        }
+      } catch(err) {
+        alert("Ошибка соединения с сервером");
+      }
+    });
+
+    // Фильтрация заказов по статусу
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const orderCards = document.querySelectorAll('.order-card');
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filterValue = btn.getAttribute('data-filter');
+        orderCards.forEach(card => {
+          if (filterValue === 'all') {
+            card.style.display = 'block';
+          } else {
+            if (card.getAttribute('data-status').toLowerCase() === filterValue) {
+              card.style.display = 'block';
+            } else {
+              card.style.display = 'none';
+            }
+          }
+        });
+        updateStats(); // Обновляем счётчики
+      });
+    });
+
+    // Поиск заказов по теме
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.trim().toLowerCase();
+      orderCards.forEach(card => {
+        if (card.style.display === 'none') return;
+        const title = card.getAttribute('data-title').toLowerCase();
+        if (title.indexOf(query) !== -1) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+      updateStats();
+    });
+
+    // Функция обновления статистики заказов и бейджа у вкладки "Новые"
+    function updateStats() {
+      let countAll = 0, countNew = 0, countInProgress = 0, countCompleted = 0, countCancelled = 0;
+      orderCards.forEach(card => {
+        if (card.style.display === 'none') return;
+        countAll++;
+        const status = card.getAttribute('data-status').toLowerCase();
+        if (status === 'новый') countNew++;
+        else if (status === 'в работе') countInProgress++;
+        else if (status === 'завершён') countCompleted++;
+        else if (status === 'отменён') countCancelled++;
+      });
+      document.getElementById('count-all').textContent = countAll;
+      document.getElementById('count-new').textContent = countNew;
+      document.getElementById('count-inprogress').textContent = countInProgress;
+      document.getElementById('count-completed').textContent = countCompleted;
+      document.getElementById('count-cancelled').textContent = countCancelled;
+      
+      const newBtn = document.querySelector('.filter-btn[data-filter="новый"]');
+      if (countNew > 0) {
+        newBtn.innerHTML = `Новые <span class="badge">${countNew}</span>`;
+      } else {
+        newBtn.textContent = 'Новые';
+      }
+    }
+    
+    window.addEventListener('load', updateStats);
+  </script>
 </body>
 </html>

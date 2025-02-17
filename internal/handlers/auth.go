@@ -15,9 +15,9 @@ import (
 func Register(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input struct {
+			Name     string `json:"name" binding:"required"` // Добавлено поле Name
 			Email    string `json:"email" binding:"required,email"`
 			Password string `json:"password" binding:"required,min=6"`
-			// Можно добавить и другие поля, например имя, телефон и т.д.
 		}
 
 		if err := c.ShouldBindJSON(&input); err != nil {
@@ -27,7 +27,10 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		log.Printf("Register: Получены данные для регистрации: %s", input.Email)
-		user := models.User{Email: input.Email}
+		user := models.User{
+			Name:  input.Name, // Сохраняем имя пользователя
+			Email: input.Email,
+		}
 		if err := user.SetPassword(input.Password); err != nil {
 			log.Printf("Register: Ошибка установки пароля: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка установки пароля"})
@@ -49,8 +52,6 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		log.Printf("Register: Пользователь успешно зарегистрирован: %s", user.Email)
-		// Можно сделать редирект на /dashboard
-		// c.Redirect(http.StatusFound, "/dashboard")
 		c.JSON(http.StatusCreated, gin.H{"message": "Регистрация прошла успешно"})
 	}
 }
@@ -59,30 +60,28 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 func Login(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input struct {
-			Email    string `json:"email" binding:"required,email"`
-			Password string `json:"password" binding:"required"`
+			Email    string `form:"email" binding:"required,email"`
+			Password string `form:"password" binding:"required"`
 		}
-
-		if err := c.ShouldBindJSON(&input); err != nil {
-			log.Printf("Login: Ошибка привязки JSON: %v", err)
+		if err := c.ShouldBind(&input); err != nil {
+			log.Printf("Login: Ошибка привязки: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		log.Printf("Login: Получены данные для входа: %s", input.Email)
 		var user models.User
 		if err := db.Where("email = ?", input.Email).First(&user).Error; err != nil {
 			log.Printf("Login: Пользователь не найден: %v", err)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверный email или пароль"})
 			return
 		}
+
 		if !user.CheckPassword(input.Password) {
-			log.Printf("Login: Неверный пароль для email: %s", input.Email)
+			log.Printf("Login: Неверный пароль для %s", input.Email)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверный email или пароль"})
 			return
 		}
 
-		// Сохраняем сессию
 		session := sessions.Default(c)
 		session.Set("user_id", user.ID)
 		if err := session.Save(); err != nil {
@@ -92,8 +91,11 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		log.Printf("Login: Пользователь успешно вошел: %s", user.Email)
-		// Можно сделать редирект на /dashboard
-		// c.Redirect(http.StatusFound, "/dashboard")
-		c.JSON(http.StatusOK, gin.H{"message": "Вход выполнен успешно"})
+		// Перенаправляем в зависимости от роли
+		if user.IsAdmin {
+			c.Redirect(http.StatusFound, "/admin_dashboard")
+		} else {
+			c.Redirect(http.StatusFound, "/dashboard")
+		}
 	}
 }

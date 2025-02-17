@@ -23,7 +23,7 @@ func AuthRequired() gin.HandlerFunc {
 	}
 }
 
-// Login – обработчик входа, использующий form‑binding и перенаправляющий на /dashboard.
+// Login – обработчик входа, использующий form‑binding и возвращающий JSON с URL для перенаправления.
 func Login(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input struct {
@@ -58,18 +58,22 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		log.Printf("Login: Пользователь успешно вошел: %s", user.Email)
-		c.Redirect(http.StatusFound, "/dashboard")
+		// Отдаем JSON с URL для перенаправления в зависимости от роли
+		if user.IsAdmin {
+			c.JSON(http.StatusOK, gin.H{"redirect": "/admin_dashboard"})
+		} else {
+			c.JSON(http.StatusOK, gin.H{"redirect": "/dashboard"})
+		}
 	}
 }
 
 // Register – обработчик регистрации с form‑binding и редиректом на /dashboard.
 func Register(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Если нужно добавить поля (например, имя, телефон, Telegram),
-		// необходимо расширить структуру input и обновить модель User.
 		var input struct {
-			Email    string `form:"email" binding:"required,email"`
-			Password string `form:"password" binding:"required,min=6"`
+			Name     string `form:"name" json:"name" binding:"required"`
+			Email    string `form:"email" json:"email" binding:"required,email"`
+			Password string `form:"password" json:"password" binding:"required,min=6"`
 		}
 		if err := c.ShouldBind(&input); err != nil {
 			log.Printf("Register: Ошибка привязки: %v", err)
@@ -77,13 +81,16 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		user := models.User{Email: input.Email}
+		log.Printf("Register: Получены данные для регистрации: %s", input.Email)
+		user := models.User{
+			Name:  input.Name,
+			Email: input.Email,
+		}
 		if err := user.SetPassword(input.Password); err != nil {
 			log.Printf("Register: Ошибка установки пароля: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка установки пароля"})
 			return
 		}
-
 		if err := db.Create(&user).Error; err != nil {
 			log.Printf("Register: Ошибка создания пользователя: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Пользователь с таким email уже существует"})
@@ -99,6 +106,7 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		log.Printf("Register: Пользователь успешно зарегистрирован: %s", user.Email)
+		// После регистрации редирект для обычных пользователей
 		c.Redirect(http.StatusFound, "/dashboard")
 	}
 }
