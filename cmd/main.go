@@ -33,16 +33,18 @@ func initDB() *gorm.DB {
 
 func main() {
 	db := initDB()
+	// Инициализация MinIO для загрузки файлов
+	handlers.InitMinio()
+
 	r := gin.Default()
 
 	// Инициализация сессий
 	store := cookie.NewStore([]byte("super-secret-key"))
 	r.Use(sessions.Sessions("mysession", store))
 
-	// Отдаем статические файлы
+	// Отдаем статические файлы и шаблоны
 	r.Static("/static", "../static")
 	r.Static("/images", "../static/images")
-	// Загружаем HTML-шаблоны из папки static
 	r.LoadHTMLGlob("../static/*.html")
 
 	// Главная и информационные страницы
@@ -72,6 +74,10 @@ func main() {
 	r.POST("/api/order/complete", middleware.AdminRequired(db), handlers.CompleteOrder(db))
 	r.POST("/api/order/cancel", middleware.AdminRequired(db), handlers.CancelOrder(db))
 	r.POST("/api/order/delete", middleware.AdminRequired(db), handlers.DeleteOrder(db))
+
+	// Эндпоинт для загрузки файлов через MinIO
+	r.POST("/api/order/upload", middleware.AuthRequired(), handlers.UploadFiles())
+	r.GET("/api/order/files", middleware.AuthRequired(), handlers.ListFiles())
 
 	// Маршрут для админ-панели (все заказы)
 	r.GET("/admin_dashboard", middleware.AdminRequired(db), handlers.AdminDashboard(db))
@@ -148,7 +154,7 @@ func main() {
 
 	// Маршрут для WebSocket-чата для администратора
 	r.GET("/ws/chat", middleware.AdminRequired(db), handlers.ChatHandler(db))
-	// Новый маршрут для WebSocket-чата для пользователей
+	// Маршрут для WebSocket-чата для пользователей
 	r.GET("/ws/chat_user", middleware.AuthRequired(), handlers.ChatHandler(db))
 
 	// Запускаем чат-хаб

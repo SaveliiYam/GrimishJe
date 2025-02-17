@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{.Order.Topic}}</title>
+  <!-- Подключаем Font Awesome для иконок -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-KyZXEAg3QhqLMpG8r+Knujsl5+5hb7ieQOZtB+UQ7VX5e7yDpPzlX5z/p3KRJ6l5xQj1G0l3FTbF4gq0sIL9w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
     /* Общие стили */
@@ -190,9 +192,9 @@
       <div class="order-files">
         <h3>Файлы заказа</h3>
         <div id="filesContainer">
-          <!-- Здесь будут отображаться файлы заказа -->
+          <!-- Здесь будут отображаться файлы с именем и иконкой -->
         </div>
-        <form id="uploadForm" action="/api/order/upload" method="POST" enctype="multipart/form-data">
+        <form id="uploadForm" enctype="multipart/form-data">
           <input type="hidden" name="orderID" value="{{.Order.ID}}">
           <input type="file" name="files" multiple required>
           <button type="submit">Загрузить файлы</button>
@@ -247,7 +249,6 @@
         var msg = JSON.parse(event.data);
         var chatWindow = document.getElementById("chatWindow");
         var msgDiv = document.createElement("div");
-        // Если сообщение отправлено пользователем, добавляем класс sent, иначе received
         msgDiv.className = "chat-message " + (msg.sender === "user" ? "sent" : "received");
         msgDiv.textContent = msg.sender + ": " + msg.message;
         chatWindow.appendChild(msgDiv);
@@ -275,6 +276,89 @@
         input.value = "";
       } else {
         showToast("Чат не подключён");
+      }
+    });
+
+    // Функция для обновления списка файлов
+    function updateFilesList(files) {
+      var filesContainer = document.getElementById("filesContainer");
+      filesContainer.innerHTML = "";
+      files.forEach(function(fileURL) {
+        // Извлекаем имя файла из URL
+        var parts = fileURL.split('/');
+        var fileName = parts[parts.length - 1];
+        // Разбиваем по символу "_" и оставляем все части, начиная с третьей
+        var nameParts = fileName.split('_');
+        if(nameParts.length >= 3) {
+          fileName = nameParts.slice(2).join('_');
+        }
+        var ext = fileName.substring(fileName.lastIndexOf('.'));
+        var iconHTML = getIconForExtension(ext);
+        var link = document.createElement("a");
+        link.href = fileURL;
+        link.target = "_blank";
+        link.innerHTML = iconHTML + " " + fileName;
+        link.style.display = "block";
+        filesContainer.appendChild(link);
+      });
+    }
+
+    // Функция возвращает HTML с иконкой для файла по его расширению
+    function getIconForExtension(ext) {
+      ext = ext.toLowerCase();
+      if (ext === ".pdf") {
+        return '<i class="fas fa-file-pdf" style="color:red;"></i>';
+      } else if (ext === ".doc" || ext === ".docx") {
+        return '<i class="fas fa-file-word" style="color:blue;"></i>';
+      } else if (ext === ".xls" || ext === ".xlsx") {
+        return '<i class="fas fa-file-excel" style="color:green;"></i>';
+      } else if (ext === ".png" || ext === ".jpg" || ext === ".jpeg" || ext === ".gif") {
+        return '<i class="fas fa-file-image" style="color:purple;"></i>';
+      } else {
+        return '<i class="fas fa-file" style="color:gray;"></i>';
+      }
+    }
+
+    // Функция для загрузки списка файлов
+    async function loadFiles() {
+      var orderID = "{{.Order.ID}}";
+      try {
+        const response = await fetch("/api/order/files?orderID=" + orderID);
+        const data = await response.json();
+        if (response.ok) {
+          updateFilesList(data.files);
+        } else {
+          showToast(data.error || "Ошибка получения файлов");
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Ошибка соединения с сервером");
+      }
+    }
+
+    window.addEventListener('load', loadFiles);
+
+    // Обработка загрузки файлов через AJAX
+    document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      var form = this;
+      var formData = new FormData(form);
+      try {
+        const response = await fetch("/api/order/upload", {
+          method: "POST",
+          body: formData
+        });
+        const data = await response.json();
+        if (response.ok) {
+          showToast(data.message);
+          updateFilesList(data.files);
+          form.reset();
+        } else {
+          showToast(data.error || "Ошибка загрузки файлов");
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Ошибка соединения с сервером");
       }
     });
   </script>
