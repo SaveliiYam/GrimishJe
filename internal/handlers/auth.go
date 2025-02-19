@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/MoshKillaPit/GrimishJe/internal/models"
-
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -15,21 +14,26 @@ import (
 func Register(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input struct {
-			Name     string `json:"name" binding:"required"` // Добавлено поле Name
-			Email    string `json:"email" binding:"required,email"`
-			Password string `json:"password" binding:"required,min=6"`
+			Name     string `form:"name" binding:"required"`
+			Email    string `form:"email" binding:"required,email"`
+			Password string `form:"password" binding:"required,min=6"`
+			Phone    string `form:"phone" binding:"required"`
+			Telegram string `form:"telegram" binding:"required"`
 		}
 
-		if err := c.ShouldBindJSON(&input); err != nil {
-			log.Printf("Register: Ошибка привязки JSON: %v", err)
+		// Используем ShouldBind, чтобы корректно распознать данные формы
+		if err := c.ShouldBind(&input); err != nil {
+			log.Printf("Register: Ошибка привязки данных: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		log.Printf("Register: Получены данные для регистрации: %s", input.Email)
 		user := models.User{
-			Name:  input.Name, // Сохраняем имя пользователя
-			Email: input.Email,
+			Name:     input.Name,
+			Email:    input.Email,
+			Phone:    input.Phone,
+			Telegram: input.Telegram,
 		}
 		if err := user.SetPassword(input.Password); err != nil {
 			log.Printf("Register: Ошибка установки пароля: %v", err)

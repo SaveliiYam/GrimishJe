@@ -6,6 +6,10 @@
   <title>Админ панель | {{.User.Name}}</title>
   <link rel="stylesheet" href="/static/styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Подключаем Font Awesome для иконок -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" 
+        integrity="sha512-xh6+2sZO8K+QGZC3zzX2Skd5y3H5H1GwY5gY6ip7Ee4ePFyW4+9lJH1N3rKT4zBZNp3XGzA4EPYY1p/9u6H+IQ==" 
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     /* Общие стили */
     body {
@@ -20,6 +24,7 @@
       max-width: 1200px;
       margin: 0 auto;
       padding: 20px;
+      position: relative;
     }
     header {
       background: linear-gradient(135deg, #00bfff, #007acc);
@@ -117,18 +122,6 @@
       border-radius: 4px;
       background-color: #fff;
     }
-    .refresh-btn {
-      padding: 8px 16px;
-      background-color: #00bfff;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    .refresh-btn:hover {
-      background-color: #007acc;
-    }
     /* Сетка заказов */
     .orders-grid {
       display: grid;
@@ -160,19 +153,45 @@
       font-size: 1em;
       color: #555;
     }
-    .order-card a {
-      display: inline-block;
+    /* Левая полоска статусов */
+    .order-card.new {
+      border-left: 5px solid #4CAF50;
+    }
+    .order-card.in-progress {
+      border-left: 5px solid #2196F3;
+    }
+    .order-card.completed {
+      border-left: 5px solid #9E9E9E;
+    }
+    .order-card.cancelled {
+      border-left: 5px solid #F44336;
+    }
+    /* Кнопки в карточке заказа */
+    .admin-actions {
       margin-top: 10px;
-      padding: 8px 16px;
-      background: #00bfff;
-      color: #fff;
-      text-decoration: none;
+      text-align: center;
+    }
+    .admin-actions button {
+      margin: 0 5px;
+      padding: 8px 12px;
+      font-size: 0.9em;
+      border: none;
       border-radius: 4px;
+      cursor: pointer;
       transition: background-color 0.3s ease;
     }
-    .order-card a:hover {
-      background: #007acc;
+    .btn-view {
+      background-color: #6c757d;
+      color: #fff;
     }
+    .btn-delete {
+      background-color: #9E9E9E;
+      color: #fff;
+    }
+    .admin-actions button:hover {
+      opacity: 0.85;
+    }
+    /* Пульсирующий индикатор изменений (красный кружочек) */
     .new-indicator {
       position: absolute;
       top: 10px;
@@ -187,41 +206,8 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0; }
     }
-    .order-card.new {
-      border-left: 5px solid #4CAF50;
-    }
-    .order-card.in-progress {
-      border-left: 5px solid #2196F3;
-    }
-    .order-card.completed {
-      border-left: 5px solid #9E9E9E;
-    }
-    .order-card.cancelled {
-      border-left: 5px solid #F44336;
-    }
-    .admin-actions {
-      margin-top: 10px;
-    }
-    .admin-actions button {
-      margin-right: 5px;
-      padding: 6px 10px;
-      font-size: 0.9em;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    .btn-accept { background-color: #4CAF50; color: #fff; }
-    .btn-complete { background-color: #2196F3; color: #fff; }
-    .btn-cancel   { background-color: #F44336; color: #fff; }
-    .btn-delete   { background-color: #9E9E9E; color: #fff; }
-    .btn-edit     { background-color: #FFA500; color: #fff; }
-    .btn-view     { background-color: #6c757d; color: #fff; }
-    .admin-actions button:hover {
-      opacity: 0.8;
-    }
-    /* Полноэкранное модальное окно для просмотра заказа, файлов и чата */
-    .modal {
+    /* Модальное окно для просмотра заказа, файлов, чата и отзыва */
+    .modal.full-view {
       display: none;
       position: fixed;
       z-index: 2000;
@@ -245,6 +231,7 @@
       flex-direction: column;
       padding: 20px;
       animation: fadeIn 0.3s ease;
+      position: relative;
     }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-10px); }
@@ -292,6 +279,116 @@
     }
     .order-files #filesContainer {
       margin-bottom: 10px;
+    }
+    /* Блок отзыва */
+    #reviewSection {
+      margin-top: 20px;
+      border-top: 1px solid #ddd;
+      padding-top: 10px;
+      display: none;
+    }
+    #reviewSection h3 {
+      font-size: 1.3em;
+      color: #00bfff;
+      margin-bottom: 10px;
+    }
+    #reviewContent p {
+      margin: 5px 0;
+      font-size: 1em;
+    }
+    #reviewFormContainer {
+      margin-top: 10px;
+      display: none;
+    }
+    #reviewFormContainer label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    #reviewFormContainer select, 
+    #reviewFormContainer textarea {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1em;
+    }
+    #reviewFormContainer button {
+      padding: 8px 12px;
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #reviewFormContainer button:hover {
+      background-color: #218838;
+    }
+    /* Блок редактирования заказа (Admin Edit) */
+    #adminEditSection {
+      margin-top: 10px;
+      border-top: 1px solid #ddd;
+      padding-top: 10px;
+      display: none;
+    }
+    #adminEditSection label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    #adminEditSection input,
+    #adminEditSection textarea {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1em;
+    }
+    #adminEditSection button {
+      padding: 8px 12px;
+      background-color: #ffc107;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #adminEditSection button:hover {
+      background-color: #e0a800;
+    }
+    /* Блок действий в модальном окне */
+    .modal-actions {
+      margin-top: 15px;
+      text-align: center;
+    }
+    .modal-actions button {
+      margin: 0 5px;
+      padding: 8px 12px;
+      font-size: 1em;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .btn-accept {
+      background-color: #4CAF50;
+      color: #fff;
+    }
+    .btn-upload {
+      background-color: #28a745;
+      color: #fff;
+    }
+    .btn-complete {
+      background-color: #007bff;
+      color: #fff;
+    }
+    .btn-delete {
+      background-color: #9E9E9E;
+      color: #fff;
+    }
+    .modal-actions button:hover {
+      opacity: 0.85;
     }
     .chat-section-modal {
       flex: 1;
@@ -352,19 +449,39 @@
       font-size: 1em;
       z-index: 3000;
     }
+    /* Плавающая кнопка "Обновить заказы" */
+    .fab-refresh {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background-color: #00bfff;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      font-size: 18px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      cursor: pointer;
+      z-index: 1000;
+      transition: background-color 0.3s;
+    }
+    .fab-refresh:hover {
+      background-color: #007acc;
+    }
+    .fab-refresh i {
+      margin-right: 8px;
+      font-size: 20px;
+    }
   </style>
 </head>
 <body>
-  <nav class="back-button">
-    <a href="/dashboard">← Вернуться ко всем заказам</a>
-  </nav>
-  
   <main class="container">
     <header>
-      <h1>Админ панель | Все заказы</h1>
+      <h1>Админ панель | {{.User.Name}}</h1>
     </header>
     
-    <!-- Контроль: сводка, поиск, сортировка, фильтр, обновление -->
+    <!-- Блок управления заказами -->
     <div class="order-controls">
       <div class="order-stats">
         <h2>Статистика заказов</h2>
@@ -385,9 +502,6 @@
           <option value="asc">Старые сверху</option>
         </select>
       </div>
-      <div>
-        <button class="refresh-btn" onclick="refreshOrders()">Обновить заказы</button>
-      </div>
     </div>
     
     <!-- Фильтр заказов -->
@@ -402,28 +516,26 @@
     <!-- Сетка заказов -->
     <div class="orders-grid" id="ordersGrid">
       {{range .Orders}}
-        <div class="order-card {{if eq .Status "новый"}}new{{else if eq .Status "в работе"}}in-progress{{else if eq .Status "завершён"}}completed{{else if eq .Status "отменён"}}cancelled{{end}}" 
-             data-status="{{.Status}}" 
-             data-title="{{.Topic}}" 
+        <div class="order-card {{if eq .Status "новый"}}new{{else if eq .Status "в работе"}}in-progress{{else if eq .Status "завершён"}}completed{{else if eq .Status "отменён"}}cancelled{{end}}"
+             data-order-id="{{.ID}}"
+             data-status="{{.Status}}"
+             data-title="{{.Topic}}"
              data-order-number="{{.OrderNumber}}"
+             data-customer="{{if .User.Name}}{{.User.Name}}{{else}}Не указано{{end}}"
+             data-phone="{{if .User.Phone}}{{.User.Phone}}{{else}}Не указан{{end}}"
+             data-telegram="{{if .User.Telegram}}{{.User.Telegram}}{{else}}Не указан{{end}}"
              data-created="{{.CreatedAt}}">
           <h3>{{.Topic}}</h3>
           <p><strong>Номер заказа:</strong> {{.OrderNumber}}</p>
+          <p><strong>Заказчик:</strong> {{if .User.Name}}{{.User.Name}}{{else}}Не указано{{end}}</p>
+          <p><strong>Телефон:</strong> {{if .User.Phone}}{{.User.Phone}}{{else}}Не указан{{end}}</p>
+          <p><strong>Telegram:</strong> {{if .User.Telegram}}{{.User.Telegram}}{{else}}Не указан{{end}}</p>
           {{if eq .Status "новый"}}<span class="new-indicator"></span>{{end}}
           <p><strong>Статус:</strong> {{.Status}}</p>
           <p><strong>Срок:</strong> {{.Deadline}}</p>
           <p><strong>Бюджет:</strong> {{.Budget}} ₽</p>
           <div class="admin-actions">
-            <!-- Кнопка просмотра с открытием полноэкранного окна -->
-            <button class="btn-view" onclick="viewOrder({{.ID}})">Просмотр</button>
-            {{if eq .Status "новый"}}
-              <button class="btn-accept" onclick="acceptOrder({{.ID}})">Принять</button>
-            {{end}}
-            {{if eq .Status "в работе"}}
-              <button class="btn-complete" onclick="completeOrder({{.ID}})">Завершить</button>
-              <button class="btn-cancel" onclick="cancelOrder({{.ID}})">Отменить</button>
-            {{end}}
-            <button class="btn-edit" onclick="editOrder({{.ID}})">Редактировать</button>
+            <button class="btn-view" onclick="viewOrder({{.ID}})">Просмотреть</button>
             <button class="btn-delete" onclick="deleteOrder({{.ID}})">Удалить</button>
           </div>
         </div>
@@ -431,24 +543,8 @@
     </div>
   </main>
   
-  <!-- Модальное окно редактирования заказа (админ) -->
-  <div class="modal" id="adminEditModal">
-    <div class="modal-content">
-      <span class="close-button" id="closeAdminEditModal">&times;</span>
-      <h2>Редактировать заказ</h2>
-      <form id="adminEditForm" action="/api/order/admin-edit" method="POST">
-        <input type="hidden" id="adminEditOrderID" name="orderID">
-        <label for="adminEditDeadline">Срок выполнения:</label>
-        <input type="date" id="adminEditDeadline" name="deadline" required>
-        <label for="adminEditNotes">Заметки:</label>
-        <textarea id="adminEditNotes" name="notes" rows="3"></textarea>
-        <button type="submit">Сохранить изменения</button>
-      </form>
-    </div>
-  </div>
-  
-  <!-- Полноэкранное модальное окно для просмотра заказа, файлов и чата -->
-  <div class="modal" id="orderDetailModal">
+  <!-- Модальное окно для просмотра заказа, файлов, чата и отзыва -->
+  <div class="modal full-view" id="orderDetailModal">
     <div class="modal-content full-view">
       <span class="close-button" id="closeOrderDetailModal">&times;</span>
       <h2>Детали заказа</h2>
@@ -456,27 +552,90 @@
         <div class="order-info">
           <p><strong>Номер заказа:</strong> <span id="orderNumber"></span></p>
           <p><strong>Тема:</strong> <span id="orderTopic"></span></p>
+          <p><strong>Заказчик:</strong> <span id="orderCustomer"></span></p>
+          <p><strong>Телефон:</strong> <span id="orderPhone"></span></p>
+          <p><strong>Telegram:</strong> <span id="orderTelegram"></span></p>
           <p><strong>Статус:</strong> <span id="orderStatus"></span></p>
           <p><strong>Срок:</strong> <span id="orderDeadline"></span></p>
           <p><strong>Бюджет:</strong> <span id="orderBudget"></span> ₽</p>
           <p><strong>Заметки:</strong> <span id="orderNotes"></span></p>
+          
+          <!-- Кнопка для редактирования заказа -->
+          <button id="adminEditBtn" onclick="toggleAdminEdit()">Редактировать заказ</button>
+          
+          <!-- Форма редактирования заказа -->
+          <div id="adminEditSection">
+            <form id="adminEditForm" action="/api/order/admin-edit" method="POST">
+              <input type="hidden" name="orderID" id="adminEditOrderID">
+              
+              <label for="adminEditTopic">Тема заказа:</label>
+              <input type="text" id="adminEditTopic" name="topic" required>
+              
+              <label for="adminEditDescription">Описание заказа:</label>
+              <textarea id="adminEditDescription" name="description" rows="3" required></textarea>
+              
+              <label for="adminEditDeadline">Срок выполнения:</label>
+              <input type="date" id="adminEditDeadline" name="deadline" required>
+              
+              <label for="adminEditPlagiarismRequired">Проверка на плагиат:</label>
+              <input type="checkbox" id="adminEditPlagiarismRequired" name="plagiarismRequired">
+              
+              <label for="adminEditPlagiarismPercent">Процент плагиата:</label>
+              <input type="number" id="adminEditPlagiarismPercent" name="plagiarismPercent" min="0" max="100">
+              
+              <label for="adminEditBudget">Бюджет (₽):</label>
+              <input type="number" id="adminEditBudget" name="budget" step="0.01" required>
+              
+              <label for="adminEditWorkType">Тип работы:</label>
+              <input type="text" id="adminEditWorkType" name="workType" required>
+              
+              <label for="adminEditNotes">Заметки:</label>
+              <textarea id="adminEditNotes" name="notes" rows="3"></textarea>
+              
+              <button type="submit">Сохранить изменения</button>
+              <button type="button" onclick="toggleAdminEdit()">Отмена</button>
+            </form>
+          </div>
+          
+          <!-- Блок отзыва -->
+          <div id="reviewSection">
+            <h3>Отзыв</h3>
+            <div id="reviewContent"></div>
+            <div id="reviewFormContainer">
+              <h4>Оставить отзыв</h4>
+              <form id="reviewForm" action="/api/order/review" method="POST">
+                <input type="hidden" name="orderID" id="reviewOrderID">
+                <label for="reviewRating">Оценка:</label>
+                <select id="reviewRating" name="rating">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                </select>
+                <label for="reviewComment">Комментарий:</label>
+                <textarea id="reviewComment" name="comment" rows="3"></textarea>
+                <button type="submit">Сохранить отзыв</button>
+              </form>
+            </div>
+          </div>
+          
           <div class="order-files">
             <h3>Файлы заказа</h3>
-            <div id="filesContainer">
-              <!-- Здесь будут отображаться файлы заказа -->
-            </div>
+            <div id="filesContainer"></div>
             <form id="uploadFormModal" action="/api/order/upload" method="POST" enctype="multipart/form-data">
               <input type="hidden" name="orderID" id="modalOrderID">
               <input type="file" name="files" multiple required>
               <button type="submit">Загрузить файлы</button>
             </form>
           </div>
+          
+          <!-- Блок действий в модальном окне -->
+          <div class="modal-actions" id="modalActions"></div>
         </div>
         <div class="chat-section-modal">
           <h3>Чат</h3>
-          <div class="chat-window" id="chatContainer">
-            <!-- Сообщения чата -->
-          </div>
+          <div class="chat-window" id="chatContainer"></div>
           <div class="chat-input">
             <input type="text" id="chatInput" placeholder="Напишите сообщение...">
             <button onclick="sendChatMessage()">Отправить</button>
@@ -486,29 +645,48 @@
     </div>
   </div>
   
+  <!-- Плавающая кнопка "Обновить заказы" -->
+  <div class="fab-refresh" onclick="refreshOrders()">
+    <i class="fa-solid fa-arrow-rotate-right"></i>
+    <span>Обновить заказы</span>
+  </div>
+  
   <!-- Toast уведомление -->
   <div id="toast" class="toast"></div>
   
   <script>
-    // Глобальная переменная для WebSocket-чата
     var currentChatWS = null;
-    
-    // Функция показа toast уведомления
+    var currentOrderStatus = "новый"; // Глобальная переменная для хранения статуса заказа
+
+    // Функция для вывода toast уведомления
     function showToast(message) {
       const toast = document.getElementById('toast');
       toast.textContent = message;
-      toast.classList.add('show');
+      toast.style.display = 'block';
       setTimeout(() => {
-        toast.classList.remove('show');
+        toast.style.display = 'none';
       }, 3000);
     }
     
-    // Функция обновления списка заказов
     function refreshOrders() {
       location.reload();
     }
     
-    // Функции для админ-действий
+    // Обновление блока действий в модальном окне
+    function updateModalActions(orderID, status) {
+      var modalActions = document.getElementById("modalActions");
+      modalActions.innerHTML = "";
+      if (status === "новый") {
+        modalActions.innerHTML += '<button class="btn-accept" onclick="acceptOrder('+orderID+')">Принять заказ</button>';
+      } else if (status === "в работе") {
+        modalActions.innerHTML += '<button class="btn-complete" onclick="completeOrder('+orderID+')">Завершить заказ</button>';
+        modalActions.innerHTML += '<button class="btn-upload" onclick="uploadFinalFile('+orderID+')">Загрузить итоговый заказ</button>';
+        modalActions.innerHTML += '<button class="btn-delete" onclick="deleteOrder('+orderID+')">Удалить заказ</button>';
+      } else if (status === "завершён" || status === "отменён") {
+        modalActions.innerHTML += '<button class="btn-delete" onclick="deleteOrder('+orderID+')">Удалить заказ</button>';
+      }
+    }
+    
     async function acceptOrder(orderID) {
       if (!confirm("Принять заказ?")) return;
       const formData = new FormData();
@@ -518,7 +696,9 @@
         const data = await response.json();
         if (response.ok) {
           showToast(data.message);
-          refreshOrders();
+          currentOrderStatus = "в работе";
+          document.getElementById("orderStatus").textContent = currentOrderStatus;
+          updateModalActions(orderID, currentOrderStatus);
         } else {
           showToast(data.error || "Ошибка");
         }
@@ -536,7 +716,10 @@
         const data = await response.json();
         if (response.ok) {
           showToast(data.message);
-          refreshOrders();
+          currentOrderStatus = "завершён";
+          document.getElementById("orderStatus").textContent = currentOrderStatus;
+          updateModalActions(orderID, currentOrderStatus);
+          loadReview(orderID);
         } else {
           showToast(data.error || "Ошибка");
         }
@@ -554,7 +737,9 @@
         const data = await response.json();
         if (response.ok) {
           showToast(data.message);
-          refreshOrders();
+          currentOrderStatus = "отменён";
+          document.getElementById("orderStatus").textContent = currentOrderStatus;
+          updateModalActions(orderID, currentOrderStatus);
         } else {
           showToast(data.error || "Ошибка");
         }
@@ -581,20 +766,37 @@
       }
     }
     
-    function editOrder(orderID) {
-      document.getElementById("adminEditOrderID").value = orderID;
-      document.getElementById("adminEditModal").style.display = "flex";
+    // Функция для пометки заказа как изменённого (добавляет пульсирующий кружочек)
+    function markOrderChanged(orderID) {
+      var card = document.querySelector('.order-card[data-order-id="'+orderID+'"]');
+      if(card && !card.querySelector('.new-indicator')) {
+        var indicator = document.createElement('span');
+        indicator.className = 'new-indicator';
+        card.appendChild(indicator);
+      }
     }
     
-    document.getElementById("closeAdminEditModal").addEventListener("click", () => {
-      document.getElementById("adminEditModal").style.display = "none";
-    });
-    window.addEventListener("click", (e) => {
-      if (e.target === document.getElementById("adminEditModal")) {
-        document.getElementById("adminEditModal").style.display = "none";
+    // Функция для переключения формы редактирования заказа
+    function toggleAdminEdit() {
+      var section = document.getElementById("adminEditSection");
+      if(section.style.display === "none" || section.style.display === "") {
+        // При открытии формы заполняем поля текущими значениями
+        var modalOrderID = document.getElementById("modalOrderID").value;
+        document.getElementById("adminEditOrderID").value = modalOrderID;
+        document.getElementById("adminEditTopic").value = document.getElementById("orderTopic").textContent;
+        // Если существует скрытый элемент с описанием – используем его, иначе оставляем пустым
+        document.getElementById("adminEditDescription").value = document.getElementById("orderDescription") ? document.getElementById("orderDescription").textContent : "";
+        document.getElementById("adminEditDeadline").value = document.getElementById("orderDeadline").textContent;
+        document.getElementById("adminEditBudget").value = document.getElementById("orderBudget").textContent;
+        document.getElementById("adminEditWorkType").value = document.getElementById("orderWorkType") ? document.getElementById("orderWorkType").textContent : "";
+        document.getElementById("adminEditNotes").value = document.getElementById("orderNotes").textContent;
+        section.style.display = "block";
+      } else {
+        section.style.display = "none";
       }
-    });
+    }
     
+    // Обработка формы редактирования заказа
     document.getElementById("adminEditForm").addEventListener("submit", async function(e) {
       e.preventDefault();
       const formData = new FormData(this);
@@ -603,25 +805,248 @@
         const data = await response.json();
         if (response.ok) {
           showToast(data.message);
-          document.getElementById("adminEditModal").style.display = "none";
-          refreshOrders();
+          // Обновляем отображаемые данные
+          document.getElementById("orderTopic").textContent = document.getElementById("adminEditTopic").value;
+          document.getElementById("orderDeadline").textContent = document.getElementById("adminEditDeadline").value;
+          document.getElementById("orderBudget").textContent = document.getElementById("adminEditBudget").value;
+          document.getElementById("orderNotes").textContent = document.getElementById("adminEditNotes").value;
+          toggleAdminEdit();
         } else {
-          showToast(data.error || "Ошибка редактирования");
+          showToast(data.error || "Ошибка редактирования заказа");
         }
       } catch (err) {
         showToast("Ошибка соединения");
       }
     });
     
-    // Фильтрация, поиск и сортировка заказов (без изменений)
+    // При просмотре заказа
+    function viewOrder(orderID) {
+      var card = document.querySelector('.order-card[data-order-id="'+orderID+'"]');
+      if (!card) return;
+      
+      // Читаем данные из карточки
+      var orderNumber = card.getAttribute("data-order-number");
+      var orderTopic = card.getAttribute("data-title");
+      var orderCustomer = card.getAttribute("data-customer");
+      var orderPhone = card.getAttribute("data-phone");
+      var orderTelegram = card.getAttribute("data-telegram");
+      
+      document.getElementById('orderNumber').textContent = orderNumber;
+      document.getElementById('orderTopic').textContent = orderTopic;
+      document.getElementById('orderCustomer').textContent = orderCustomer;
+      document.getElementById('orderPhone').textContent = orderPhone;
+      document.getElementById('orderTelegram').textContent = orderTelegram;
+      
+      // Остальные поля (статус, срок, бюджет) можно либо загрузить с сервера, либо задать дефолтные значения
+      document.getElementById('orderStatus').textContent = currentOrderStatus;
+      document.getElementById('orderDeadline').textContent = "2025-03-01";
+      document.getElementById('orderBudget').textContent = "5000";
+      // Заметки изначально пустые
+      document.getElementById('orderNotes').textContent = "";
+      
+      // Сохраняем orderID в скрытом поле для дальнейших действий
+      document.getElementById('modalOrderID').value = orderID;
+      
+      loadFilesModal();
+      loadChatHistory(orderID);
+      
+      document.getElementById('orderDetailModal').style.display = "flex";
+      
+      var wsUrl = "ws://" + window.location.host + "/ws/chat?orderID=" + orderID;
+      currentChatWS = new WebSocket(wsUrl);
+      currentChatWS.onopen = function() {
+        console.log("Чат подключён");
+      };
+      currentChatWS.onmessage = function(event) {
+        var msg = JSON.parse(event.data);
+        appendChatMessage(msg);
+      };
+      currentChatWS.onerror = function(err) {
+        console.error("WebSocket ошибка:", err);
+        showToast("Ошибка подключения к чату");
+      };
+      
+      var indicator = card.querySelector('.new-indicator');
+      if(indicator) {
+        indicator.remove();
+      }
+      
+      updateModalActions(orderID, currentOrderStatus);
+      
+      if(currentOrderStatus === "завершён") {
+        loadReview(orderID);
+      } else {
+        document.getElementById("reviewSection").style.display = "none";
+      }
+    }
+    
+    document.getElementById("closeOrderDetailModal").addEventListener("click", () => {
+      document.getElementById("orderDetailModal").style.display = "none";
+      if (currentChatWS) {
+        currentChatWS.close();
+        currentChatWS = null;
+      }
+    });
+    window.addEventListener("click", (e) => {
+      if (e.target === document.getElementById("orderDetailModal")) {
+        document.getElementById("orderDetailModal").style.display = "none";
+        if (currentChatWS) {
+          currentChatWS.close();
+          currentChatWS = null;
+        }
+      }
+    });
+    
+    function sendChatMessage() {
+      var input = document.getElementById("chatInput");
+      var message = input.value.trim();
+      if (message === "") return;
+      if (currentChatWS && currentChatWS.readyState === WebSocket.OPEN) {
+        var msgObj = { sender: "admin", message: message };
+        currentChatWS.send(JSON.stringify(msgObj));
+        input.value = "";
+        showToast("Сообщение отправлено");
+      } else {
+        showToast("Чат не подключён");
+      }
+    }
+    
+    async function loadFilesModal() {
+      var orderID = document.getElementById('modalOrderID').value;
+      try {
+        const response = await fetch("/api/order/files?orderID=" + orderID);
+        const data = await response.json();
+        if (response.ok) {
+          updateFilesList(data.files);
+        } else {
+          showToast(data.error || "Ошибка получения файлов");
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Ошибка соединения с сервером");
+      }
+    }
+    
+    function updateFilesList(files) {
+      var filesContainer = document.getElementById("filesContainer");
+      filesContainer.innerHTML = "";
+      files.forEach(function(fileURL) {
+        var parts = fileURL.split('/');
+        var fileName = parts[parts.length - 1];
+        var nameParts = fileName.split('_');
+        if (nameParts.length >= 3) {
+          fileName = nameParts.slice(2).join('_');
+        }
+        var ext = fileName.substring(fileName.lastIndexOf('.'));
+        var iconHTML = getIconForExtension(ext);
+        var link = document.createElement("a");
+        link.href = fileURL;
+        link.target = "_blank";
+        link.innerHTML = iconHTML + " " + fileName;
+        link.style.display = "block";
+        link.style.marginBottom = "5px";
+        filesContainer.appendChild(link);
+      });
+    }
+    
+    function getIconForExtension(ext) {
+      ext = ext.toLowerCase();
+      if (ext === ".pdf") {
+        return '<i class="fa-solid fa-file-pdf" style="color:red;"></i>';
+      } else if (ext === ".doc" || ext === ".docx") {
+        return '<i class="fa-solid fa-file-word" style="color:blue;"></i>';
+      } else if (ext === ".xls" || ext === ".xlsx") {
+        return '<i class="fa-solid fa-file-excel" style="color:green;"></i>';
+      } else if (ext === ".png" || ext === ".jpg" || ext === ".jpeg" || ext === ".gif") {
+        return '<i class="fa-solid fa-file-image" style="color:purple;"></i>';
+      } else {
+        return '<i class="fa-solid fa-file" style="color:gray;"></i>';
+      }
+    }
+    
+    async function loadChatHistory(orderID) {
+      try {
+        const response = await fetch("/api/order/chat_history?orderID=" + orderID);
+        const data = await response.json();
+        if (response.ok) {
+          var chatContainer = document.getElementById("chatContainer");
+          chatContainer.innerHTML = "";
+          data.messages.forEach(function(msg) {
+            appendChatMessage(msg);
+          });
+        } else {
+          showToast(data.error || "Ошибка получения истории чата");
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Ошибка соединения с сервером");
+      }
+    }
+    
+    function appendChatMessage(msg) {
+      var chatContainer = document.getElementById("chatContainer");
+      var msgDiv = document.createElement("div");
+      msgDiv.className = "chat-message " + (msg.sender === "admin" ? "sent" : "received");
+      msgDiv.textContent = msg.sender + ": " + msg.message;
+      chatContainer.appendChild(msgDiv);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+    
+    async function uploadFinalFile(orderID) {
+      var fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.onchange = async function() {
+        var file = fileInput.files[0];
+        if (!file) return;
+        var formData = new FormData();
+        formData.append("orderID", orderID);
+        formData.append("files", file);
+        try {
+          const response = await fetch("/api/order/upload", { method: "POST", body: formData });
+          const data = await response.json();
+          if (response.ok) {
+            showToast("Итоговый файл успешно загружен");
+            updateFilesList(data.files);
+          } else {
+            showToast(data.error || "Ошибка загрузки итогового файла");
+          }
+        } catch (err) {
+          showToast("Ошибка соединения с сервером");
+        }
+      };
+      fileInput.click();
+    }
+    
+    document.getElementById("uploadFormModal").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      try {
+        const response = await fetch(this.action, { method: "POST", body: formData });
+        const data = await response.json();
+        if (response.ok) {
+          showToast(data.message);
+          updateFilesList(data.files);
+          if(document.getElementById('orderDetailModal').style.display !== "flex") {
+            markOrderChanged(document.getElementById('modalOrderID').value);
+          }
+        } else {
+          showToast(data.error || "Ошибка загрузки файлов");
+        }
+      } catch (err) {
+        showToast("Ошибка соединения с сервером");
+      }
+    });
+    
+    /* Фильтры (вкладки) */
     const filterButtons = document.querySelectorAll('.filter-btn');
-    const orderCards = document.querySelectorAll('.order-card');
     filterButtons.forEach(btn => {
       btn.addEventListener('click', () => {
+        document.getElementById('searchInput').value = "";
         filterButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         const filterValue = btn.getAttribute('data-filter');
-        orderCards.forEach(card => {
+        const cards = document.querySelectorAll('.order-card');
+        cards.forEach(card => {
           if (filterValue === 'all') {
             card.style.display = 'block';
           } else {
@@ -636,46 +1061,10 @@
       });
     });
     
-    let searchTimeout;
-    const searchInput = document.getElementById('searchInput');
-    searchInput.addEventListener('input', () => {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        const query = searchInput.value.trim().toLowerCase();
-        orderCards.forEach(card => {
-          if (card.style.display === 'none') return;
-          const title = card.getAttribute('data-title').toLowerCase();
-          const orderNumber = card.getAttribute('data-order-number').toLowerCase();
-          if (title.indexOf(query) !== -1 || orderNumber.indexOf(query) !== -1) {
-            card.style.display = 'block';
-          } else {
-            card.style.display = 'none';
-          }
-        });
-        updateStats();
-      }, 300);
-    });
-    
-    const sortSelect = document.getElementById('sortSelect');
-    sortSelect.addEventListener('change', () => {
-      sortOrders(sortSelect.value);
-    });
-    
-    function sortOrders(order) {
-      const grid = document.getElementById('ordersGrid');
-      let cardsArray = Array.from(orderCards);
-      cardsArray.sort((a, b) => {
-        const dateA = new Date(a.getAttribute('data-created'));
-        const dateB = new Date(b.getAttribute('data-created'));
-        return order === 'asc' ? dateA - dateB : dateB - dateA;
-      });
-      cardsArray.forEach(card => grid.appendChild(card));
-    }
-    
     function updateStats() {
       let countAll = 0, countNew = 0, countInProgress = 0, countCompleted = 0, countCancelled = 0;
-      orderCards.forEach(card => {
-        if (card.style.display === 'none') return;
+      const cards = document.querySelectorAll('.order-card');
+      cards.forEach(card => {
         countAll++;
         const status = card.getAttribute('data-status').toLowerCase();
         if (status === 'новый') countNew++;
@@ -699,82 +1088,67 @@
     
     window.addEventListener('load', updateStats);
     
-    // --- Функции для полноэкранного модального окна просмотра заказа, файлов и чата ---
-    // Открытие полноэкранного окна и установка WebSocket-чата
-    function viewOrder(orderID) {
-      // Здесь можно выполнить AJAX-запрос для получения данных заказа.
-      // Пока для демонстрации заполняем поля тестовыми данными:
-      document.getElementById('orderNumber').textContent = orderID;
-      document.getElementById('orderTopic').textContent = "Тема заказа " + orderID;
-      document.getElementById('orderStatus').textContent = "новый";
-      document.getElementById('orderDeadline').textContent = "2025-03-01";
-      document.getElementById('orderBudget').textContent = "5000";
-      document.getElementById('orderNotes').textContent = "Примечания к заказу " + orderID;
-      
-      // Заполняем hidden-поле для загрузки файлов
-      document.getElementById('modalOrderID').value = orderID;
-      
-      // Здесь можно загрузить список файлов через AJAX и заполнить #filesContainer
-      
-      // Очистка контейнера чата
-      document.getElementById('chatContainer').innerHTML = "";
-      
-      // Открываем модальное окно
-      document.getElementById('orderDetailModal').style.display = "flex";
-      
-      // Подключаем WebSocket для чата данного заказа
-      var wsUrl = "ws://" + window.location.host + "/ws/chat?orderID=" + orderID;
-      currentChatWS = new WebSocket(wsUrl);
-      currentChatWS.onopen = function() {
-        console.log("Чат подключён");
-      };
-      currentChatWS.onmessage = function(event) {
-        var msg = JSON.parse(event.data);
-        var chatContainer = document.getElementById("chatContainer");
-        var msgDiv = document.createElement("div");
-        msgDiv.className = "chat-message " + (msg.sender === "admin" ? "sent" : "received");
-        msgDiv.textContent = msg.sender + ": " + msg.message;
-        chatContainer.appendChild(msgDiv);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-      };
-      currentChatWS.onerror = function(err) {
-        console.error("WebSocket ошибка:", err);
-        showToast("Ошибка подключения к чату");
-      };
-    }
+    let searchTimeout;
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        const query = searchInput.value.trim().toLowerCase();
+        const cards = document.querySelectorAll('.order-card');
+        cards.forEach(card => {
+          const title = card.getAttribute('data-title').toLowerCase();
+          const orderNumber = card.getAttribute('data-order-number').toLowerCase();
+          if (title.indexOf(query) !== -1 || orderNumber.indexOf(query) !== -1) {
+            card.style.display = 'block';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+        updateStats();
+      }, 300);
+    });
     
-    // Закрытие модального окна и WebSocket-соединения
-    function closeChatModal() {
-      document.getElementById("orderDetailModal").style.display = "none";
-      if (currentChatWS) {
-        currentChatWS.close();
-        currentChatWS = null;
+    async function loadReview(orderID) {
+      try {
+        const response = await fetch("/api/order/review?orderID=" + orderID);
+        const data = await response.json();
+        const reviewSection = document.getElementById("reviewSection");
+        const reviewContent = document.getElementById("reviewContent");
+        const reviewFormContainer = document.getElementById("reviewFormContainer");
+        document.getElementById("reviewOrderID").value = orderID;
+        if (data.review) {
+          reviewContent.innerHTML = "<p><strong>Оценка:</strong> " + data.review.rating + " / 5</p>" +
+                                      "<p><strong>Комментарий:</strong> " + data.review.comment + "</p>";
+          reviewFormContainer.style.display = "none";
+          reviewSection.style.display = "block";
+        } else {
+          reviewContent.innerHTML = "<p>Отзыв не оставлен.</p>";
+          reviewFormContainer.style.display = "block";
+          reviewSection.style.display = "block";
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Ошибка получения отзыва");
       }
     }
     
-    document.getElementById("closeOrderDetailModal").addEventListener("click", closeChatModal);
-    window.addEventListener("click", (e) => {
-      if (e.target === document.getElementById("orderDetailModal")) {
-        closeChatModal();
+    document.getElementById("reviewForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      try {
+        const response = await fetch(this.action, { method: "POST", body: formData });
+        const data = await response.json();
+        if (response.ok) {
+          showToast(data.message);
+          loadReview(document.getElementById("reviewOrderID").value);
+        } else {
+          showToast(data.error || "Ошибка сохранения отзыва");
+        }
+      } catch (err) {
+        showToast("Ошибка соединения");
       }
     });
     
-    // Отправка сообщения через WebSocket
-    function sendChatMessage() {
-      var input = document.getElementById("chatInput");
-      var message = input.value.trim();
-      if (message === "") return;
-      if (currentChatWS && currentChatWS.readyState === WebSocket.OPEN) {
-        var msgObj = {
-          sender: "admin",
-          message: message
-        };
-        currentChatWS.send(JSON.stringify(msgObj));
-        input.value = "";
-      } else {
-        showToast("Чат не подключён");
-      }
-    }
   </script>
 </body>
 </html>

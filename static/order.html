@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{.Order.Topic}}</title>
   <!-- Подключаем Font Awesome для иконок -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-KyZXEAg3QhqLMpG8r+Knujsl5+5hb7ieQOZtB+UQ7VX5e7yDpPzlX5z/p3KRJ6l5xQj1G0l3FTbF4gq0sIL9w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha512-xh6+2sZO8K+QGZC3zzX2Skd5y3H5H1GwY5gY6ip7Ee4ePFyW4+9lJH1N3rKT4zBZNp3XGzA4EPYY1p/9u6H+IQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
     /* Общие стили */
@@ -261,7 +261,10 @@
       };
     }
 
-    window.addEventListener('load', connectChat);
+    window.addEventListener('load', function() {
+      connectChat();
+      loadFiles(); // Загружаем список файлов при загрузке страницы
+    });
 
     document.getElementById("sendMessage").addEventListener("click", function() {
       var input = document.getElementById("chatInput");
@@ -287,9 +290,9 @@
         // Извлекаем имя файла из URL
         var parts = fileURL.split('/');
         var fileName = parts[parts.length - 1];
-        // Разбиваем по символу "_" и оставляем все части, начиная с третьей
+        // Убираем префикс вида "orderID_timestamp_"
         var nameParts = fileName.split('_');
-        if(nameParts.length >= 3) {
+        if (nameParts.length >= 3) {
           fileName = nameParts.slice(2).join('_');
         }
         var ext = fileName.substring(fileName.lastIndexOf('.'));
@@ -307,15 +310,15 @@
     function getIconForExtension(ext) {
       ext = ext.toLowerCase();
       if (ext === ".pdf") {
-        return '<i class="fas fa-file-pdf" style="color:red;"></i>';
+        return '<i class="fa-solid fa-file-pdf" style="color:red;"></i>';
       } else if (ext === ".doc" || ext === ".docx") {
-        return '<i class="fas fa-file-word" style="color:blue;"></i>';
+        return '<i class="fa-solid fa-file-word" style="color:blue;"></i>';
       } else if (ext === ".xls" || ext === ".xlsx") {
-        return '<i class="fas fa-file-excel" style="color:green;"></i>';
+        return '<i class="fa-solid fa-file-excel" style="color:green;"></i>';
       } else if (ext === ".png" || ext === ".jpg" || ext === ".jpeg" || ext === ".gif") {
-        return '<i class="fas fa-file-image" style="color:purple;"></i>';
+        return '<i class="fa-solid fa-file-image" style="color:purple;"></i>';
       } else {
-        return '<i class="fas fa-file" style="color:gray;"></i>';
+        return '<i class="fa-solid fa-file" style="color:gray;"></i>';
       }
     }
 
@@ -335,8 +338,6 @@
         showToast("Ошибка соединения с сервером");
       }
     }
-
-    window.addEventListener('load', loadFiles);
 
     // Обработка загрузки файлов через AJAX
     document.getElementById("uploadForm").addEventListener("submit", async function(e) {

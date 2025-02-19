@@ -4,11 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Громыш | Помощь студентам</title>
-  <!-- Подключаем CSS через абсолютный путь -->
+  <!-- Подключаем CSS -->
   <link rel="stylesheet" href="/static/styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Подключаем Font Awesome для иконок (если понадобятся) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha512-xh6+2sZO8K+QGZC3zzX2Skd5y3H5H1GwY5gY6ip7Ee4ePFyW4+9lJH1N3rKT4zBZNp3XGzA4EPYY1p/9u6H+IQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
-    /* Основные стили страницы (при необходимости можно вынести в отдельный файл) */
+    /* Основные стили страницы */
     body {
       font-family: 'Roboto', sans-serif;
       margin: 0;
@@ -17,6 +19,7 @@
     }
     nav {
       padding: 1em;
+      background: #007acc;
     }
     nav ul {
       list-style-type: none;
@@ -192,23 +195,37 @@
       border: 1px solid #ddd;
       border-radius: 5px;
     }
-    /* Единый стиль для сообщений об ошибках */
+    /* Стиль для ошибок в форме */
     .error-message {
-      color: #D8000C;
-      background-color: #FFBABA;
-      border: 1px solid #D8000C;
-      padding: 5px 10px;
-      border-radius: 4px;
-      margin-top: 5px;
-      font-size: 0.9em;
-      text-align: left;
+      color: #ffffff;
+      background-color: #d8000c;
+      padding: 8px 12px;
+      border-radius: 5px;
+      margin: 5px 0;
+      font-size: 0.95em;
+      text-align: center;
+    }
+    /* Toast уведомления */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(216,0,12,0.9);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 5px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      z-index: 3000;
+    }
+    .toast.show {
+      opacity: 1;
     }
   </style>
 </head>
 <body>
   <nav>
     <ul>
-      <!-- Обновлённые ссылки: используем чистые URL -->
       <li><a href="/" class="circle-link">Главная</a></li>
       <li><a href="/about" class="circle-link">О нас</a></li>
       <li><a href="/services" class="circle-link">Виды работ</a></li>
@@ -232,7 +249,7 @@
         <button class="switch-button" id="showLogin">Авторизация</button>
         <button class="switch-button" id="showRegister">Регистрация</button>
       </div>
-      <!-- Форма авторизации с блоком для общей ошибки -->
+      <!-- Форма авторизации -->
       <form id="loginForm" class="auth-form" action="/login" method="POST">
         <div id="loginGeneralError" class="error-message" style="display: none;"></div>
         <label for="loginEmail">Email:</label>
@@ -241,7 +258,7 @@
         <input type="password" id="loginPassword" name="password" required>
         <button type="submit">Войти</button>
       </form>
-      <!-- Форма регистрации с блоком для ошибок -->
+      <!-- Форма регистрации -->
       <form id="registerForm" class="auth-form" action="/register" method="POST">
         <div id="registerGeneralError" class="error-message" style="display: none;"></div>
         <label for="registerName">Имя:</label>
@@ -251,7 +268,7 @@
         <label for="registerPassword">Пароль:</label>
         <input type="password" id="registerPassword" name="password" required>
         <label for="registerPhone">Телефон:</label>
-        <input type="tel" id="registerPhone" name="phone" placeholder="+7 (___) ___-____" required>
+        <input type="tel" id="registerPhone" name="phone" placeholder="+7 (___) ___-__-__" required>
         <label for="registerTelegram">Telegram:</label>
         <div class="telegram-wrapper">
           <img src="/images/TG.png" alt="Telegram Icon">
@@ -265,6 +282,8 @@
   <footer>
     <p>&copy; Громыш | Поддержка студентов и школьников</p>
   </footer>
+
+  <div class="toast" id="toast"></div>
 
   <script>
     const modal = document.getElementById('authModal');
@@ -280,13 +299,38 @@
     const loginGeneralError = document.getElementById('loginGeneralError');
     const registerGeneralError = document.getElementById('registerGeneralError');
 
-    // Форматирование номера телефона
-    phoneInput.addEventListener('input', (e) => {
-      const value = e.target.value.replace(/\D/g, '');
-      const formatted = value
-        .replace(/^(\d{1})(\d{3})(\d{3})(\d{2})(\d{2})$/, "+7 ($2) $3-$4-$5")
-        .substring(0, 17);
-      e.target.value = formatted;
+    // Форматирование номера телефона в формате +7 (XXX) XXX-XX-XX
+    function formatPhone(value) {
+      const digits = value.replace(/\D/g, '');
+      const part1 = digits.substring(0, 1);
+      const part2 = digits.substring(1, 4);
+      const part3 = digits.substring(4, 7);
+      const part4 = digits.substring(7, 9);
+      const part5 = digits.substring(9, 11);
+      let formatted = '';
+      if (part1) {
+        formatted = '+' + part1;
+      }
+      if (part2) {
+        formatted += ' (' + part2;
+        if (part2.length === 3) {
+          formatted += ')';
+        }
+      }
+      if (part3) {
+        formatted += ' ' + part3;
+      }
+      if (part4) {
+        formatted += '-' + part4;
+      }
+      if (part5) {
+        formatted += '-' + part5;
+      }
+      return formatted;
+    }
+
+    phoneInput.addEventListener('input', function(e) {
+      this.value = formatPhone(this.value);
     });
 
     function adjustModalHeight() {
@@ -342,21 +386,22 @@
         });
         if (!response.ok) {
           const data = await response.json();
-          // Показываем сообщение об ошибке
           loginGeneralError.textContent = data.error || 'Ошибка авторизации';
           loginGeneralError.style.display = 'block';
+          // Показываем toast только для непредвиденных ошибок (при необходимости)
+          // showToast(loginGeneralError.textContent);
         } else {
-          // При успешной авторизации закрываем модальное окно и переходим в личный кабинет
           modal.style.display = 'none';
           window.location.href = '/dashboard';
         }
       } catch (err) {
         loginGeneralError.textContent = 'Ошибка соединения с сервером';
         loginGeneralError.style.display = 'block';
+        // showToast(loginGeneralError.textContent);
       }
     });
 
-    // Перехват отправки формы регистрации через AJAX
+    // Перехват отправки формы регистрации через AJAX (без дублирования toast)
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       registerGeneralError.style.display = 'none';
@@ -368,19 +413,29 @@
         });
         if (!response.ok) {
           const data = await response.json();
-          // Показываем сообщение об ошибке, например, "email занят"
           registerGeneralError.textContent = data.error || 'Ошибка регистрации';
           registerGeneralError.style.display = 'block';
+          // Не вызываем showToast, чтобы ошибка отображалась только в форме
         } else {
-          // При успешной регистрации закрываем модальное окно и переходим в личный кабинет
           modal.style.display = 'none';
           window.location.href = '/dashboard';
         }
       } catch (err) {
         registerGeneralError.textContent = 'Ошибка соединения с сервером';
         registerGeneralError.style.display = 'block';
+        // Не вызываем showToast, чтобы ошибка отображалась только в форме
       }
     });
+
+    // Функция показа toast уведомления (используется только для логина и прочих ошибок)
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
   </script>
 </body>
 </html>

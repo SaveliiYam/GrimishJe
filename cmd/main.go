@@ -74,10 +74,15 @@ func main() {
 	r.POST("/api/order/complete", middleware.AdminRequired(db), handlers.CompleteOrder(db))
 	r.POST("/api/order/cancel", middleware.AdminRequired(db), handlers.CancelOrder(db))
 	r.POST("/api/order/delete", middleware.AdminRequired(db), handlers.DeleteOrder(db))
+	// Новый endpoint для редактирования заказа администратором
+	r.POST("/api/order/admin-edit", middleware.AdminRequired(db), handlers.AdminEditOrder(db))
 
 	// Эндпоинт для загрузки файлов через MinIO
 	r.POST("/api/order/upload", middleware.AuthRequired(), handlers.UploadFiles())
 	r.GET("/api/order/files", middleware.AuthRequired(), handlers.ListFiles())
+
+	// Новый endpoint для получения истории чата (админ)
+	r.GET("/api/order/chat_history", middleware.AdminRequired(db), handlers.ChatHistory(db))
 
 	// Маршрут для админ-панели (все заказы)
 	r.GET("/admin_dashboard", middleware.AdminRequired(db), handlers.AdminDashboard(db))

@@ -16,4 +16,13 @@ type Order struct {
 	Status             string  `gorm:"size:50;default:'новый'" json:"status"`
 	WorkType           string  `json:"work_type"`
 	Notes              string  `json:"notes"`
+	User               User    `gorm:"foreignKey:UserID"`
+}
+
+type Review struct {
+	gorm.Model
+	OrderID uint   `json:"order_id"`                              // Связь с заказом
+	Rating  uint   `json:"rating" binding:"required,min=1,max=5"` // Оценка от 1 до 5
+	Comment string `json:"comment"`                               // Комментарий
+	Order   Order  `gorm:"foreignKey:OrderID"`
 }

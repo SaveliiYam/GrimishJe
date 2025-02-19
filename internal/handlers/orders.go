@@ -173,8 +173,8 @@ func AcceptOrder(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		order.Status = "в работе"
-		if err := db.Save(&order).Error; err != nil {
+		// Обновляем только статус, чтобы не трогать order_number и другие поля
+		if err := db.Model(&order).Update("status", "в работе").Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось обновить заказ"})
 			return
 		}
@@ -204,8 +204,7 @@ func CompleteOrder(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		order.Status = "завершён"
-		if err := db.Save(&order).Error; err != nil {
+		if err := db.Model(&order).Update("status", "завершён").Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось обновить заказ"})
 			return
 		}
@@ -235,8 +234,7 @@ func CancelOrder(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		order.Status = "отменён"
-		if err := db.Save(&order).Error; err != nil {
+		if err := db.Model(&order).Update("status", "отменён").Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось обновить заказ"})
 			return
 		}
@@ -267,5 +265,82 @@ func DeleteOrder(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "Заказ удалён"})
+	}
+}
+
+// AdminEditOrder позволяет администратору редактировать заказ (обновление срока и заметок).
+// AdminEditOrder позволяет администратору редактировать заказ (расширенный вариант).
+func AdminEditOrder(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var input struct {
+			OrderID            string  `form:"orderID" binding:"required"`
+			Topic              string  `form:"topic" binding:"required"`
+			Description        string  `form:"description" binding:"required"`
+			Deadline           string  `form:"deadline" binding:"required"`
+			PlagiarismRequired bool    `form:"plagiarismRequired"`
+			PlagiarismPercent  uint    `form:"plagiarismPercent"`
+			Budget             float64 `form:"budget" binding:"required"`
+			WorkType           string  `form:"workType" binding:"required"`
+			Notes              string  `form:"notes"`
+		}
+
+		if err := c.ShouldBind(&input); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		orderID, err := strconv.ParseUint(input.OrderID, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный orderID"})
+			return
+		}
+
+		var order models.Order
+		if err := db.First(&order, uint(orderID)).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Заказ не найден"})
+			return
+		}
+
+		// Обновляем только нужные поля
+		order.Topic = input.Topic
+		order.Description = input.Description
+		order.Deadline = input.Deadline
+		order.PlagiarismRequired = input.PlagiarismRequired
+		order.PlagiarismPercent = input.PlagiarismPercent
+		order.Budget = input.Budget
+		order.WorkType = input.WorkType
+		order.Notes = input.Notes
+
+		// Обновляем только выбранные поля, оставляя OrderNumber без изменений
+		if err := db.Model(&order).
+			Select("Topic", "Description", "Deadline", "PlagiarismRequired", "PlagiarismPercent", "Budget", "WorkType", "Notes").
+			Updates(order).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось обновить заказ"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Заказ успешно обновлён администратором"})
+	}
+}
+
+// ChatHistory возвращает историю сообщений чата для заказа.
+func ChatHistory(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		orderIDStr := c.Query("orderID")
+		if orderIDStr == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует orderID"})
+			return
+		}
+		orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный orderID"})
+			return
+		}
+		var messages []models.ChatMessage
+		if err := db.Where("order_id = ?", uint(orderID)).Order("created_at asc").Find(&messages).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения истории чата"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"messages": messages})
 	}
 }

@@ -10,7 +10,9 @@ type User struct {
 	Email    string `gorm:"uniqueIndex:users_email_key;size:255" json:"email"`
 	Password string `json:"password" binding:"required,min=6"`
 	Name     string `json:"name" binding:"required"`
-	IsAdmin  bool   `gorm:"default:false" json:"is_admin"` // true, если пользователь является администратором
+	Phone    string `gorm:"size:20" json:"phone"`          // Новое поле для номера телефона
+	Telegram string `gorm:"size:50" json:"telegram"`       // Новое поле для Telegram
+	IsAdmin  bool   `gorm:"default:false" json:"is_admin"` // true, если пользователь — администратор
 }
 
 func (u *User) SetPassword(password string) error {

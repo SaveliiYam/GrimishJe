@@ -12,14 +12,13 @@ import (
 // AdminDashboard рендерит админ-панель, где администратор видит все заказы.
 func AdminDashboard(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Извлекаем все заказы из базы данных
 		var orders []models.Order
-		if err := db.Find(&orders).Error; err != nil {
+		// Используем Preload, чтобы загрузить связанные данные пользователя
+		if err := db.Preload("User").Find(&orders).Error; err != nil {
 			c.String(http.StatusInternalServerError, "Ошибка получения заказов")
 			return
 		}
 
-		// Извлекаем данные пользователя (админа) из сессии
 		session := sessions.Default(c)
 		uid := session.Get("user_id")
 		if uid == nil {
@@ -32,7 +31,6 @@ func AdminDashboard(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Рендерим шаблон admin_dashboard.html, передавая пользователя и все заказы
 		c.HTML(http.StatusOK, "admin_dashboard.html", gin.H{
 			"User":   user,
 			"Orders": orders,
