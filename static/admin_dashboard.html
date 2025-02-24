@@ -4,105 +4,206 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Админ панель | {{.User.Name}}</title>
-  <link rel="stylesheet" href="/static/styles.css">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-  <!-- Подключаем Font Awesome для иконок -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" 
-        integrity="sha512-xh6+2sZO8K+QGZC3zzX2Skd5y3H5H1GwY5gY6ip7Ee4ePFyW4+9lJH1N3rKT4zBZNp3XGzA4EPYY1p/9u6H+IQ==" 
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
   <style>
-    /* Общие стили */
+    :root {
+      --primary-color: #1e90ff;       /* Основной синий для действий */
+      --secondary-color: #007bff;      /* Более яркий синий для hover */
+      --success-color: #28a745;        /* Зелёный для принятия/завершения */
+      --error-color: #dc3545;          /* Красный для отмены/удаления */
+      --warning-color: #ffc107;        /* Жёлтый для промежуточных действий (загрузка) */
+      --neutral-color: #6c757d;        /* Серый для просмотра */
+      --background-light: #f5f7fa;
+      --card-bg: #ffffff;
+      --text-color: #2d3748;
+      --text-light: #718096;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="dark"] {
+      --background-light: #1a202c;
+      --card-bg: #2d3748;
+      --text-color: #e2e8f0;
+      --text-light: #a0aec0;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+      --primary-color: #63b3ed; /* Более светлый синий */
+      --secondary-color: #4299e1;
+      --success-color: #48bb78; /* Более светлый зелёный */
+      --error-color: #f56565; /* Более светлый красный */
+      --warning-color: #ecc94b; /* Более светлый жёлтый */
+      --neutral-color: #a0aec0; /* Более светлый серый */
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      padding: 10px;
-      background: #fff;
-      font-family: 'Roboto', sans-serif;
-      color: #333;
+      padding: 20px;
+      background: var(--background-light);
+      font-family: 'Inter', sans-serif;
+      color: var(--text-color);
+      line-height: 1.6;
+      transition: background 0.3s ease, color 0.3s ease;
     }
+
     .container {
       width: 90%;
-      max-width: 1200px;
+      max-width: 1280px;
       margin: 0 auto;
       padding: 20px;
       position: relative;
     }
-    header {
-      background: linear-gradient(135deg, #00bfff, #007acc);
+
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 8px;
+      background: var(--primary-color);
       color: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      text-align: center;
-      margin-bottom: 20px;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s ease;
     }
+
+    .theme-toggle:hover {
+      background: var(--secondary-color);
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 30px;
+      box-shadow: var(--shadow-md);
+    }
+
     header h1 {
       margin: 0;
       font-size: 2.5em;
+      font-weight: 700;
     }
-    /* Блок управления заказами */
+
     .order-controls {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
+      gap: 15px;
     }
+
     .order-stats {
       text-align: center;
-      margin-bottom: 10px;
       flex: 1;
     }
+
     .order-stats h2 {
       margin-bottom: 10px;
+      font-size: 1.5em;
+      color: var(--secondary-color);
     }
+
     .stats-container {
       display: flex;
       justify-content: center;
       gap: 15px;
       flex-wrap: wrap;
     }
+
     .stat-item {
-      background: #f5f5f5;
+      background: var(--card-bg);
       padding: 10px 15px;
-      border-radius: 5px;
+      border-radius: 8px;
       font-size: 1em;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.3s ease;
     }
+
+    .stat-item:hover {
+      transform: translateY(-2px);
+    }
+
     .order-search {
       text-align: center;
-      margin-bottom: 10px;
+      flex: 1;
     }
+
     .order-search input {
-      padding: 8px 12px;
+      padding: 10px 15px;
       width: 250px;
       max-width: 100%;
-      border: 1px solid #ddd;
-      border-radius: 4px;
+      border: 1px solid var(--text-light);
+      border-radius: 8px;
       font-size: 1em;
+      transition: border-color 0.3s ease;
     }
+
+    .order-search input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+      outline: none;
+    }
+
+    .sort-container {
+      text-align: center;
+      flex: 1;
+    }
+
+    .sort-container select {
+      padding: 10px 15px;
+      font-size: 1em;
+      border: 1px solid var(--text-light);
+      border-radius: 8px;
+      background: var(--card-bg);
+      transition: border-color 0.3s ease;
+    }
+
+    .sort-container select:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+      outline: none;
+    }
+
     .order-filter {
       text-align: center;
       margin-bottom: 10px;
+      flex: 1;
     }
+
     .order-filter button {
-      padding: 8px 16px;
+      padding: 10px 20px;
       margin: 0 5px;
       border: none;
-      background-color: #ddd;
-      border-radius: 4px;
+      background: var(--card-bg);
+      border-radius: 8px;
       cursor: pointer;
-      transition: background-color 0.3s;
-      position: relative;
+      transition: background 0.3s ease, transform 0.3s ease;
+      font-size: 1em;
+      box-shadow: var(--shadow-sm);
     }
+
     .order-filter button.active {
-      background-color: #00bfff;
+      background: var(--primary-color);
       color: #fff;
+      box-shadow: var(--shadow-md);
     }
+
     .order-filter button:hover {
-      background-color: #00bfff;
+      background: var(--secondary-color);
       color: #fff;
+      transform: translateY(-2px);
     }
+
     .order-filter .badge {
-      background: #F44336;
+      background: var(--error-color);
       color: #fff;
       border-radius: 50%;
       padding: 2px 6px;
@@ -111,102 +212,111 @@
       top: -5px;
       right: -5px;
     }
-    .sort-container {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-    .sort-container select {
-      padding: 8px 12px;
-      font-size: 1em;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      background-color: #fff;
-    }
-    /* Сетка заказов */
+
     .orders-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 20px;
       margin-bottom: 30px;
     }
+
     .order-card {
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      background: var(--card-bg);
+      border: 1px solid var(--text-light);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
       padding: 20px;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
       position: relative;
     }
+
+    .order-card.skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
     .order-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      box-shadow: var(--shadow-md);
     }
+
     .order-card h3 {
       margin-top: 0;
       font-size: 1.4em;
-      color: #007acc;
+      color: var(--secondary-color);
       margin-bottom: 10px;
     }
+
     .order-card p {
       margin: 5px 0;
       font-size: 1em;
-      color: #555;
+      color: var(--text-light);
     }
-    /* Левая полоска статусов */
+
     .order-card.new {
-      border-left: 5px solid #4CAF50;
+      border-left: 5px solid var(--success-color);
     }
+
     .order-card.in-progress {
-      border-left: 5px solid #2196F3;
+      border-left: 5px solid var(--primary-color);
     }
+
     .order-card.completed {
       border-left: 5px solid #9E9E9E;
     }
+
     .order-card.cancelled {
-      border-left: 5px solid #F44336;
+      border-left: 5px solid var(--error-color);
     }
-    /* Кнопки в карточке заказа */
-    .admin-actions {
-      margin-top: 10px;
-      text-align: center;
-    }
-    .admin-actions button {
-      margin: 0 5px;
-      padding: 8px 12px;
-      font-size: 0.9em;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    .btn-view {
-      background-color: #6c757d;
-      color: #fff;
-    }
-    .btn-delete {
-      background-color: #9E9E9E;
-      color: #fff;
-    }
-    .admin-actions button:hover {
-      opacity: 0.85;
-    }
-    /* Пульсирующий индикатор изменений (красный кружочек) */
+
     .new-indicator {
+      display: none; /* Убрали индикатор по умолчанию, он будет добавляться динамически при необходимости */
       position: absolute;
       top: 10px;
       right: 10px;
       width: 10px;
       height: 10px;
-      background-color: #F44336;
+      background: var(--error-color);
       border-radius: 50%;
       animation: blink 1s infinite;
     }
+
     @keyframes blink {
       0%, 100% { opacity: 1; }
       50% { opacity: 0; }
     }
-    /* Модальное окно для просмотра заказа, файлов, чата и отзыва */
+
+    .admin-actions {
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    .admin-actions button {
+      margin: 0 5px;
+      padding: 10px 15px;
+      font-size: 0.9em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+    .btn-view {
+      background: var(--neutral-color);
+      color: #fff;
+    }
+
+    .btn-delete {
+      background: var(--error-color);
+      color: #fff;
+    }
+
+    .admin-actions button:hover {
+      transform: translateY(-2px);
+      opacity: 0.9;
+    }
+
     .modal.full-view {
       display: none;
       position: fixed;
@@ -215,260 +325,412 @@
       top: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0,0,0,0.5);
+      background: rgba(0, 0, 0, 0.5);
       justify-content: center;
       align-items: center;
       overflow: auto;
       padding: 20px;
     }
+
     .modal-content.full-view {
-      background-color: #fff;
-      border-radius: 10px;
+      background: var(--card-bg);
+      border-radius: 16px;
       width: 90%;
       max-width: 1200px;
       height: 90vh;
       display: flex;
       flex-direction: column;
-      padding: 20px;
-      animation: fadeIn 0.3s ease;
+      padding: 30px;
+      animation: fadeIn 0.3s ease-in-out;
+      box-shadow: var(--shadow-md);
       position: relative;
+      overflow: hidden;
     }
+
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
+      from { opacity: 0; transform: translateY(-20px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
     .close-button {
       position: absolute;
-      top: 10px;
-      right: 10px;
+      top: 15px;
+      right: 15px;
       font-size: 28px;
       cursor: pointer;
-      color: #333;
+      color: var(--text-light);
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.3s ease, background 0.3s ease;
     }
+
+    .close-button:hover {
+      color: var(--primary-color);
+      background: rgba(0, 0, 0, 0.2);
+    }
+
     .modal-content.full-view h2 {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
+      font-size: 2em;
+      color: var(--secondary-color);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
+
     .modal-body {
       display: flex;
       flex: 1;
-      gap: 20px;
+      gap: 30px;
       overflow-y: auto;
+      padding: 20px 0;
     }
-    .order-info {
+
+    .order-info, .chat-section-modal {
       flex: 1;
-      border-right: 1px solid #ddd;
-      padding-right: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
+
+    .order-info:hover, .chat-section-modal:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-md);
+    }
+
     .order-info p {
-      margin: 10px 0;
+      margin: 15px 0;
       font-size: 1.1em;
+      color: var(--text-light);
+      line-height: 1.8;
     }
-    .order-info h3 {
-      margin-top: 0;
-      font-size: 1.4em;
-      color: #007acc;
+
+    .order-info strong {
+      color: var(--text-color);
+      font-weight: 600;
     }
+
     .order-files {
       margin-top: 20px;
     }
+
     .order-files h3 {
-      font-size: 1.3em;
-      margin-bottom: 10px;
-      color: #00bfff;
+      font-size: 1.5em;
+      margin-bottom: 15px;
+      color: var(--primary-color);
+      font-weight: 600;
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 10px;
     }
-    .order-files #filesContainer {
-      margin-bottom: 10px;
+
+    .files-grid-modal {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
     }
-    /* Блок отзыва */
-    #reviewSection {
+
+    .file-item {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .file-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .file-icon {
+      font-size: 2.5em;
+      margin-bottom: 15px;
+      color: var(--text-light);
+    }
+
+    .file-name {
+      font-size: 1em;
+      color: var(--text-color);
+      text-decoration: none;
+      word-break: break-all;
+      transition: color 0.3s ease;
+    }
+
+    .file-name:hover {
+      color: var(--primary-color);
+    }
+
+    #reviewSection, #adminEditSection {
       margin-top: 20px;
-      border-top: 1px solid #ddd;
-      padding-top: 10px;
-      display: none;
+      padding-top: 20px;
+      border-top: 1px solid var(--text-light);
     }
-    #reviewSection h3 {
-      font-size: 1.3em;
-      color: #00bfff;
-      margin-bottom: 10px;
+
+    #reviewSection h3, #adminEditSection h3 {
+      font-size: 1.5em;
+      color: var(--primary-color);
+      margin-bottom: 15px;
+      font-weight: 600;
     }
-    #reviewContent p {
-      margin: 5px 0;
+
+    #reviewContent p, #adminEditSection p {
+      margin: 10px 0;
       font-size: 1em;
+      color: var(--text-light);
     }
-    #reviewFormContainer {
-      margin-top: 10px;
-      display: none;
-    }
-    #reviewFormContainer label {
-      display: block;
-      margin-bottom: 5px;
-    }
-    #reviewFormContainer select, 
-    #reviewFormContainer textarea {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 1em;
-    }
-    #reviewFormContainer button {
-      padding: 8px 12px;
-      background-color: #28a745;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    #reviewFormContainer button:hover {
-      background-color: #218838;
-    }
-    /* Блок редактирования заказа (Admin Edit) */
-    #adminEditSection {
-      margin-top: 10px;
-      border-top: 1px solid #ddd;
-      padding-top: 10px;
-      display: none;
-    }
-    #adminEditSection label {
-      display: block;
-      margin-bottom: 5px;
-    }
-    #adminEditSection input,
-    #adminEditSection textarea {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 1em;
-    }
-    #adminEditSection button {
-      padding: 8px 12px;
-      background-color: #ffc107;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    #adminEditSection button:hover {
-      background-color: #e0a800;
-    }
-    /* Блок действий в модальном окне */
-    .modal-actions {
+
+    #reviewFormContainer, #adminEditForm {
       margin-top: 15px;
+    }
+
+    #reviewFormContainer label, #adminEditForm label {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--text-color);
+      font-weight: 500;
+    }
+
+    #reviewFormContainer select, 
+    #reviewFormContainer textarea,
+    #adminEditForm input,
+    #adminEditForm textarea {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid var(--text-light);
+      border-radius: 8px;
+      font-size: 1em;
+      background: var(--card-bg);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    #reviewFormContainer select:focus,
+    #reviewFormContainer textarea:focus,
+    #adminEditForm input:focus,
+    #adminEditForm textarea:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+      outline: none;
+    }
+
+    #reviewFormContainer button, #adminEditForm button {
+      padding: 12px 25px;
+      background: var(--success-color);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease;
+      font-size: 1em;
+      font-weight: 500;
+    }
+
+    #reviewFormContainer button:hover, #adminEditForm button:hover {
+      background: #218838;
+      transform: translateY(-2px);
+    }
+
+    .modal-actions {
+      margin-top: 20px;
       text-align: center;
     }
-    .modal-actions button {
-      margin: 0 5px;
-      padding: 8px 12px;
+
+    .modal-actions-btn {
+      margin: 0 10px;
+      padding: 12px 25px;
       font-size: 1em;
       border: none;
-      border-radius: 4px;
+      border-radius: 8px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+      color: #fff;
+      box-shadow: var(--shadow-sm);
     }
+
+    .modal-actions-btn:hover {
+      transform: translateY(-2px);
+      opacity: 0.9;
+      box-shadow: var(--shadow-md);
+    }
+
     .btn-accept {
-      background-color: #4CAF50;
-      color: #fff;
+      background: var(--success-color);
     }
+
     .btn-upload {
-      background-color: #28a745;
-      color: #fff;
+      background: var(--warning-color);
     }
+
     .btn-complete {
-      background-color: #007bff;
-      color: #fff;
+      background: var(--primary-color);
     }
+
+    .btn-cancel {
+      background: var(--error-color);
+    }
+
     .btn-delete {
-      background-color: #9E9E9E;
-      color: #fff;
+      background: var(--error-color);
     }
-    .modal-actions button:hover {
-      opacity: 0.85;
+
+    .btn-view-final {
+      background: var(--neutral-color);
     }
+
     .chat-section-modal {
       flex: 1;
       display: flex;
       flex-direction: column;
     }
+
     .chat-section-modal h3 {
-      margin: 0 0 10px;
-      color: #00bfff;
-      font-size: 1.3em;
+      margin: 0 0 15px;
+      color: var(--primary-color);
+      font-size: 1.5em;
+      font-weight: 600;
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 10px;
     }
+
     .chat-window {
       flex: 1;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      background: #f9f9f9;
-      padding: 15px;
+      border: 1px solid var(--text-light);
+      border-radius: 12px;
+      background: #f9fafb;
+      padding: 20px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 15px;
+      box-shadow: var(--shadow-sm);
     }
+
+    .chat-message {
+      padding: 15px;
+      border-radius: 12px;
+      max-width: 75%;
+      font-size: 1em;
+      line-height: 1.6;
+      box-shadow: var(--shadow-sm);
+      word-wrap: break-word;
+      background: var(--card-bg);
+      transition: transform 0.3s ease;
+    }
+
+    .chat-message.sent {
+      background: #e0f7fa;
+      align-self: flex-end;
+      margin-left: auto;
+      position: relative;
+      border-bottom-right-radius: 0;
+      color: #0c4a6e;
+    }
+
+    .chat-message.received {
+      background: #f1f8e9;
+      align-self: flex-start;
+      margin-right: auto;
+      position: relative;
+      border-bottom-left-radius: 0;
+      color: #2f6f44;
+    }
+
+    .chat-message.sent::before,
+    .chat-message.received::before {
+      content: "";
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-style: solid;
+    }
+
+    .chat-message.sent::before {
+      bottom: -10px;
+      right: 10px;
+      border-width: 0 10px 10px 0;
+      border-color: transparent #e0f7fa transparent transparent;
+    }
+
+    .chat-message.received::before {
+      bottom: -10px;
+      left: 10px;
+      border-width: 0 0 10px 10px;
+      border-color: transparent transparent #f1f8e9 transparent;
+    }
+
     .chat-input {
       display: flex;
-      gap: 10px;
-      margin-top: 10px;
+      gap: 15px;
+      margin-top: 15px;
+      align-items: center;
     }
+
     .chat-input input {
       flex: 1;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
+      padding: 12px;
+      border: 1px solid var(--text-light);
+      border-radius: 8px;
       font-size: 1em;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
+
+    .chat-input input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+      outline: none;
+    }
+
     .chat-input button {
-      padding: 10px 20px;
-      background: #00bfff;
+      padding: 12px 25px;
+      background: var(--primary-color);
       color: #fff;
       border: none;
-      border-radius: 4px;
+      border-radius: 8px;
       font-size: 1em;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: background 0.3s ease, transform 0.3s ease;
     }
+
     .chat-input button:hover {
-      background: #007acc;
+      background: var(--secondary-color);
+      transform: translateY(-2px);
     }
-    /* Toast уведомления */
-    #toast {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(0,0,0,0.8);
-      color: #fff;
-      padding: 10px 20px;
-      border-radius: 4px;
-      display: none;
-      font-size: 1em;
-      z-index: 3000;
-    }
-    /* Плавающая кнопка "Обновить заказы" */
+
     .fab-refresh {
       position: fixed;
       bottom: 30px;
       right: 30px;
-      background-color: #00bfff;
+      background: var(--primary-color);
       color: #fff;
       padding: 12px 20px;
       border-radius: 30px;
       display: flex;
       align-items: center;
       font-size: 18px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      box-shadow: var(--shadow-md);
       cursor: pointer;
       z-index: 1000;
-      transition: background-color 0.3s;
+      transition: background 0.3s ease, transform 0.3s ease;
     }
+
     .fab-refresh:hover {
-      background-color: #007acc;
+      background: var(--secondary-color);
+      transform: translateY(-2px);
     }
+
     .fab-refresh i {
       margin-right: 8px;
       font-size: 20px;
@@ -476,12 +738,12 @@
   </style>
 </head>
 <body>
+  <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
   <main class="container">
     <header>
       <h1>Админ панель | {{.User.Name}}</h1>
     </header>
     
-    <!-- Блок управления заказами -->
     <div class="order-controls">
       <div class="order-stats">
         <h2>Статистика заказов</h2>
@@ -504,7 +766,6 @@
       </div>
     </div>
     
-    <!-- Фильтр заказов -->
     <div class="order-filter">
       <button class="filter-btn active" data-filter="all">Все</button>
       <button class="filter-btn" data-filter="новый">Новые</button>
@@ -513,7 +774,6 @@
       <button class="filter-btn" data-filter="отменён">Отмененные</button>
     </div>
     
-    <!-- Сетка заказов -->
     <div class="orders-grid" id="ordersGrid">
       {{range .Orders}}
         <div class="order-card {{if eq .Status "новый"}}new{{else if eq .Status "в работе"}}in-progress{{else if eq .Status "завершён"}}completed{{else if eq .Status "отменён"}}cancelled{{end}}"
@@ -524,7 +784,9 @@
              data-customer="{{if .User.Name}}{{.User.Name}}{{else}}Не указано{{end}}"
              data-phone="{{if .User.Phone}}{{.User.Phone}}{{else}}Не указан{{end}}"
              data-telegram="{{if .User.Telegram}}{{.User.Telegram}}{{else}}Не указан{{end}}"
-             data-created="{{.CreatedAt}}">
+             data-created="{{.CreatedAt}}"
+             data-deadline="{{.Deadline}}"
+             data-budget="{{.Budget}}">
           <h3>{{.Topic}}</h3>
           <p><strong>Номер заказа:</strong> {{.OrderNumber}}</p>
           <p><strong>Заказчик:</strong> {{if .User.Name}}{{.User.Name}}{{else}}Не указано{{end}}</p>
@@ -536,77 +798,64 @@
           <p><strong>Бюджет:</strong> {{.Budget}} ₽</p>
           <div class="admin-actions">
             <button class="btn-view" onclick="viewOrder({{.ID}})">Просмотреть</button>
-            <button class="btn-delete" onclick="deleteOrder({{.ID}})">Удалить</button>
+            <button class="btn-delete" onclick="cancelOrder({{.ID}})">Удалить</button>
           </div>
         </div>
       {{end}}
     </div>
   </main>
   
-  <!-- Модальное окно для просмотра заказа, файлов, чата и отзыва -->
   <div class="modal full-view" id="orderDetailModal">
     <div class="modal-content full-view">
-      <span class="close-button" id="closeOrderDetailModal">&times;</span>
+      <span class="close-button" id="closeOrderDetailModal">×</span>
       <h2>Детали заказа</h2>
       <div class="modal-body">
         <div class="order-info">
-          <p><strong>Номер заказа:</strong> <span id="orderNumber"></span></p>
-          <p><strong>Тема:</strong> <span id="orderTopic"></span></p>
-          <p><strong>Заказчик:</strong> <span id="orderCustomer"></span></p>
-          <p><strong>Телефон:</strong> <span id="orderPhone"></span></p>
-          <p><strong>Telegram:</strong> <span id="orderTelegram"></span></p>
-          <p><strong>Статус:</strong> <span id="orderStatus"></span></p>
-          <p><strong>Срок:</strong> <span id="orderDeadline"></span></p>
-          <p><strong>Бюджет:</strong> <span id="orderBudget"></span> ₽</p>
-          <p><strong>Заметки:</strong> <span id="orderNotes"></span></p>
+          <div class="order-details-grid">
+            <p><strong>Номер заказа:</strong> <span id="orderNumber"></span></p>
+            <p><strong>Тема:</strong> <span id="orderTopic"></span></p>
+            <p><strong>Заказчик:</strong> <span id="orderCustomer"></span></p>
+            <p><strong>Телефон:</strong> <span id="orderPhone"></span></p>
+            <p><strong>Telegram:</strong> <span id="orderTelegram"></span></p>
+            <p><strong>Статус:</strong> <span id="orderStatus"></span></p>
+            <p><strong>Срок:</strong> <span id="orderDeadline"></span></p>
+            <p><strong>Бюджет:</strong> <span id="orderBudget"></span> ₽</p>
+          </div>
           
-          <!-- Кнопка для редактирования заказа -->
-          <button id="adminEditBtn" onclick="toggleAdminEdit()">Редактировать заказ</button>
+          <button id="adminEditBtn" onclick="toggleAdminEdit()" class="modern-button">Редактировать заказ</button>
           
-          <!-- Форма редактирования заказа -->
-          <div id="adminEditSection">
-            <form id="adminEditForm" action="/api/order/admin-edit" method="POST">
+          <div id="adminEditSection" style="display: none;">
+            <form id="adminEditForm" action="/api/order/admin-edit" method="POST" class="edit-form">
               <input type="hidden" name="orderID" id="adminEditOrderID">
               
               <label for="adminEditTopic">Тема заказа:</label>
-              <input type="text" id="adminEditTopic" name="topic" required>
-              
-              <label for="adminEditDescription">Описание заказа:</label>
-              <textarea id="adminEditDescription" name="description" rows="3" required></textarea>
+              <input type="text" id="adminEditTopic" name="topic" required class="input-field">
               
               <label for="adminEditDeadline">Срок выполнения:</label>
-              <input type="date" id="adminEditDeadline" name="deadline" required>
-              
-              <label for="adminEditPlagiarismRequired">Проверка на плагиат:</label>
-              <input type="checkbox" id="adminEditPlagiarismRequired" name="plagiarismRequired">
-              
-              <label for="adminEditPlagiarismPercent">Процент плагиата:</label>
-              <input type="number" id="adminEditPlagiarismPercent" name="plagiarismPercent" min="0" max="100">
+              <input type="date" id="adminEditDeadline" name="deadline" required class="input-field">
               
               <label for="adminEditBudget">Бюджет (₽):</label>
-              <input type="number" id="adminEditBudget" name="budget" step="0.01" required>
-              
-              <label for="adminEditWorkType">Тип работы:</label>
-              <input type="text" id="adminEditWorkType" name="workType" required>
+              <input type="number" id="adminEditBudget" name="budget" step="0.01" required class="input-field">
               
               <label for="adminEditNotes">Заметки:</label>
-              <textarea id="adminEditNotes" name="notes" rows="3"></textarea>
+              <textarea id="adminEditNotes" name="notes" rows="4" class="input-field"></textarea>
               
-              <button type="submit">Сохранить изменения</button>
-              <button type="button" onclick="toggleAdminEdit()">Отмена</button>
+              <div class="button-group">
+                <button type="submit" class="modern-button">Сохранить изменения</button>
+                <button type="button" onclick="toggleAdminEdit()" class="modern-button secondary">Отмена</button>
+              </div>
             </form>
           </div>
           
-          <!-- Блок отзыва -->
-          <div id="reviewSection">
+          <div id="reviewSection" style="display: none;">
             <h3>Отзыв</h3>
-            <div id="reviewContent"></div>
-            <div id="reviewFormContainer">
+            <div id="reviewContent" class="review-content"></div>
+            <div id="reviewFormContainer" style="display: none;">
               <h4>Оставить отзыв</h4>
-              <form id="reviewForm" action="/api/order/review" method="POST">
+              <form id="reviewForm" action="/api/order/review" method="POST" class="edit-form">
                 <input type="hidden" name="orderID" id="reviewOrderID">
                 <label for="reviewRating">Оценка:</label>
-                <select id="reviewRating" name="rating">
+                <select id="reviewRating" name="rating" class="input-field">
                   <option value="1">1</option>
                   <option value="2">2</option>
                   <option value="3">3</option>
@@ -614,79 +863,180 @@
                   <option value="5">5</option>
                 </select>
                 <label for="reviewComment">Комментарий:</label>
-                <textarea id="reviewComment" name="comment" rows="3"></textarea>
-                <button type="submit">Сохранить отзыв</button>
+                <textarea id="reviewComment" name="comment" rows="4" class="input-field"></textarea>
+                <button type="submit" class="modern-button">Сохранить отзыв</button>
               </form>
             </div>
           </div>
           
           <div class="order-files">
             <h3>Файлы заказа</h3>
-            <div id="filesContainer"></div>
-            <form id="uploadFormModal" action="/api/order/upload" method="POST" enctype="multipart/form-data">
+            <div id="filesContainer" class="files-grid-modal"></div>
+            <form id="uploadFormModal" action="/api/order/upload" method="POST" enctype="multipart/form-data" class="upload-form">
               <input type="hidden" name="orderID" id="modalOrderID">
-              <input type="file" name="files" multiple required>
-              <button type="submit">Загрузить файлы</button>
+              <input type="file" name="files" multiple required class="input-field">
+              <button type="submit" class="modern-button">Загрузить файлы</button>
             </form>
           </div>
           
-          <!-- Блок действий в модальном окне -->
           <div class="modal-actions" id="modalActions"></div>
         </div>
         <div class="chat-section-modal">
           <h3>Чат</h3>
           <div class="chat-window" id="chatContainer"></div>
           <div class="chat-input">
-            <input type="text" id="chatInput" placeholder="Напишите сообщение...">
-            <button onclick="sendChatMessage()">Отправить</button>
+            <input type="text" id="chatInput" placeholder="Напишите сообщение..." class="input-field">
+            <button onclick="sendChatMessage()" class="modern-button">Отправить</button>
           </div>
         </div>
       </div>
     </div>
   </div>
   
-  <!-- Плавающая кнопка "Обновить заказы" -->
   <div class="fab-refresh" onclick="refreshOrders()">
     <i class="fa-solid fa-arrow-rotate-right"></i>
     <span>Обновить заказы</span>
   </div>
   
-  <!-- Toast уведомление -->
-  <div id="toast" class="toast"></div>
-  
-  <script>
-    var currentChatWS = null;
-    var currentOrderStatus = "новый"; // Глобальная переменная для хранения статуса заказа
+  <div id="toast" class="toast" style="display: none;"></div>
 
-    // Функция для вывода toast уведомления
-    function showToast(message) {
+  <style>
+    .order-details-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .modern-button {
+      padding: 12px 25px;
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease;
+      font-size: 1em;
+      font-weight: 500;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .modern-button:hover {
+      background: var(--secondary-color);
+      transform: translateY(-2px);
+    }
+
+    .modern-button.secondary {
+      background: var(--neutral-color);
+    }
+
+    .modern-button.secondary:hover {
+      background: #5a6268;
+    }
+
+    .edit-form, .upload-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .input-field {
+      border: 1px solid var(--text-light);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 1em;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+      outline: none;
+    }
+
+    .review-content {
+      background: var(--card-bg);
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 15px;
+    }
+  </style>
+
+  <script defer>
+    let currentChatWS = null;
+    let currentOrderStatus = "новый";
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.body.dataset.theme = savedTheme;
+      const themeToggle = document.getElementById('themeToggle');
+      themeToggle.innerHTML = savedTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    }
+
+    const themeToggle = document.getElementById('themeToggle');
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = document.body.dataset.theme === 'dark' ? 'dark' : 'light';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.body.dataset.theme = newTheme;
+      localStorage.setItem('theme', newTheme);
+      themeToggle.innerHTML = newTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+      trackEvent('Theme', 'Toggle', newTheme);
+    });
+
+    function showToast(message, type = 'success') {
       const toast = document.getElementById('toast');
       toast.textContent = message;
+      toast.className = `toast ${type}`;
       toast.style.display = 'block';
       setTimeout(() => {
-        toast.style.display = 'none';
+        toast.style.transition = 'opacity 0.5s';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.style.display = 'none', 500);
       }, 3000);
     }
-    
+
     function refreshOrders() {
-      location.reload();
+      const ordersGrid = document.getElementById('ordersGrid');
+      ordersGrid.classList.add('skeleton');
+      setTimeout(() => {
+        location.reload();
+        ordersGrid.classList.remove('skeleton');
+      }, 1000);
+      showToast('Заказы обновлены', 'success');
     }
-    
-    // Обновление блока действий в модальном окне
+
     function updateModalActions(orderID, status) {
-      var modalActions = document.getElementById("modalActions");
+      const modalActions = document.getElementById("modalActions");
       modalActions.innerHTML = "";
-      if (status === "новый") {
-        modalActions.innerHTML += '<button class="btn-accept" onclick="acceptOrder('+orderID+')">Принять заказ</button>';
-      } else if (status === "в работе") {
-        modalActions.innerHTML += '<button class="btn-complete" onclick="completeOrder('+orderID+')">Завершить заказ</button>';
-        modalActions.innerHTML += '<button class="btn-upload" onclick="uploadFinalFile('+orderID+')">Загрузить итоговый заказ</button>';
-        modalActions.innerHTML += '<button class="btn-delete" onclick="deleteOrder('+orderID+')">Удалить заказ</button>';
-      } else if (status === "завершён" || status === "отменён") {
-        modalActions.innerHTML += '<button class="btn-delete" onclick="deleteOrder('+orderID+')">Удалить заказ</button>';
+      switch (status) {
+        case "новый":
+          modalActions.innerHTML += '<button class="modal-actions-btn btn-accept" onclick="acceptOrder(' + orderID + ')">Принять заказ</button>';
+          modalActions.innerHTML += '<button class="modal-actions-btn btn-cancel" onclick="cancelOrder(' + orderID + ')">Отменить заказ</button>';
+          break;
+        case "в работе":
+          modalActions.innerHTML += '<button class="modal-actions-btn btn-upload" onclick="uploadFinalFile(' + orderID + ')">Загрузить итоговый файл</button>';
+          modalActions.innerHTML += '<button class="modal-actions-btn btn-complete" onclick="completeOrder(' + orderID + ')">Завершить заказ</button>';
+          modalActions.innerHTML += '<button class="modal-actions-btn btn-cancel" onclick="cancelOrder(' + orderID + ')">Отменить заказ</button>';
+          break;
+        case "завершён":
+          modalActions.innerHTML += '<button class="modal-actions-btn btn-view-final" onclick="viewFinalFile(' + orderID + ')">Просмотреть итоговый файл</button>';
+          modalActions.innerHTML += '<button class="modal-actions-btn btn-delete" onclick="deleteOrder(' + orderID + ')">Удалить заказ</button>';
+          break;
+        case "отменён":
+          modalActions.innerHTML += '<button class="modal-actions-btn btn-delete" onclick="deleteOrder(' + orderID + ')">Удалить заказ</button>';
+          break;
+        default:
+          modalActions.innerHTML += '<p>Статус не определён</p>';
       }
     }
-    
+
     async function acceptOrder(orderID) {
       if (!confirm("Принять заказ?")) return;
       const formData = new FormData();
@@ -695,18 +1045,25 @@
         const response = await fetch("/api/order/accept", { method: "POST", body: formData });
         const data = await response.json();
         if (response.ok) {
-          showToast(data.message);
+          showToast(data.message, 'success');
           currentOrderStatus = "в работе";
+          const card = document.querySelector(`.order-card[data-order-id="${orderID}"]`);
+          if (card) {
+            card.setAttribute('data-status', currentOrderStatus);
+            card.className = `order-card in-progress`;
+          }
           document.getElementById("orderStatus").textContent = currentOrderStatus;
           updateModalActions(orderID, currentOrderStatus);
+          markOrderChanged(orderID);
+          updateStats();
         } else {
-          showToast(data.error || "Ошибка");
+          showToast(data.error || "Ошибка", 'error');
         }
       } catch (err) {
-        showToast("Ошибка соединения");
+        showToast("Ошибка соединения", 'error');
       }
     }
-    
+
     async function completeOrder(orderID) {
       if (!confirm("Завершить заказ?")) return;
       const formData = new FormData();
@@ -715,19 +1072,25 @@
         const response = await fetch("/api/order/complete", { method: "POST", body: formData });
         const data = await response.json();
         if (response.ok) {
-          showToast(data.message);
+          showToast(data.message, 'success');
           currentOrderStatus = "завершён";
+          const card = document.querySelector(`.order-card[data-order-id="${orderID}"]`);
+          if (card) {
+            card.setAttribute('data-status', currentOrderStatus);
+            card.className = `order-card completed`;
+          }
           document.getElementById("orderStatus").textContent = currentOrderStatus;
           updateModalActions(orderID, currentOrderStatus);
           loadReview(orderID);
+          updateStats();
         } else {
-          showToast(data.error || "Ошибка");
+          showToast(data.error || "Ошибка", 'error');
         }
       } catch (err) {
-        showToast("Ошибка соединения");
+        showToast("Ошибка соединения", 'error');
       }
     }
-    
+
     async function cancelOrder(orderID) {
       if (!confirm("Отменить заказ?")) return;
       const formData = new FormData();
@@ -736,18 +1099,24 @@
         const response = await fetch("/api/order/cancel", { method: "POST", body: formData });
         const data = await response.json();
         if (response.ok) {
-          showToast(data.message);
+          showToast(data.message, 'success');
           currentOrderStatus = "отменён";
+          const card = document.querySelector(`.order-card[data-order-id="${orderID}"]`);
+          if (card) {
+            card.setAttribute('data-status', currentOrderStatus);
+            card.className = `order-card cancelled`;
+          }
           document.getElementById("orderStatus").textContent = currentOrderStatus;
           updateModalActions(orderID, currentOrderStatus);
+          updateStats();
         } else {
-          showToast(data.error || "Ошибка");
+          showToast(data.error || "Ошибка", 'error');
         }
       } catch (err) {
-        showToast("Ошибка соединения");
+        showToast("Ошибка соединения", 'error');
       }
     }
-    
+
     async function deleteOrder(orderID) {
       if (!confirm("Удалить заказ? Это действие необратимо.")) return;
       const formData = new FormData();
@@ -756,47 +1125,60 @@
         const response = await fetch("/api/order/delete", { method: "POST", body: formData });
         const data = await response.json();
         if (response.ok) {
-          showToast(data.message);
+          showToast(data.message, 'success');
+          const card = document.querySelector(`.order-card[data-order-id="${orderID}"]`);
+          if (card) {
+            card.remove();
+          }
+          updateStats();
           refreshOrders();
         } else {
-          showToast(data.error || "Ошибка");
+          showToast(data.error || "Ошибка", 'error');
         }
       } catch (err) {
-        showToast("Ошибка соединения");
+        showToast("Ошибка соединения", 'error');
       }
     }
-    
-    // Функция для пометки заказа как изменённого (добавляет пульсирующий кружочек)
+
+    async function viewFinalFile(orderID) {
+      try {
+        const response = await fetch(`/api/order/files?orderID=${orderID}`);
+        const data = await response.json();
+        if (response.ok && data.files.length > 0) {
+          const finalFile = data.files[data.files.length - 1]; // Предполагаем, что последний файл — итоговый
+          window.open(finalFile.url || finalFile.URL, '_blank');
+        } else {
+          showToast("Итоговый файл не найден", 'error');
+        }
+      } catch (err) {
+        showToast("Ошибка при загрузке файла", 'error');
+      }
+    }
+
     function markOrderChanged(orderID) {
-      var card = document.querySelector('.order-card[data-order-id="'+orderID+'"]');
-      if(card && !card.querySelector('.new-indicator')) {
-        var indicator = document.createElement('span');
+      const card = document.querySelector('.order-card[data-order-id="' + orderID + '"]');
+      if (card && !card.querySelector('.new-indicator')) {
+        const indicator = document.createElement('span');
         indicator.className = 'new-indicator';
         card.appendChild(indicator);
       }
     }
-    
-    // Функция для переключения формы редактирования заказа
+
     function toggleAdminEdit() {
-      var section = document.getElementById("adminEditSection");
-      if(section.style.display === "none" || section.style.display === "") {
-        // При открытии формы заполняем поля текущими значениями
-        var modalOrderID = document.getElementById("modalOrderID").value;
+      const section = document.getElementById("adminEditSection");
+      if (section.style.display === "none" || section.style.display === "") {
+        const modalOrderID = document.getElementById("modalOrderID").value;
         document.getElementById("adminEditOrderID").value = modalOrderID;
         document.getElementById("adminEditTopic").value = document.getElementById("orderTopic").textContent;
-        // Если существует скрытый элемент с описанием – используем его, иначе оставляем пустым
-        document.getElementById("adminEditDescription").value = document.getElementById("orderDescription") ? document.getElementById("orderDescription").textContent : "";
         document.getElementById("adminEditDeadline").value = document.getElementById("orderDeadline").textContent;
-        document.getElementById("adminEditBudget").value = document.getElementById("orderBudget").textContent;
-        document.getElementById("adminEditWorkType").value = document.getElementById("orderWorkType") ? document.getElementById("orderWorkType").textContent : "";
-        document.getElementById("adminEditNotes").value = document.getElementById("orderNotes").textContent;
+        document.getElementById("adminEditBudget").value = document.getElementById("orderBudget").textContent.replace(" ₽", "");
+        document.getElementById("adminEditNotes").value = document.getElementById("orderNotes")?.textContent || "";
         section.style.display = "block";
       } else {
         section.style.display = "none";
       }
     }
-    
-    // Обработка формы редактирования заказа
+
     document.getElementById("adminEditForm").addEventListener("submit", async function(e) {
       e.preventDefault();
       const formData = new FormData(this);
@@ -804,82 +1186,96 @@
         const response = await fetch(this.action, { method: "POST", body: formData });
         const data = await response.json();
         if (response.ok) {
-          showToast(data.message);
-          // Обновляем отображаемые данные
+          showToast(data.message, 'success');
           document.getElementById("orderTopic").textContent = document.getElementById("adminEditTopic").value;
           document.getElementById("orderDeadline").textContent = document.getElementById("adminEditDeadline").value;
-          document.getElementById("orderBudget").textContent = document.getElementById("adminEditBudget").value;
+          document.getElementById("orderBudget").textContent = document.getElementById("adminEditBudget").value + " ₽";
           document.getElementById("orderNotes").textContent = document.getElementById("adminEditNotes").value;
           toggleAdminEdit();
+          markOrderChanged(document.getElementById("adminEditOrderID").value);
+          updateStats();
         } else {
-          showToast(data.error || "Ошибка редактирования заказа");
+          showToast(data.error || "Ошибка редактирования заказа", 'error');
         }
       } catch (err) {
-        showToast("Ошибка соединения");
+        showToast("Ошибка соединения", 'error');
       }
     });
-    
-    // При просмотре заказа
+
     function viewOrder(orderID) {
-      var card = document.querySelector('.order-card[data-order-id="'+orderID+'"]');
+      const card = document.querySelector('.order-card[data-order-id="' + orderID + '"]');
       if (!card) return;
-      
-      // Читаем данные из карточки
-      var orderNumber = card.getAttribute("data-order-number");
-      var orderTopic = card.getAttribute("data-title");
-      var orderCustomer = card.getAttribute("data-customer");
-      var orderPhone = card.getAttribute("data-phone");
-      var orderTelegram = card.getAttribute("data-telegram");
-      
+
+      const orderNumber = card.getAttribute("data-order-number");
+      const orderTopic = card.getAttribute("data-title");
+      const orderCustomer = card.getAttribute("data-customer");
+      const orderPhone = card.getAttribute("data-phone");
+      const orderTelegram = card.getAttribute("data-telegram");
+      const orderStatus = card.getAttribute("data-status");
+      const orderDeadline = card.getAttribute("data-deadline");
+      const orderBudget = card.getAttribute("data-budget");
+
       document.getElementById('orderNumber').textContent = orderNumber;
       document.getElementById('orderTopic').textContent = orderTopic;
       document.getElementById('orderCustomer').textContent = orderCustomer;
       document.getElementById('orderPhone').textContent = orderPhone;
       document.getElementById('orderTelegram').textContent = orderTelegram;
-      
-      // Остальные поля (статус, срок, бюджет) можно либо загрузить с сервера, либо задать дефолтные значения
-      document.getElementById('orderStatus').textContent = currentOrderStatus;
-      document.getElementById('orderDeadline').textContent = "2025-03-01";
-      document.getElementById('orderBudget').textContent = "5000";
-      // Заметки изначально пустые
-      document.getElementById('orderNotes').textContent = "";
-      
-      // Сохраняем orderID в скрытом поле для дальнейших действий
+      document.getElementById('orderStatus').textContent = orderStatus;
+      document.getElementById('orderDeadline').textContent = orderDeadline;
+      document.getElementById('orderBudget').textContent = orderBudget;
+
+      currentOrderStatus = orderStatus;
+
       document.getElementById('modalOrderID').value = orderID;
-      
+
       loadFilesModal();
       loadChatHistory(orderID);
-      
+
       document.getElementById('orderDetailModal').style.display = "flex";
-      
-      var wsUrl = "ws://" + window.location.host + "/ws/chat?orderID=" + orderID;
+
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsHost = window.location.host;
+      const wsUrl = `${wsProtocol}//${wsHost}/ws/chat?orderID=${orderID}`;
       currentChatWS = new WebSocket(wsUrl);
-      currentChatWS.onopen = function() {
-        console.log("Чат подключён");
+
+      currentChatWS.onopen = () => {
+        console.log("Чат подключён через:", wsUrl);
       };
-      currentChatWS.onmessage = function(event) {
-        var msg = JSON.parse(event.data);
-        appendChatMessage(msg);
+
+      currentChatWS.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          appendChatMessage(msg);
+        } catch (e) {
+          console.error("Ошибка парсинга сообщения:", e);
+          showToast("Ошибка обработки сообщения чата", 'error');
+        }
       };
-      currentChatWS.onerror = function(err) {
+
+      currentChatWS.onerror = (err) => {
         console.error("WebSocket ошибка:", err);
-        showToast("Ошибка подключения к чату");
+        showToast("Ошибка подключения к чату: " + (err.message || 'Неизвестная ошибка'), 'error');
       };
-      
-      var indicator = card.querySelector('.new-indicator');
-      if(indicator) {
+
+      currentChatWS.onclose = () => {
+        console.log("Чат отключён");
+        showToast("Подключение к чату потеряно", 'error');
+      };
+
+      const indicator = card.querySelector('.new-indicator');
+      if (indicator) {
         indicator.remove();
       }
-      
+
       updateModalActions(orderID, currentOrderStatus);
-      
-      if(currentOrderStatus === "завершён") {
+
+      if (currentOrderStatus === "завершён") {
         loadReview(orderID);
       } else {
         document.getElementById("reviewSection").style.display = "none";
       }
     }
-    
+
     document.getElementById("closeOrderDetailModal").addEventListener("click", () => {
       document.getElementById("orderDetailModal").style.display = "none";
       if (currentChatWS) {
@@ -887,6 +1283,7 @@
         currentChatWS = null;
       }
     });
+
     window.addEventListener("click", (e) => {
       if (e.target === document.getElementById("orderDetailModal")) {
         document.getElementById("orderDetailModal").style.display = "none";
@@ -896,127 +1293,125 @@
         }
       }
     });
-    
+
     function sendChatMessage() {
-      var input = document.getElementById("chatInput");
-      var message = input.value.trim();
+      const input = document.getElementById("chatInput");
+      const message = input.value.trim();
       if (message === "") return;
       if (currentChatWS && currentChatWS.readyState === WebSocket.OPEN) {
-        var msgObj = { sender: "admin", message: message };
+        const msgObj = {
+          order_id: parseInt(document.getElementById("modalOrderID").value, 10),
+          sender: "admin",
+          message: message,
+          created_at: Math.floor(Date.now() / 1000)
+        };
         currentChatWS.send(JSON.stringify(msgObj));
         input.value = "";
-        showToast("Сообщение отправлено");
+        showToast("Сообщение отправлено", 'success');
       } else {
-        showToast("Чат не подключён");
+        showToast("Чат не подключён", 'error');
       }
     }
-    
+
     async function loadFilesModal() {
-      var orderID = document.getElementById('modalOrderID').value;
+      const orderID = document.getElementById('modalOrderID').value;
       try {
         const response = await fetch("/api/order/files?orderID=" + orderID);
         const data = await response.json();
         if (response.ok) {
-          updateFilesList(data.files);
+          updateFilesList(data.files || []);
         } else {
-          showToast(data.error || "Ошибка получения файлов");
+          showToast(data.error || "Ошибка получения файлов", 'error');
         }
       } catch (err) {
-        console.error(err);
-        showToast("Ошибка соединения с сервером");
+        showToast("Ошибка соединения с сервером", 'error');
       }
     }
-    
+
     function updateFilesList(files) {
-      var filesContainer = document.getElementById("filesContainer");
+      const filesContainer = document.getElementById("filesContainer");
       filesContainer.innerHTML = "";
-      files.forEach(function(fileURL) {
-        var parts = fileURL.split('/');
-        var fileName = parts[parts.length - 1];
-        var nameParts = fileName.split('_');
-        if (nameParts.length >= 3) {
-          fileName = nameParts.slice(2).join('_');
+      files.forEach(file => {
+        const fileItem = document.createElement("div");
+        fileItem.className = "file-item";
+        let fileName = file.OriginalName || "Неизвестное имя файла";
+        if (fileName.includes('/')) {
+          const urlParts = fileName.split('/');
+          fileName = urlParts[urlParts.length - 1];
+          if (fileName.includes('_') && fileName.split('_')[0] === document.getElementById('modalOrderID').value) {
+            fileName = fileName.split('_').slice(1).join('_');
+          }
         }
-        var ext = fileName.substring(fileName.lastIndexOf('.'));
-        var iconHTML = getIconForExtension(ext);
-        var link = document.createElement("a");
-        link.href = fileURL;
-        link.target = "_blank";
-        link.innerHTML = iconHTML + " " + fileName;
-        link.style.display = "block";
-        link.style.marginBottom = "5px";
-        filesContainer.appendChild(link);
+        const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+        const iconHTML = getIconForExtension(ext);
+        fileItem.innerHTML = `
+          <div class="file-icon">${iconHTML}</div>
+          <a href="${file.url || file.URL || '#'}" target="_blank" class="file-name">${fileName}</a>
+        `;
+        filesContainer.appendChild(fileItem);
       });
     }
-    
+
     function getIconForExtension(ext) {
-      ext = ext.toLowerCase();
-      if (ext === ".pdf") {
-        return '<i class="fa-solid fa-file-pdf" style="color:red;"></i>';
-      } else if (ext === ".doc" || ext === ".docx") {
-        return '<i class="fa-solid fa-file-word" style="color:blue;"></i>';
-      } else if (ext === ".xls" || ext === ".xlsx") {
-        return '<i class="fa-solid fa-file-excel" style="color:green;"></i>';
-      } else if (ext === ".png" || ext === ".jpg" || ext === ".jpeg" || ext === ".gif") {
-        return '<i class="fa-solid fa-file-image" style="color:purple;"></i>';
-      } else {
-        return '<i class="fa-solid fa-file" style="color:gray;"></i>';
-      }
+      if (ext === ".pdf") return '<i class="fa-solid fa-file-pdf" style="color:red;"></i>';
+      if (ext === ".doc" || ext === ".docx") return '<i class="fa-solid fa-file-word" style="color:blue;"></i>';
+      if (ext === ".xls" || ext === ".xlsx") return '<i class="fa-solid fa-file-excel" style="color:green;"></i>';
+      if (ext === ".png" || ext === ".jpg" || ext === ".jpeg" || ext === ".gif") return '<i class="fa-solid fa-file-image" style="color:purple;"></i>';
+      return '<i class="fa-solid fa-file" style="color:gray;"></i>';
     }
-    
+
     async function loadChatHistory(orderID) {
       try {
         const response = await fetch("/api/order/chat_history?orderID=" + orderID);
         const data = await response.json();
         if (response.ok) {
-          var chatContainer = document.getElementById("chatContainer");
+          const chatContainer = document.getElementById("chatContainer");
           chatContainer.innerHTML = "";
-          data.messages.forEach(function(msg) {
-            appendChatMessage(msg);
-          });
+          data.messages.forEach(msg => appendChatMessage(msg));
+          chatContainer.scrollTop = chatContainer.scrollHeight;
         } else {
-          showToast(data.error || "Ошибка получения истории чата");
+          showToast(data.error || "Ошибка получения истории чата", 'error');
         }
       } catch (err) {
-        console.error(err);
-        showToast("Ошибка соединения с сервером");
+        showToast("Ошибка соединения с сервером", 'error');
       }
     }
-    
+
     function appendChatMessage(msg) {
-      var chatContainer = document.getElementById("chatContainer");
-      var msgDiv = document.createElement("div");
-      msgDiv.className = "chat-message " + (msg.sender === "admin" ? "sent" : "received");
-      msgDiv.textContent = msg.sender + ": " + msg.message;
+      const chatContainer = document.getElementById("chatContainer");
+      const msgDiv = document.createElement("div");
+      msgDiv.className = `chat-message ${msg.sender === "admin" ? "sent" : "received"}`;
+      msgDiv.textContent = msg.message;
       chatContainer.appendChild(msgDiv);
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
-    
+
     async function uploadFinalFile(orderID) {
-      var fileInput = document.createElement("input");
+      const fileInput = document.createElement("input");
       fileInput.type = "file";
       fileInput.onchange = async function() {
-        var file = fileInput.files[0];
+        const file = fileInput.files[0];
         if (!file) return;
-        var formData = new FormData();
+        const formData = new FormData();
         formData.append("orderID", orderID);
         formData.append("files", file);
         try {
           const response = await fetch("/api/order/upload", { method: "POST", body: formData });
           const data = await response.json();
           if (response.ok) {
-            showToast("Итоговый файл успешно загружен");
+            showToast("Итоговый файл успешно загружен", 'success');
             updateFilesList(data.files);
+            markOrderChanged(orderID);
           } else {
-            showToast(data.error || "Ошибка загрузки итогового файла");
+            showToast(data.error || "Ошибка загрузки итогового файла", 'error');
           }
         } catch (err) {
-          showToast("Ошибка соединения с сервером");
+          showToast("Ошибка соединения с сервером", 'error');
         }
       };
       fileInput.click();
     }
-    
+
     document.getElementById("uploadFormModal").addEventListener("submit", async function(e) {
       e.preventDefault();
       const formData = new FormData(this);
@@ -1024,20 +1419,17 @@
         const response = await fetch(this.action, { method: "POST", body: formData });
         const data = await response.json();
         if (response.ok) {
-          showToast(data.message);
+          showToast(data.message, 'success');
           updateFilesList(data.files);
-          if(document.getElementById('orderDetailModal').style.display !== "flex") {
-            markOrderChanged(document.getElementById('modalOrderID').value);
-          }
+          markOrderChanged(document.getElementById('modalOrderID').value);
         } else {
-          showToast(data.error || "Ошибка загрузки файлов");
+          showToast(data.error || "Ошибка загрузки файлов", 'error');
         }
       } catch (err) {
-        showToast("Ошибка соединения с сервером");
+        showToast("Ошибка соединения с сервером", 'error');
       }
     });
-    
-    /* Фильтры (вкладки) */
+
     const filterButtons = document.querySelectorAll('.filter-btn');
     filterButtons.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1060,11 +1452,11 @@
         updateStats();
       });
     });
-    
+
     function updateStats() {
       let countAll = 0, countNew = 0, countInProgress = 0, countCompleted = 0, countCancelled = 0;
-      const cards = document.querySelectorAll('.order-card');
-      cards.forEach(card => {
+      const allCards = document.querySelectorAll('.order-card');
+      allCards.forEach(card => {
         countAll++;
         const status = card.getAttribute('data-status').toLowerCase();
         if (status === 'новый') countNew++;
@@ -1077,7 +1469,7 @@
       document.getElementById('count-inprogress').textContent = countInProgress;
       document.getElementById('count-completed').textContent = countCompleted;
       document.getElementById('count-cancelled').textContent = countCancelled;
-      
+
       const newBtn = document.querySelector('.filter-btn[data-filter="новый"]');
       if (countNew > 0) {
         newBtn.innerHTML = `Новые <span class="badge">${countNew}</span>`;
@@ -1085,9 +1477,17 @@
         newBtn.textContent = 'Новые';
       }
     }
-    
-    window.addEventListener('load', updateStats);
-    
+
+    window.addEventListener('load', () => {
+      initTheme();
+      const ordersGrid = document.querySelector('.orders-grid');
+      ordersGrid.classList.add('skeleton');
+      setTimeout(() => {
+        ordersGrid.classList.remove('skeleton');
+        updateStats();
+      }, 1000);
+    });
+
     let searchTimeout;
     const searchInput = document.getElementById('searchInput');
     searchInput.addEventListener('input', () => {
@@ -1107,7 +1507,21 @@
         updateStats();
       }, 300);
     });
-    
+
+    const sortSelect = document.getElementById('sortSelect');
+    sortSelect.addEventListener('change', () => {
+      const sortOrder = sortSelect.value;
+      const cards = Array.from(document.querySelectorAll('.order-card'));
+      cards.sort((a, b) => {
+        const aDate = new Date(a.getAttribute('data-created'));
+        const bDate = new Date(b.getAttribute('data-created'));
+        return sortOrder === 'desc' ? bDate - aDate : aDate - bDate;
+      });
+      const ordersGrid = document.getElementById('ordersGrid');
+      cards.forEach(card => ordersGrid.appendChild(card));
+      updateStats();
+    });
+
     async function loadReview(orderID) {
       try {
         const response = await fetch("/api/order/review?orderID=" + orderID);
@@ -1118,7 +1532,7 @@
         document.getElementById("reviewOrderID").value = orderID;
         if (data.review) {
           reviewContent.innerHTML = "<p><strong>Оценка:</strong> " + data.review.rating + " / 5</p>" +
-                                      "<p><strong>Комментарий:</strong> " + data.review.comment + "</p>";
+                                    "<p><strong>Комментарий:</strong> " + data.review.comment + "</p>";
           reviewFormContainer.style.display = "none";
           reviewSection.style.display = "block";
         } else {
@@ -1127,11 +1541,10 @@
           reviewSection.style.display = "block";
         }
       } catch (err) {
-        console.error(err);
-        showToast("Ошибка получения отзыва");
+        showToast("Ошибка получения отзыва", 'error');
       }
     }
-    
+
     document.getElementById("reviewForm").addEventListener("submit", async function(e) {
       e.preventDefault();
       const formData = new FormData(this);
@@ -1139,16 +1552,19 @@
         const response = await fetch(this.action, { method: "POST", body: formData });
         const data = await response.json();
         if (response.ok) {
-          showToast(data.message);
+          showToast(data.message, 'success');
           loadReview(document.getElementById("reviewOrderID").value);
         } else {
-          showToast(data.error || "Ошибка сохранения отзыва");
+          showToast(data.error || "Ошибка сохранения отзыва", 'error');
         }
       } catch (err) {
-        showToast("Ошибка соединения");
+        showToast("Ошибка соединения", 'error');
       }
     });
-    
+
+    function trackEvent(category, action, label) {
+      console.log(`Event tracked: ${category}, ${action}, ${label}`);
+    }
   </script>
 </body>
 </html>

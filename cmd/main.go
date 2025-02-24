@@ -82,7 +82,7 @@ func main() {
 	r.GET("/api/order/files", middleware.AuthRequired(), handlers.ListFiles())
 
 	// Новый endpoint для получения истории чата (админ)
-	r.GET("/api/order/chat_history", middleware.AdminRequired(db), handlers.ChatHistory(db))
+	r.GET("/api/order/chat_history", middleware.AuthRequired(), handlers.ChatHistory(db))
 
 	// Маршрут для админ-панели (все заказы)
 	r.GET("/admin_dashboard", middleware.AdminRequired(db), handlers.AdminDashboard(db))

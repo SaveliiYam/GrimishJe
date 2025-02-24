@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
@@ -53,7 +52,7 @@ func InitMinio() {
 	}
 }
 
-// UploadFiles обрабатывает загрузку файлов в MinIO и возвращает URL загруженных файлов.
+// UploadFiles обрабатывает загрузку файлов в MinIO и возвращает URL загруженных файлов с исходными именами.
 func UploadFiles() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		orderID := c.PostForm("orderID")
@@ -72,15 +71,19 @@ func UploadFiles() gin.HandlerFunc {
 			return
 		}
 		ctx := context.Background()
-		uploadedFiles := []string{}
+		uploadedFiles := make([]struct {
+			URL          string `json:"url"`
+			OriginalName string `json:"original_name"`
+		}, 0)
 		for _, file := range files {
 			ext := strings.ToLower(filepath.Ext(file.Filename))
 			if !allowedExts[ext] {
 				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Формат файла %s не поддерживается", ext)})
 				return
 			}
-			// Формирование уникального имени файла: orderID_timestamp_originalname
-			newFileName := fmt.Sprintf("%s_%d_%s", orderID, time.Now().UnixNano(), file.Filename)
+			// Сохраняем оригинальное имя файла и формируем имя для MinIO с минимальным префиксом
+			originalName := file.Filename
+			newFileName := fmt.Sprintf("%s_%s", orderID, originalName) // Упрощаем имя, убираем timestamp
 			src, err := file.Open()
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка открытия файла"})
@@ -89,15 +92,19 @@ func UploadFiles() gin.HandlerFunc {
 			defer src.Close()
 			// Загрузка файла в MinIO
 			_, err = minioClient.PutObject(ctx, bucketName, newFileName, src, file.Size, minio.PutObjectOptions{
-				ContentType: file.Header.Get("Content-Type"),
+				ContentType:  file.Header.Get("Content-Type"),
+				UserMetadata: map[string]string{"original_name": originalName}, // Сохраняем оригинальное имя в метаданных
 			})
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка загрузки файла"})
 				return
 			}
-			// Формирование URL для доступа к файлу (настройте под свои условия)
-			fileURL := fmt.Sprintf("http://%s/%s/%s", "localhost:9000", bucketName, newFileName)
-			uploadedFiles = append(uploadedFiles, fileURL)
+			// Формирование URL для доступа к файлу
+			fileURL := fmt.Sprintf("http://localhost:9000/%s/%s", bucketName, newFileName)
+			uploadedFiles = append(uploadedFiles, struct {
+				URL          string `json:"url"`
+				OriginalName string `json:"original_name"`
+			}{URL: fileURL, OriginalName: originalName})
 		}
 		c.JSON(http.StatusOK, gin.H{"message": "Файлы успешно загружены", "files": uploadedFiles})
 	}
@@ -117,15 +124,37 @@ func ListFiles() gin.HandlerFunc {
 			Prefix:    prefix,
 			Recursive: true,
 		})
-		files := []string{}
+		files := make([]struct {
+			URL          string `json:"url"`
+			OriginalName string `json:"original_name"`
+		}, 0)
 		for object := range objectCh {
 			if object.Err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": object.Err.Error()})
 				return
 			}
-			// Формируем URL. Если ваше приложение работает в Docker, возможно, потребуется использовать другое имя хоста.
+			// Получаем метаданные объекта через StatObject
+			objInfo, err := minioClient.StatObject(ctx, bucketName, object.Key, minio.StatObjectOptions{})
+			if err != nil {
+				log.Printf("Ошибка получения метаданных для файла %s: %v", object.Key, err)
+				continue
+			}
+			originalName, ok := objInfo.UserMetadata["original_name"]
+			if !ok {
+				// Если метаданные отсутствуют, извлекаем оригинальное имя из конца пути (после префикса orderID_)
+				parts := strings.Split(object.Key, "_")
+				if len(parts) > 1 {
+					originalName = strings.Join(parts[1:], "_") // Берем все после orderID_
+				} else {
+					originalName = filepath.Base(object.Key)
+				}
+			}
+			// Формируем URL
 			fileURL := fmt.Sprintf("http://localhost:9000/%s/%s", bucketName, object.Key)
-			files = append(files, fileURL)
+			files = append(files, struct {
+				URL          string `json:"url"`
+				OriginalName string `json:"original_name"`
+			}{URL: fileURL, OriginalName: originalName})
 		}
 		c.JSON(http.StatusOK, gin.H{"files": files})
 	}

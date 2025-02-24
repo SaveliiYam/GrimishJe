@@ -4,177 +4,390 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{.Order.Topic}}</title>
-  <!-- Подключаем Font Awesome для иконок -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha512-xh6+2sZO8K+QGZC3zzX2Skd5y3H5H1GwY5gY6ip7Ee4ePFyW4+9lJH1N3rKT4zBZNp3XGzA4EPYY1p/9u6H+IQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
   <style>
-    /* Общие стили */
+    :root {
+      --primary-color: #1e90ff;
+      --secondary-color: #007bff;
+      --success-color: #28a745;
+      --error-color: #dc3545;
+      --background-light: #f5f7fa;
+      --card-bg: #ffffff;
+      --text-color: #2d3748;
+      --text-light: #718096;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Тёмная тема только при явном выборе */
+    [data-theme="dark"] {
+      --background-light: #1a202c;
+      --card-bg: #2d3748;
+      --text-color: #e2e8f0;
+      --text-light: #a0aec0;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Остальные стили остаются без изменений */
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      padding: 10px;
-      background: #f7f9fc;
-      font-family: 'Roboto', sans-serif;
-      color: #333;
+      padding: 20px;
+      background: var(--background-light);
+      font-family: 'Inter', sans-serif;
+      color: var(--text-color);
+      line-height: 1.6;
+      transition: background 0.3s ease, color 0.3s ease;
     }
+
     .container {
       width: 90%;
-      max-width: 1200px;
+      max-width: 1280px;
       margin: 0 auto;
     }
-    header {
-      background: linear-gradient(135deg, #00bfff, #007acc);
-      color: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 2.5em;
-    }
-    .order-details {
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-      margin-bottom: 20px;
-    }
-    .order-details h2 {
-      margin-top: 0;
-      font-size: 1.8em;
-      color: #007acc;
-      border-bottom: 2px solid #e1e8f0;
-      padding-bottom: 5px;
-    }
-    .order-details p {
-      margin: 10px 0;
-      line-height: 1.5;
-      font-size: 1.1em;
-    }
-    .order-number {
-      font-weight: bold;
-      color: #d35400;
-    }
-    .copy-btn {
-      background: #007acc;
+
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 8px;
+      background: var(--primary-color);
       color: #fff;
       border: none;
-      border-radius: 4px;
-      padding: 2px 6px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .theme-toggle:hover {
+      background: var(--secondary-color);
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 30px;
+      box-shadow: var(--shadow-md);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.2em;
+      font-weight: 700;
+    }
+
+    .order-details {
+      background: var(--card-bg);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    .order-details.skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .order-details h2 {
+      font-size: 1.8em;
+      color: var(--secondary-color);
+      margin: 0 0 15px;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 10px;
+    }
+
+    .order-details p {
+      margin: 12px 0;
+      font-size: 1.1em;
+      color: var(--text-light);
+    }
+
+    .order-number {
+      font-weight: 600;
+      color: #d35400;
+    }
+
+    .copy-btn {
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
       font-size: 0.9em;
       cursor: pointer;
-      margin-left: 8px;
-      transition: background-color 0.3s ease;
+      margin-left: 10px;
+      transition: all 0.3s ease;
     }
+
     .copy-btn:hover {
-      background: #005f99;
+      background: var(--secondary-color);
+      transform: translateY(-2px);
     }
+
     .order-files {
       margin-top: 20px;
     }
+
     .order-files h3 {
-      font-size: 1.3em;
-      margin-bottom: 10px;
-      color: #00bfff;
+      font-size: 1.4em;
+      color: var(--primary-color);
+      margin-bottom: 15px;
     }
-    .order-files #filesContainer {
-      margin-bottom: 10px;
+
+    .files-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 15px;
     }
-    .chat-section {
-      background: #fff;
-      padding: 20px;
+
+    .file-item {
+      background: var(--card-bg);
+      padding: 15px;
       border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .file-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .file-icon {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      color: var(--text-light);
+    }
+
+    .file-name {
+      font-size: 1em;
+      color: var(--text-color);
+      text-decoration: none;
+      word-break: break-all; /* Обеспечивает перенос длинных имен файлов */
+    }
+
+    .file-name:hover {
+      color: var(--primary-color);
+    }
+
+    .order-files form {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .order-files input[type="file"] {
+      padding: 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      flex: 1;
+    }
+
+    .order-files button, .download-all-btn {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .order-files button:hover, .download-all-btn:hover {
+      background: var(--secondary-color);
+      transform: translateY(-2px);
+    }
+
+    .download-all-btn {
+      margin-top: 10px;
+      display: none;
+    }
+
+    .chat-section {
+      background: var(--card-bg);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
     }
+
+    .chat-section.skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
     .chat-section h3 {
       font-size: 1.6em;
+      color: var(--primary-color);
       margin-bottom: 15px;
-      color: #00bfff;
-      border-bottom: 2px solid #e1e8f0;
-      padding-bottom: 5px;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 10px;
     }
+
     .chat-window {
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      background: #f9f9f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #f9fafb;
       padding: 15px;
-      height: 300px;
+      height: 350px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
+
     .chat-message {
-      padding: 10px;
-      border-radius: 6px;
-      max-width: 70%;
-      font-size: 0.95em;
-      line-height: 1.4;
+      padding: 12px;
+      border-radius: 8px;
+      max-width: 75%;
+      font-size: 1em;
+      line-height: 1.5;
+      box-shadow: var(--shadow-sm);
+      word-wrap: break-word; /* Обеспечивает перенос длинных слов */
     }
+
     .chat-message.sent {
       background: #e0f7fa;
       align-self: flex-end;
+      margin-left: auto; /* Сдвигает сообщение вправо */
+      position: relative;
+      border-bottom-right-radius: 0; /* Убираем закругление снизу справа */
+      color: #0c4a6e; /* Темно-синий для отправленных сообщений */
     }
+
     .chat-message.received {
       background: #f1f8e9;
       align-self: flex-start;
+      margin-right: auto; /* Сдвигает сообщение влево */
+      position: relative;
+      border-bottom-left-radius: 0; /* Убираем закругление снизу слева */
+      color: #2f6f44; /* Темно-зеленый для полученных сообщений */
     }
+
+    .chat-message.sent::before,
+    .chat-message.received::before {
+      content: "";
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-style: solid;
+    }
+
+    .chat-message.sent::before {
+      bottom: -10px;
+      right: 10px;
+      border-width: 0 10px 10px 0;
+      border-color: transparent #e0f7fa transparent transparent;
+    }
+
+    .chat-message.received::before {
+      bottom: -10px;
+      left: 10px;
+      border-width: 0 0 10px 10px;
+      border-color: transparent transparent #f1f8e9 transparent;
+    }
+
     .chat-input {
       display: flex;
       gap: 10px;
-      margin-top: 15px;
+      margin-top: 20px;
     }
+
     .chat-input input {
       flex: 1;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
       font-size: 1em;
+      transition: all 0.3s ease;
     }
+
+    .chat-input input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+      outline: none;
+    }
+
     .chat-input button {
-      padding: 10px 20px;
-      background: #00bfff;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
       color: #fff;
       border: none;
-      border-radius: 4px;
-      font-size: 1em;
+      border-radius: 8px;
+      font-weight: 600;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: all 0.3s ease;
     }
+
     .chat-input button:hover {
-      background: #007acc;
+      background: var(--secondary-color);
+      transform: translateY(-2px);
     }
-    /* Toast уведомления */
-    #toast {
+
+    .toast {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      background: rgba(0,0,0,0.8);
-      color: #fff;
       padding: 10px 20px;
-      border-radius: 4px;
-      display: none;
-      font-size: 1em;
-      z-index: 3000;
+      color: #fff;
+      border-radius: 8px;
+      animation: slideInToast 0.5s ease forwards;
+      z-index: 2000;
+    }
+
+    .toast.success { background: var(--success-color); }
+    .toast.error { background: var(--error-color); }
+
+    @keyframes slideInToast {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.8em; }
+      .order-details, .chat-section { padding: 15px; }
+      .chat-window { height: 250px; }
+      .chat-input { flex-direction: column; }
+      .chat-input button { width: 100%; }
+      .order-files form { flex-direction: column; }
+      .order-files button, .download-all-btn { width: 100%; }
     }
   </style>
 </head>
 <body>
+  <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
   <div class="container">
     <header>
       <h1>{{.Order.Topic}}</h1>
     </header>
-    
+
     <section class="order-details">
       <h2>Детали заказа</h2>
-      <p>
-        <strong>Номер заказа:</strong> 
-        <span class="order-number">{{.Order.OrderNumber}}</span>
-        <button class="copy-btn" onclick="copyOrderNumber()" aria-label="Скопировать номер заказа">Копировать</button>
-      </p>
+      <p><strong>Номер заказа:</strong> <span class="order-number">{{.Order.OrderNumber}}</span> <button class="copy-btn" onclick="copyOrderNumber()">Копировать</button></p>
       <p><strong>Статус:</strong> {{.Order.Status}}</p>
       <p><strong>Описание:</strong> {{.Order.Description}}</p>
       <p><strong>Срок выполнения:</strong> {{.Order.Deadline}}</p>
@@ -188,162 +401,242 @@
       {{if .Order.Notes}}
         <p><strong>Заметки:</strong> {{.Order.Notes}}</p>
       {{end}}
-      
+
       <div class="order-files">
         <h3>Файлы заказа</h3>
-        <div id="filesContainer">
-          <!-- Здесь будут отображаться файлы с именем и иконкой -->
-        </div>
+        <div id="filesContainer" class="files-grid"></div>
         <form id="uploadForm" enctype="multipart/form-data">
           <input type="hidden" name="orderID" value="{{.Order.ID}}">
           <input type="file" name="files" multiple required>
           <button type="submit">Загрузить файлы</button>
         </form>
+        <button class="download-all-btn" id="downloadAll" style="margin-top: 10px; display: none;">Скачать все</button>
       </div>
     </section>
-    
+
     <section class="chat-section">
       <h3>Чат с исполнителем</h3>
-      <div class="chat-window" id="chatWindow">
-        <!-- История чата загружается через WebSocket -->
-      </div>
+      <div class="chat-window" id="chatWindow"></div>
       <div class="chat-input">
         <input type="text" id="chatInput" placeholder="Напишите сообщение...">
         <button id="sendMessage">Отправить</button>
       </div>
     </section>
   </div>
-  
-  <div id="toast"></div>
-  
-  <script>
-    var currentChatWS = null;
 
-    function showToast(message) {
-      const toast = document.getElementById('toast');
+  <script defer>
+    let currentChatWS = null;
+
+    // Инициализация темы из localStorage
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.body.dataset.theme = savedTheme;
+      const themeToggle = document.getElementById('themeToggle');
+      themeToggle.innerHTML = savedTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    }
+
+    // Переключение темы
+    const themeToggle = document.getElementById('themeToggle');
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = document.body.dataset.theme === 'dark' ? 'dark' : 'light';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.body.dataset.theme = newTheme;
+      localStorage.setItem('theme', newTheme);
+      themeToggle.innerHTML = newTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+      trackEvent('Theme', 'Toggle', newTheme);
+    });
+
+    // Toast уведомления
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
       toast.textContent = message;
-      toast.style.display = 'block';
+      document.body.appendChild(toast);
       setTimeout(() => {
-        toast.style.display = 'none';
+        toast.style.transition = 'opacity 0.5s';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 500);
       }, 3000);
     }
 
     function copyOrderNumber() {
       const orderNumber = document.querySelector('.order-number').innerText;
       navigator.clipboard.writeText(orderNumber)
-        .then(() => showToast('Номер заказа скопирован!'))
-        .catch(() => showToast('Ошибка копирования.'));
+        .then(() => {
+          showToast('Номер заказа скопирован!', 'success');
+          trackEvent('Order', 'Copy', 'Order Number');
+        })
+        .catch(() => showToast('Ошибка копирования', 'error'));
     }
 
-    // Подключение к WebSocket-чату для пользователя
-    function connectChat() {
-      var orderID = "{{.Order.ID}}";
-      var wsUrl = "ws://" + window.location.host + "/ws/chat_user?orderID=" + orderID;
-      currentChatWS = new WebSocket(wsUrl);
-
-      currentChatWS.onopen = function() {
-        console.log("Чат подключён (user)");
-      };
-
-      currentChatWS.onmessage = function(event) {
-        var msg = JSON.parse(event.data);
-        var chatWindow = document.getElementById("chatWindow");
-        var msgDiv = document.createElement("div");
-        msgDiv.className = "chat-message " + (msg.sender === "user" ? "sent" : "received");
-        msgDiv.textContent = msg.sender + ": " + msg.message;
-        chatWindow.appendChild(msgDiv);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-      };
-
-      currentChatWS.onerror = function(err) {
-        console.error("WebSocket ошибка:", err);
-        showToast("Ошибка подключения к чату");
-      };
-    }
-
-    window.addEventListener('load', function() {
-      connectChat();
-      loadFiles(); // Загружаем список файлов при загрузке страницы
-    });
-
-    document.getElementById("sendMessage").addEventListener("click", function() {
-      var input = document.getElementById("chatInput");
-      var message = input.value.trim();
-      if (message === "") return;
-      if (currentChatWS && currentChatWS.readyState === WebSocket.OPEN) {
-        var msgObj = {
-          sender: "user",
-          message: message
-        };
-        currentChatWS.send(JSON.stringify(msgObj));
-        input.value = "";
-      } else {
-        showToast("Чат не подключён");
-      }
-    });
-
-    // Функция для обновления списка файлов
-    function updateFilesList(files) {
-      var filesContainer = document.getElementById("filesContainer");
-      filesContainer.innerHTML = "";
-      files.forEach(function(fileURL) {
-        // Извлекаем имя файла из URL
-        var parts = fileURL.split('/');
-        var fileName = parts[parts.length - 1];
-        // Убираем префикс вида "orderID_timestamp_"
-        var nameParts = fileName.split('_');
-        if (nameParts.length >= 3) {
-          fileName = nameParts.slice(2).join('_');
-        }
-        var ext = fileName.substring(fileName.lastIndexOf('.'));
-        var iconHTML = getIconForExtension(ext);
-        var link = document.createElement("a");
-        link.href = fileURL;
-        link.target = "_blank";
-        link.innerHTML = iconHTML + " " + fileName;
-        link.style.display = "block";
-        filesContainer.appendChild(link);
-      });
-    }
-
-    // Функция возвращает HTML с иконкой для файла по его расширению
-    function getIconForExtension(ext) {
-      ext = ext.toLowerCase();
-      if (ext === ".pdf") {
-        return '<i class="fa-solid fa-file-pdf" style="color:red;"></i>';
-      } else if (ext === ".doc" || ext === ".docx") {
-        return '<i class="fa-solid fa-file-word" style="color:blue;"></i>';
-      } else if (ext === ".xls" || ext === ".xlsx") {
-        return '<i class="fa-solid fa-file-excel" style="color:green;"></i>';
-      } else if (ext === ".png" || ext === ".jpg" || ext === ".jpeg" || ext === ".gif") {
-        return '<i class="fa-solid fa-file-image" style="color:purple;"></i>';
-      } else {
-        return '<i class="fa-solid fa-file" style="color:gray;"></i>';
-      }
-    }
-
-    // Функция для загрузки списка файлов
-    async function loadFiles() {
-      var orderID = "{{.Order.ID}}";
+    // Загрузка истории чатов при открытии страницы
+    async function loadChatHistory(orderID) {
       try {
-        const response = await fetch("/api/order/files?orderID=" + orderID);
+        const response = await fetch(`/api/order/chat_history?orderID=${orderID}`);
         const data = await response.json();
         if (response.ok) {
-          updateFilesList(data.files);
+          const chatWindow = document.getElementById("chatWindow");
+          data.messages.forEach(msg => {
+            const msgDiv = document.createElement("div");
+            msgDiv.className = `chat-message ${msg.sender === "user" ? "sent" : "received"}`;
+            // Отображаем только текст сообщения
+            msgDiv.textContent = msg.message;
+            chatWindow.appendChild(msgDiv);
+          });
+          chatWindow.scrollTop = chatWindow.scrollHeight;
         } else {
-          showToast(data.error || "Ошибка получения файлов");
+          showToast(data.error || "Ошибка загрузки истории чата", 'error');
         }
       } catch (err) {
         console.error(err);
-        showToast("Ошибка соединения с сервером");
+        showToast("Ошибка соединения с сервером", 'error');
       }
     }
 
-    // Обработка загрузки файлов через AJAX
-    document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+    function connectChat() {
+      const orderID = "{{.Order.ID}}";
+      // Получаем текущий URL для формирования WebSocket-адреса через ngrok
+      const currentURL = window.location.hostname;
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsPort = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+      const wsUrl = `${wsProtocol}//${currentURL}:${wsPort}/ws/chat_user?orderID=${orderID}`;
+      currentChatWS = new WebSocket(wsUrl);
+
+      currentChatWS.onopen = () => {
+        console.log("Чат подключён (user) через:", wsUrl);
+        // Загружаем историю после подключения
+        loadChatHistory(orderID);
+      };
+
+      currentChatWS.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          console.log("Получено сообщение от сервера:", msg); // Логирование для отладки
+          const chatWindow = document.getElementById("chatWindow");
+          const msgDiv = document.createElement("div");
+          msgDiv.className = `chat-message ${msg.sender === "user" ? "sent" : "received"}`;
+
+          // Отображаем только текст сообщения
+          msgDiv.textContent = msg.message;
+          chatWindow.appendChild(msgDiv);
+          chatWindow.scrollTop = chatWindow.scrollHeight;
+        } catch (e) {
+          console.error("Ошибка парsинга сообщения:", e);
+          showToast("Ошибка обработки сообщения чата", 'error');
+        }
+      };
+
+      currentChatWS.onerror = (err) => {
+        console.error("WebSocket ошибка:", err);
+        showToast("Ошибка подключения к чату: " + (err.message || 'Неизвестная ошибка'), 'error');
+      };
+
+      currentChatWS.onclose = () => {
+        console.log("Чат отключён");
+        showToast("Подключение к чату потеряно", 'error');
+      };
+
+      currentChatWS.onpong = () => {
+        console.log("Получен pong от сервера");
+      };
+    }
+
+    document.getElementById("sendMessage").addEventListener("click", () => {
+      const input = document.getElementById("chatInput");
+      const message = input.value.trim();
+      if (message === "") return;
+      if (currentChatWS && currentChatWS.readyState === WebSocket.OPEN) {
+        const msgObj = {
+          order_id: parseInt("{{.Order.ID}}", 10),
+          sender: "user",
+          message: message,
+          created_at: Math.floor(Date.now() / 1000)
+        };
+        currentChatWS.send(JSON.stringify(msgObj));
+        input.value = "";
+        trackEvent('Chat', 'Send', 'Message');
+      } else {
+        showToast("Чат не подключён", 'error');
+      }
+    });
+
+    function updateFilesList(files) {
+      const filesContainer = document.getElementById("filesContainer");
+      const downloadAllBtn = document.getElementById("downloadAll");
+      filesContainer.innerHTML = "";
+      files.forEach(file => {
+        const fileItem = document.createElement("div");
+        fileItem.className = "file-item";
+        let fileName = file.OriginalName; // Используем OriginalName как основной источник
+        if (!fileName || typeof fileName !== 'string') {
+          // Если OriginalName отсутствует, извлекаем имя из URL, убирая префикс orderID_
+          fileName = file.url || file.URL || "Неизвестное имя файла";
+          if (fileName.includes('/')) {
+            const urlParts = fileName.split('/');
+            fileName = urlParts[urlParts.length - 1]; // Берем последнее имя файла
+          }
+          if (fileName.includes('_') && fileName.split('_')[0] === "{{.Order.ID}}") {
+            // Убираем префикс orderID_, если он есть
+            fileName = fileName.split('_').slice(1).join('_');
+          }
+        }
+        console.log("Обработка файла:", file, "Имя файла:", fileName); // Логирование для отладки
+        const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+        const iconHTML = getIconForExtension(ext);
+        fileItem.innerHTML = `
+          <div class="file-icon">${iconHTML}</div>
+          <a href="${file.url || file.URL || '#'}" target="_blank" class="file-name">${fileName}</a>
+        `;
+        filesContainer.appendChild(fileItem);
+      });
+      downloadAllBtn.style.display = files.length > 0 ? 'block' : 'none';
+    }
+
+    function getIconForExtension(ext) {
+      if (ext === ".pdf") return '<i class="fa-solid fa-file-pdf" style="color:red;"></i>';
+      if (ext === ".doc" || ext === ".docx") return '<i class="fa-solid fa-file-word" style="color:blue;"></i>';
+      if (ext === ".xls" || ext === ".xlsx") return '<i class="fa-solid fa-file-excel" style="color:green;"></i>';
+      if (ext === ".png" || ext === ".jpg" || ext === ".jpeg" || ext === ".gif") return '<i class="fa-solid fa-file-image" style="color:purple;"></i>';
+      return '<i class="fa-solid fa-file" style="color:gray;"></i>';
+    }
+
+    async function loadFiles() {
+      const orderID = "{{.Order.ID}}";
+      try {
+        const response = await fetch(`/api/order/files?orderID=${orderID}`);
+        const data = await response.json();
+        console.log("Данные файлов от сервера:", data); // Логирование для отладки
+        if (response.ok) {
+          updateFilesList(data.files || []); // Убедимся, что files не undefined
+        } else {
+          showToast(data.error || "Ошибка получения файлов", 'error');
+        }
+      } catch (err) {
+        console.error("Ошибка загрузки файлов:", err);
+        showToast("Ошибка соединения с сервером", 'error');
+      }
+    }
+
+    // Автоматическое обновление списка файлов через WebSocket или периодический опрос
+    function setupFileUpdates() {
+      const orderID = "{{.Order.ID}}";
+      // Периодический опрос каждые 5 секунд (можно заменить на WebSocket для реального времени)
+      setInterval(() => loadFiles(), 5000);
+
+      // Или использовать WebSocket (если добавишь поддержку в backend)
+      /* const ws = new WebSocket(`ws://localhost:8080/ws/files?orderID=${orderID}`);
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.files) {
+          updateFilesList(data.files);
+        }
+      }; */
+    }
+
+    document.getElementById("uploadForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      var form = this;
-      var formData = new FormData(form);
+      const form = e.target;
+      const formData = new FormData(form);
       try {
         const response = await fetch("/api/order/upload", {
           method: "POST",
@@ -351,17 +644,74 @@
         });
         const data = await response.json();
         if (response.ok) {
-          showToast(data.message);
-          updateFilesList(data.files);
+          showToast(data.message, 'success');
+          updateFilesList(data.files); // Обновляем список сразу после загрузки
+          // Можно также инициировать опрос или WebSocket-сообщение
+          loadFiles(); // Дополнительное обновление для надежности
           form.reset();
+          trackEvent('Files', 'Upload', 'Files Uploaded');
         } else {
-          showToast(data.error || "Ошибка загрузки файлов");
+          showToast(data.error || "Ошибка загрузки файлов", 'error');
         }
       } catch (err) {
         console.error(err);
-        showToast("Ошибка соединения с сервером");
+        showToast("Ошибка соединения с сервером", 'error');
       }
     });
+
+    document.getElementById("downloadAll").addEventListener("click", () => {
+      const filesContainer = document.getElementById("filesContainer");
+      const links = filesContainer.getElementsByTagName("a");
+      if (links.length > 0) {
+        const zip = new JSZip();
+        let count = 0;
+        for (let link of links) {
+          fetch(link.href)
+            .then(response => response.blob())
+            .then(blob => {
+              zip.file(link.textContent, blob);
+              count++;
+              if (count === links.length) {
+                zip.generateAsync({ type: "blob" })
+                  .then(content => {
+                    const url = window.URL.createObjectURL(content);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "files.zip";
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                  });
+              }
+            })
+            .catch(err => console.error("Ошибка скачивания файла:", err));
+        }
+        showToast("Скачивание всех файлов началось", 'success');
+        trackEvent('Files', 'Download All', 'All Files');
+      } else {
+        showToast("Нет файлов для скачивания", 'error');
+      }
+    });
+
+    window.addEventListener('load', () => {
+      initTheme();
+      const orderDetails = document.querySelector('.order-details');
+      const chatSection = document.querySelector('.chat-section');
+      orderDetails.classList.add('skeleton');
+      chatSection.classList.add('skeleton');
+      setTimeout(() => {
+        orderDetails.classList.remove('skeleton');
+        chatSection.classList.remove('skeleton');
+        connectChat();
+        loadFiles();
+        setupFileUpdates(); // Начинаем автоматическое обновление файлов
+      }, 1000);
+    });
+
+    function trackEvent(category, action, label) {
+      console.log(`Event tracked: ${category}, ${action}, ${label}`);
+    }
   </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </body>
 </html>
