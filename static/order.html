@@ -3,9 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{.Order.Topic}}</title>
+  <meta name="description" content="Детали заказа {{.Order.Topic}} — управление файлами, чат с исполнителем и информация о заказе в Громыш.">
+  <meta name="keywords" content="Громыш, заказ, детали заказа, файлы, чат, студенческие работы">
+  <meta name="author" content="Громыш">
+  <title>{{.Order.Topic}} | Громыш</title>
+  <!-- Подключаем Font Awesome для иконок -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
   <style>
     :root {
       --primary-color: #1e90ff;
@@ -20,7 +24,7 @@
       --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
     }
 
-    /* Тёмная тема только при явном выборе */
+    /* Тёмная тема */
     [data-theme="dark"] {
       --background-light: #1a202c;
       --card-bg: #2d3748;
@@ -29,7 +33,6 @@
       --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
-    /* Остальные стили остаются без изменений */
     * {
       box-sizing: border-box;
     }
@@ -50,6 +53,7 @@
       margin: 0 auto;
     }
 
+    /* Переключатель темы */
     .theme-toggle {
       position: fixed;
       top: 20px;
@@ -64,9 +68,11 @@
     }
 
     .theme-toggle:hover {
+      transform: scale(1.1);
       background: var(--secondary-color);
     }
 
+    /* Хедер */
     header {
       background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
       color: #fff;
@@ -79,10 +85,31 @@
 
     header h1 {
       margin: 0;
-      font-size: 2.2em;
+      font-size: clamp(1.8em, 5vw, 2.2em);
       font-weight: 700;
     }
 
+    /* Кнопка "Вернуться к заказам" */
+    .back-to-orders {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 10px 20px;
+      background: var(--primary-color);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .back-to-orders:hover {
+      background: var(--secondary-color);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Детали заказа */
     .order-details {
       background: var(--card-bg);
       padding: 25px;
@@ -104,7 +131,7 @@
     }
 
     .order-details h2 {
-      font-size: 1.8em;
+      font-size: clamp(1.5em, 4vw, 1.8em);
       color: var(--secondary-color);
       margin: 0 0 15px;
       border-bottom: 2px solid #e2e8f0;
@@ -113,7 +140,7 @@
 
     .order-details p {
       margin: 12px 0;
-      font-size: 1.1em;
+      font-size: clamp(1em, 2.5vw, 1.1em);
       color: var(--text-light);
     }
 
@@ -128,7 +155,7 @@
       border: none;
       border-radius: 8px;
       padding: 6px 12px;
-      font-size: 0.9em;
+      font-size: clamp(0.8em, 2vw, 0.9em);
       cursor: pointer;
       margin-left: 10px;
       transition: all 0.3s ease;
@@ -139,14 +166,25 @@
       transform: translateY(-2px);
     }
 
+    /* Файлы заказа */
     .order-files {
       margin-top: 20px;
     }
 
     .order-files h3 {
-      font-size: 1.4em;
+      font-size: clamp(1.2em, 3vw, 1.4em);
       color: var(--primary-color);
       margin-bottom: 15px;
+    }
+
+    .file-section {
+      margin-bottom: 20px;
+    }
+
+    .file-section h4 {
+      font-size: clamp(1.1em, 2.5vw, 1.2em);
+      color: var(--text-color);
+      margin-bottom: 10px;
     }
 
     .files-grid {
@@ -159,8 +197,8 @@
     .file-item {
       background: var(--card-bg);
       padding: 15px;
-      border-radius: 8px;
-      box-shadow: var(--shadow-sm);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -170,7 +208,7 @@
 
     .file-item:hover {
       transform: translateY(-5px);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
     }
 
     .file-icon {
@@ -180,10 +218,12 @@
     }
 
     .file-name {
-      font-size: 1em;
+      font-size: clamp(0.9em, 2vw, 1em);
       color: var(--text-color);
       text-decoration: none;
-      word-break: break-all; /* Обеспечивает перенос длинных имен файлов */
+      word-break: break-all;
+      text-align: center;
+      margin-top: 5px;
     }
 
     .file-name:hover {
@@ -225,6 +265,7 @@
       display: none;
     }
 
+    /* Чат */
     .chat-section {
       background: var(--card-bg);
       padding: 25px;
@@ -241,7 +282,7 @@
     }
 
     .chat-section h3 {
-      font-size: 1.6em;
+      font-size: clamp(1.3em, 3.5vw, 1.6em);
       color: var(--primary-color);
       margin-bottom: 15px;
       border-bottom: 2px solid #e2e8f0;
@@ -253,7 +294,7 @@
       border-radius: 8px;
       background: #f9fafb;
       padding: 15px;
-      height: 350px;
+      height: clamp(250px, 40vh, 350px);
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -264,28 +305,28 @@
       padding: 12px;
       border-radius: 8px;
       max-width: 75%;
-      font-size: 1em;
+      font-size: clamp(0.9em, 2vw, 1em);
       line-height: 1.5;
       box-shadow: var(--shadow-sm);
-      word-wrap: break-word; /* Обеспечивает перенос длинных слов */
+      word-wrap: break-word;
     }
 
     .chat-message.sent {
       background: #e0f7fa;
       align-self: flex-end;
-      margin-left: auto; /* Сдвигает сообщение вправо */
+      margin-left: auto;
       position: relative;
-      border-bottom-right-radius: 0; /* Убираем закругление снизу справа */
-      color: #0c4a6e; /* Темно-синий для отправленных сообщений */
+      border-bottom-right-radius: 0;
+      color: #0c4a6e;
     }
 
     .chat-message.received {
       background: #f1f8e9;
       align-self: flex-start;
-      margin-right: auto; /* Сдвигает сообщение влево */
+      margin-right: auto;
       position: relative;
-      border-bottom-left-radius: 0; /* Убираем закругление снизу слева */
-      color: #2f6f44; /* Темно-зеленый для полученных сообщений */
+      border-bottom-left-radius: 0;
+      color: #2f6f44;
     }
 
     .chat-message.sent::before,
@@ -322,7 +363,7 @@
       padding: 12px;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
-      font-size: 1em;
+      font-size: clamp(0.9em, 2vw, 1em);
       transition: all 0.3s ease;
     }
 
@@ -348,6 +389,100 @@
       transform: translateY(-2px);
     }
 
+    /* Отзывы */
+    .review-section {
+      background: var(--card-bg);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 30px;
+    }
+
+    .review-section.skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    .review-section h3 {
+      font-size: clamp(1.3em, 3.5vw, 1.6em);
+      color: var(--primary-color);
+      margin-bottom: 15px;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 10px;
+    }
+
+    .review-content {
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    .review-content p {
+      margin: 10px 0;
+      font-size: clamp(0.9em, 2vw, 1em);
+      color: var(--text-light);
+    }
+
+    .review-section label {
+      display: block;
+      margin: 15px 0 5px;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .review-section .star-rating {
+      display: flex;
+      gap: 5px;
+      margin: 10px 0;
+    }
+
+    .review-section .star {
+      font-size: 1.5em;
+      color: #ccc; /* Цвет неактивной звезды */
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .review-section .star:hover,
+    .review-section .star.active {
+      color: #ffd700; /* Цвет активной (жёлтой) звезды */
+    }
+
+    .review-section textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: clamp(0.9em, 2vw, 1em);
+      transition: all 0.3s ease;
+    }
+
+    .review-section textarea:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+      outline: none;
+    }
+
+    .review-section button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .review-section button:hover {
+      background: var(--secondary-color);
+      transform: translateY(-2px);
+    }
+
+    /* Toast уведомления */
     .toast {
       position: fixed;
       bottom: 20px;
@@ -367,20 +502,60 @@
       to { transform: translateX(0); opacity: 1; }
     }
 
-    @media (max-width: 600px) {
-      header h1 { font-size: 1.8em; }
-      .order-details, .chat-section { padding: 15px; }
-      .chat-window { height: 250px; }
-      .chat-input { flex-direction: column; }
-      .chat-input button { width: 100%; }
-      .order-files form { flex-direction: column; }
-      .order-files button, .download-all-btn { width: 100%; }
+    /* Адаптивность для мобильных устройств */
+    @media (max-width: 768px) {
+      .container {
+        width: 95%;
+      }
+
+      .theme-toggle {
+        top: 10px;
+        right: 10px;
+      }
+
+      header h1 {
+        font-size: clamp(1.5em, 4vw, 1.8em);
+      }
+
+      .order-details, .chat-section, .review-section {
+        padding: 15px;
+      }
+
+      .chat-window {
+        height: clamp(200px, 30vh, 250px);
+      }
+
+      .chat-input {
+        flex-direction: column;
+      }
+
+      .chat-input button {
+        width: 100%;
+      }
+
+      .order-files form {
+        flex-direction: column;
+      }
+
+      .order-files button, .download-all-btn {
+        width: 100%;
+      }
+
+      .back-to-orders {
+        padding: 8px 16px;
+        font-size: clamp(0.9em, 2vw, 1em);
+      }
     }
   </style>
 </head>
 <body>
-  <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
+  <!-- Переключатель темы -->
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему"><i class="fas fa-moon"></i></button>
+
   <div class="container">
+    <!-- Кнопка "Вернуться к заказам" -->
+    <a href="/dashboard" class="back-to-orders" aria-label="Вернуться к списку заказов">Вернуться к заказам</a>
+
     <header>
       <h1>{{.Order.Topic}}</h1>
     </header>
@@ -390,7 +565,7 @@
       <p><strong>Номер заказа:</strong> <span class="order-number">{{.Order.OrderNumber}}</span> <button class="copy-btn" onclick="copyOrderNumber()">Копировать</button></p>
       <p><strong>Статус:</strong> {{.Order.Status}}</p>
       <p><strong>Описание:</strong> {{.Order.Description}}</p>
-      <p><strong>Срок выполнения:</strong> {{.Order.Deadline}}</p>
+      <p><strong>Срок выполнения:</strong> {{formatDateString .Order.Deadline}}</p>
       <p><strong>Бюджет:</strong> {{.Order.Budget}} ₽</p>
       <p><strong>Тип работы:</strong> {{.Order.WorkType}}</p>
       {{if .Order.PlagiarismRequired}}
@@ -401,31 +576,65 @@
       {{if .Order.Notes}}
         <p><strong>Заметки:</strong> {{.Order.Notes}}</p>
       {{end}}
+    </section>
 
-      <div class="order-files">
-        <h3>Файлы заказа</h3>
-        <div id="filesContainer" class="files-grid"></div>
-        <form id="uploadForm" enctype="multipart/form-data">
-          <input type="hidden" name="orderID" value="{{.Order.ID}}">
-          <input type="file" name="files" multiple required>
-          <button type="submit">Загрузить файлы</button>
-        </form>
-        <button class="download-all-btn" id="downloadAll" style="margin-top: 10px; display: none;">Скачать все</button>
+    <section class="order-files">
+      <h3>Файлы заказа</h3>
+      <div class="file-section">
+        <h4>Файлы заказчика</h4>
+        <div id="userFilesContainer" class="files-grid"></div>
       </div>
+      <div class="file-section">
+        <h4>Файлы администратора</h4>
+        <div id="adminFilesContainer" class="files-grid"></div>
+      </div>
+      <form id="uploadForm" enctype="multipart/form-data">
+        <input type="hidden" name="orderID" value="{{.Order.ID}}">
+        <input type="file" name="files" multiple required aria-label="Выберите файлы для загрузки" onchange="validateFileCount(this)">
+        <button type="submit">Загрузить файлы</button>
+      </form>
+      <button class="download-all-btn" id="downloadAll" style="margin-top: 10px; display: none;" aria-label="Скачать все файлы">Скачать все</button>
+    </section>
+
+    <section class="review-section" id="reviewSection" style="display: none;">
+      <h3>Оставить отзыв</h3>
+      <div id="reviewContent" class="review-content" style="display: none;">
+        <p><strong>Ваш отзыв:</strong></p>
+        <p><strong>Оценка:</strong> <span id="reviewRating"></span>/5</p>
+        <p><strong>Комментарий:</strong> <span id="reviewComment"></span></p>
+        <p><strong>Дата:</strong> <span id="reviewDate"></span></p>
+      </div>
+      <form id="reviewForm" action="/api/order/review" method="POST" style="display: none;">
+        <input type="hidden" name="orderID" value="{{.Order.ID}}">
+        <label for="reviewRating">Оценка (1-5):</label>
+        <div class="star-rating" id="reviewRating" role="radiogroup" aria-label="Выберите оценку от 1 до 5 звёзд">
+          <i class="fas fa-star star" data-value="1"></i>
+          <i class="fas fa-star star" data-value="2"></i>
+          <i class="fas fa-star star" data-value="3"></i>
+          <i class="fas fa-star star" data-value="4"></i>
+          <i class="fas fa-star star" data-value="5"></i>
+        </div>
+        <input type="hidden" name="rating" id="hiddenRating" value="">
+        <label for="reviewComment">Комментарий (опционально):</label>
+        <textarea id="reviewComment" name="comment" rows="4" aria-label="Комментарий к отзыву"></textarea>
+        <button type="submit" aria-label="Отправить отзыв">Отправить отзыв</button>
+      </form>
+      <p id="noReviewMessage" style="display: none;">Отзыв не оставлен.</p>
     </section>
 
     <section class="chat-section">
       <h3>Чат с исполнителем</h3>
-      <div class="chat-window" id="chatWindow"></div>
+      <div class="chat-window" id="chatWindow" role="log" aria-live="polite"></div>
       <div class="chat-input">
-        <input type="text" id="chatInput" placeholder="Напишите сообщение...">
-        <button id="sendMessage">Отправить</button>
+        <input type="text" id="chatInput" placeholder="Напишите сообщение..." aria-label="Введите сообщение для чата">
+        <button id="sendMessage" aria-label="Отправить сообщение">Отправить</button>
       </div>
     </section>
   </div>
 
   <script defer>
     let currentChatWS = null;
+    let loadedMessages = new Set(); // Для предотвращения дублирования сообщений
 
     // Инициализация темы из localStorage
     function initTheme() {
@@ -451,6 +660,7 @@
       const toast = document.createElement('div');
       toast.className = `toast ${type}`;
       toast.textContent = message;
+      toast.setAttribute('role', 'alert');
       document.body.appendChild(toast);
       setTimeout(() => {
         toast.style.transition = 'opacity 0.5s';
@@ -466,36 +676,42 @@
           showToast('Номер заказа скопирован!', 'success');
           trackEvent('Order', 'Copy', 'Order Number');
         })
-        .catch(() => showToast('Ошибка копирования', 'error'));
+        .catch(() => showToast('Ошибка копирования номера заказа', 'error'));
     }
 
-    // Загрузка истории чатов при открытии страницы
+    // Загрузка истории чатов при открытии страницы с сортировкой по created_at
     async function loadChatHistory(orderID) {
       try {
         const response = await fetch(`/api/order/chat_history?orderID=${orderID}`);
         const data = await response.json();
         if (response.ok) {
           const chatWindow = document.getElementById("chatWindow");
-          data.messages.forEach(msg => {
-            const msgDiv = document.createElement("div");
-            msgDiv.className = `chat-message ${msg.sender === "user" ? "sent" : "received"}`;
-            // Отображаем только текст сообщения
-            msgDiv.textContent = msg.message;
-            chatWindow.appendChild(msgDiv);
+          // Сортируем сообщения по created_at (от старых к новым)
+          const sortedMessages = data.messages.sort((a, b) => a.created_at - b.created_at);
+          chatWindow.innerHTML = ''; // Очищаем окно чата перед добавлением
+          sortedMessages.forEach(msg => {
+            const msgKey = `${msg.sender}-${msg.message}-${msg.created_at}`; // Уникальный ключ для сообщения
+            if (!loadedMessages.has(msgKey)) {
+              const msgDiv = document.createElement("div");
+              msgDiv.className = `chat-message ${msg.sender === "user" ? "sent" : "received"}`;
+              msgDiv.textContent = msg.message;
+              msgDiv.setAttribute('role', 'log');
+              chatWindow.appendChild(msgDiv);
+              loadedMessages.add(msgKey);
+            }
           });
-          chatWindow.scrollTop = chatWindow.scrollHeight;
+          chatWindow.scrollTop = chatWindow.scrollHeight; // Прокрутка к последнему сообщению
         } else {
           showToast(data.error || "Ошибка загрузки истории чата", 'error');
         }
       } catch (err) {
         console.error(err);
-        showToast("Ошибка соединения с сервером", 'error');
+        showToast("Ошибка соединения с сервером при загрузке истории чата", 'error');
       }
     }
 
     function connectChat() {
       const orderID = "{{.Order.ID}}";
-      // Получаем текущий URL для формирования WebSocket-адреса через ngrok
       const currentURL = window.location.hostname;
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsPort = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
@@ -504,7 +720,6 @@
 
       currentChatWS.onopen = () => {
         console.log("Чат подключён (user) через:", wsUrl);
-        // Загружаем историю после подключения
         loadChatHistory(orderID);
       };
 
@@ -513,15 +728,18 @@
           const msg = JSON.parse(event.data);
           console.log("Получено сообщение от сервера:", msg); // Логирование для отладки
           const chatWindow = document.getElementById("chatWindow");
-          const msgDiv = document.createElement("div");
-          msgDiv.className = `chat-message ${msg.sender === "user" ? "sent" : "received"}`;
-
-          // Отображаем только текст сообщения
-          msgDiv.textContent = msg.message;
-          chatWindow.appendChild(msgDiv);
-          chatWindow.scrollTop = chatWindow.scrollHeight;
+          const msgKey = `${msg.sender}-${msg.message}-${msg.created_at}`; // Уникальный ключ для сообщения
+          if (!loadedMessages.has(msgKey)) {
+            const msgDiv = document.createElement("div");
+            msgDiv.className = `chat-message ${msg.sender === "user" ? "sent" : "received"}`;
+            msgDiv.textContent = msg.message;
+            msgDiv.setAttribute('role', 'log');
+            chatWindow.appendChild(msgDiv);
+            loadedMessages.add(msgKey);
+            chatWindow.scrollTop = chatWindow.scrollHeight; // Прокрутка к последнему сообщению
+          }
         } catch (e) {
-          console.error("Ошибка парsинга сообщения:", e);
+          console.error("Ошибка парсинга сообщения:", e);
           showToast("Ошибка обработки сообщения чата", 'error');
         }
       };
@@ -535,16 +753,15 @@
         console.log("Чат отключён");
         showToast("Подключение к чату потеряно", 'error');
       };
-
-      currentChatWS.onpong = () => {
-        console.log("Получен pong от сервера");
-      };
     }
 
     document.getElementById("sendMessage").addEventListener("click", () => {
       const input = document.getElementById("chatInput");
       const message = input.value.trim();
-      if (message === "") return;
+      if (message === "") {
+        showToast("Сообщение не может быть пустым", 'error');
+        return;
+      }
       if (currentChatWS && currentChatWS.readyState === WebSocket.OPEN) {
         const msgObj = {
           order_id: parseInt("{{.Order.ID}}", 10),
@@ -556,48 +773,18 @@
         input.value = "";
         trackEvent('Chat', 'Send', 'Message');
       } else {
-        showToast("Чат не подключён", 'error');
+        showToast("Чат не подключён, попробуйте позже", 'error');
       }
     });
 
-    function updateFilesList(files) {
-      const filesContainer = document.getElementById("filesContainer");
-      const downloadAllBtn = document.getElementById("downloadAll");
-      filesContainer.innerHTML = "";
-      files.forEach(file => {
-        const fileItem = document.createElement("div");
-        fileItem.className = "file-item";
-        let fileName = file.OriginalName; // Используем OriginalName как основной источник
-        if (!fileName || typeof fileName !== 'string') {
-          // Если OriginalName отсутствует, извлекаем имя из URL, убирая префикс orderID_
-          fileName = file.url || file.URL || "Неизвестное имя файла";
-          if (fileName.includes('/')) {
-            const urlParts = fileName.split('/');
-            fileName = urlParts[urlParts.length - 1]; // Берем последнее имя файла
-          }
-          if (fileName.includes('_') && fileName.split('_')[0] === "{{.Order.ID}}") {
-            // Убираем префикс orderID_, если он есть
-            fileName = fileName.split('_').slice(1).join('_');
-          }
-        }
-        console.log("Обработка файла:", file, "Имя файла:", fileName); // Логирование для отладки
-        const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
-        const iconHTML = getIconForExtension(ext);
-        fileItem.innerHTML = `
-          <div class="file-icon">${iconHTML}</div>
-          <a href="${file.url || file.URL || '#'}" target="_blank" class="file-name">${fileName}</a>
-        `;
-        filesContainer.appendChild(fileItem);
-      });
-      downloadAllBtn.style.display = files.length > 0 ? 'block' : 'none';
-    }
-
-    function getIconForExtension(ext) {
-      if (ext === ".pdf") return '<i class="fa-solid fa-file-pdf" style="color:red;"></i>';
-      if (ext === ".doc" || ext === ".docx") return '<i class="fa-solid fa-file-word" style="color:blue;"></i>';
-      if (ext === ".xls" || ext === ".xlsx") return '<i class="fa-solid fa-file-excel" style="color:green;"></i>';
-      if (ext === ".png" || ext === ".jpg" || ext === ".jpeg" || ext === ".gif") return '<i class="fa-solid fa-file-image" style="color:purple;"></i>';
-      return '<i class="fa-solid fa-file" style="color:gray;"></i>';
+    function validateFileCount(input) {
+      const files = input.files;
+      if (files.length > 10) {
+        showToast("Можно загрузить не более 10 файлов за раз", 'error');
+        input.value = ''; // Сбрасываем выбор файлов
+        return false;
+      }
+      return true;
     }
 
     async function loadFiles() {
@@ -605,32 +792,86 @@
       try {
         const response = await fetch(`/api/order/files?orderID=${orderID}`);
         const data = await response.json();
-        console.log("Данные файлов от сервера:", data); // Логирование для отладки
+        console.log("Данные файлов от сервера:", JSON.stringify(data, null, 2));
         if (response.ok) {
-          updateFilesList(data.files || []); // Убедимся, что files не undefined
+          const userFiles = (data.files || []).filter(file => file.uploadedBy === "user" || !file.uploadedBy); // Включаем файлы без uploadedBy
+          const adminFiles = (data.files || []).filter(file => file.uploadedBy === "admin");
+          updateFilesList(userFiles, adminFiles);
         } else {
-          showToast(data.error || "Ошибка получения файлов", 'error');
+          showToast(data.error || "Ошибка получения файлов заказа", "error");
         }
       } catch (err) {
         console.error("Ошибка загрузки файлов:", err);
-        showToast("Ошибка соединения с сервером", 'error');
+        showToast("Ошибка соединения с сервером при загрузке файлов", "error");
       }
     }
 
-    // Автоматическое обновление списка файлов через WebSocket или периодический опрос
+    function updateFilesList(userFiles, adminFiles) {
+      const userFilesContainer = document.getElementById("userFilesContainer");
+      const adminFilesContainer = document.getElementById("adminFilesContainer");
+      const downloadAllBtn = document.getElementById("downloadAll");
+
+      // Убираем сообщения "Файлы не найдены" и показываем только файлы
+      userFilesContainer.innerHTML = userFiles.length > 0 ? "" : "";
+      adminFilesContainer.innerHTML = adminFiles.length > 0 ? "" : "";
+
+      userFiles.forEach(file => {
+        const fileItem = createFileItem(file);
+        userFilesContainer.appendChild(fileItem);
+      });
+
+      adminFiles.forEach(file => {
+        const fileItem = createFileItem(file);
+        adminFilesContainer.appendChild(fileItem);
+      });
+
+      downloadAllBtn.style.display = (userFiles.length + adminFiles.length) > 0 ? "block" : "none";
+    }
+
+    function createFileItem(file) {
+      const fileItem = document.createElement("div");
+      fileItem.className = "file-item";
+      let fileName = file.original_name || (file.url || file.URL || "Неизвестное имя файла").split('/').pop();
+      if (fileName && fileName.includes('_') && fileName.split('_')[0] === "{{.Order.ID}}") {
+        fileName = fileName.split('_').slice(1).join('_');
+      }
+      if (!fileName || fileName.trim() === "") {
+        fileName = (file.url || file.URL || "Неизвестный файл").split('/').pop() || "Неизвестное имя файла";
+      }
+      const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase() || '.unknown';
+      const iconHTML = getIconForExtension(ext);
+      fileItem.innerHTML = `
+        <div class="file-icon">${iconHTML}</div>
+        <a href="${file.url || file.URL || '#'}" target="_blank" class="file-name" aria-label="Скачать файл: ${fileName}">${fileName}</a>
+      `;
+      return fileItem;
+    }
+
+    function getIconForExtension(ext) {
+      const normalizedExt = ext.toLowerCase().trim() || '.unknown';
+      switch (normalizedExt) {
+        case ".pdf":
+          return '<i class="fa-solid fa-file-pdf" style="color: #FF0000;"></i>';
+        case ".doc":
+        case ".docx":
+          return '<i class="fa-solid fa-file-word" style="color: #1E90FF;"></i>';
+        case ".xls":
+        case ".xlsx":
+          return '<i class="fa-solid fa-file-excel" style="color: #00FF00;"></i>';
+        case ".png":
+        case ".jpg":
+        case ".jpeg":
+        case ".gif":
+          return '<i class="fa-solid fa-file-image" style="color: #800080;"></i>';
+        default:
+          return '<i class="fa-solid fa-file" style="color: #808080;"></i>';
+      }
+    }
+
+    // Автоматическое обновление списка файлов через периодический опрос
     function setupFileUpdates() {
       const orderID = "{{.Order.ID}}";
-      // Периодический опрос каждые 5 секунд (можно заменить на WebSocket для реального времени)
       setInterval(() => loadFiles(), 5000);
-
-      // Или использовать WebSocket (если добавишь поддержку в backend)
-      /* const ws = new WebSocket(`ws://localhost:8080/ws/files?orderID=${orderID}`);
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.files) {
-          updateFilesList(data.files);
-        }
-      }; */
     }
 
     document.getElementById("uploadForm").addEventListener("submit", async (e) => {
@@ -640,38 +881,39 @@
       try {
         const response = await fetch("/api/order/upload", {
           method: "POST",
-          body: formData
+          body: formData,
+          credentials: 'include',
         });
         const data = await response.json();
         if (response.ok) {
-          showToast(data.message, 'success');
-          updateFilesList(data.files); // Обновляем список сразу после загрузки
-          // Можно также инициировать опрос или WebSocket-сообщение
-          loadFiles(); // Дополнительное обновление для надежности
-          form.reset();
-          trackEvent('Files', 'Upload', 'Files Uploaded');
+          showToast(data.message || "Файлы успешно загружены", 'success');
+          loadFiles(); // Обновляем список файлов после загрузки
         } else {
           showToast(data.error || "Ошибка загрузки файлов", 'error');
         }
       } catch (err) {
         console.error(err);
-        showToast("Ошибка соединения с сервером", 'error');
+        showToast("Ошибка соединения с сервером при загрузке файлов", 'error');
       }
     });
 
     document.getElementById("downloadAll").addEventListener("click", () => {
-      const filesContainer = document.getElementById("filesContainer");
-      const links = filesContainer.getElementsByTagName("a");
-      if (links.length > 0) {
+      const userFilesContainer = document.getElementById("userFilesContainer");
+      const adminFilesContainer = document.getElementById("adminFilesContainer");
+      const userLinks = userFilesContainer.getElementsByTagName("a");
+      const adminLinks = adminFilesContainer.getElementsByTagName("a");
+      const allLinks = [...userLinks, ...adminLinks];
+
+      if (allLinks.length > 0) {
         const zip = new JSZip();
         let count = 0;
-        for (let link of links) {
+        for (let link of allLinks) {
           fetch(link.href)
             .then(response => response.blob())
             .then(blob => {
               zip.file(link.textContent, blob);
               count++;
-              if (count === links.length) {
+              if (count === allLinks.length) {
                 zip.generateAsync({ type: "blob" })
                   .then(content => {
                     const url = window.URL.createObjectURL(content);
@@ -684,7 +926,10 @@
                   });
               }
             })
-            .catch(err => console.error("Ошибка скачивания файла:", err));
+            .catch(err => {
+              console.error("Ошибка скачивания файла:", err);
+              showToast("Ошибка скачивания одного из файлов", 'error');
+            });
         }
         showToast("Скачивание всех файлов началось", 'success');
         trackEvent('Files', 'Download All', 'All Files');
@@ -693,18 +938,137 @@
       }
     });
 
+    // Функция для обработки рейтинга звёзд
+    function initRatingStars() {
+      const stars = document.querySelectorAll('.star');
+      const hiddenRating = document.getElementById('hiddenRating');
+
+      stars.forEach(star => {
+        star.addEventListener('click', () => {
+          const value = parseInt(star.getAttribute('data-value'));
+          stars.forEach(s => s.classList.remove('active'));
+          for (let i = 0; i < value; i++) {
+            stars[i].classList.add('active');
+          }
+          hiddenRating.value = value; // Обновляем скрытое поле с значением рейтинга
+          console.log(`Выбрана оценка: ${value}`);
+        });
+
+        star.addEventListener('mouseover', () => {
+          const value = parseInt(star.getAttribute('data-value'));
+          stars.forEach(s => s.classList.remove('hover'));
+          for (let i = 0; i < value; i++) {
+            stars[i].classList.add('hover');
+          }
+        });
+
+        star.addEventListener('mouseout', () => {
+          stars.forEach(s => s.classList.remove('hover'));
+          // Восстанавливаем активные звёзды на основе текущего значения
+          const currentRating = parseInt(hiddenRating.value) || 0;
+          stars.forEach((s, index) => {
+            if (index < currentRating) s.classList.add('active');
+            else s.classList.remove('active');
+          });
+        });
+      });
+    }
+
+    // Загрузка отзыва при открытии страницы с улучшенным отображением
+    async function loadReview(orderID) {
+      try {
+        const response = await fetch(`/api/order/review?orderID=${orderID}`, {
+          credentials: "include",
+        });
+        console.log("Статус ответа от сервера для /api/order/review:", response.status); // Логирование статуса
+        console.log("Полные заголовки ответа:", response.headers); // Логирование заголовков
+        const data = await response.json();
+        console.log("Данные отзыва от сервера:", JSON.stringify(data, null, 2)); // Логирование данных
+        const reviewSection = document.getElementById("reviewSection");
+        const reviewContent = document.getElementById("reviewContent");
+        const reviewForm = document.getElementById("reviewForm");
+        const noReviewMessage = document.getElementById("noReviewMessage");
+
+        if (response.ok) {
+          const orderStatus = "{{.Order.Status}}".toLowerCase();
+          console.log("Статус заказа в шаблоне:", orderStatus); // Логирование статуса заказа
+          if (orderStatus === "завершён") {
+            reviewSection.style.display = "block"; // Явно показываем секцию, если заказ завершён
+            if (data.review) {
+              // Отзыв существует, отображаем его
+              reviewContent.innerHTML = `
+                <p><strong>Ваш отзыв:</strong></p>
+                <p><strong>Оценка:</strong> ${data.review.rating}/5</p>
+                <p><strong>Комментарий:</strong> ${data.review.comment || "Не указано"}</p>
+                <p><strong>Дата:</strong> ${data.review.created_at}</p>
+              `;
+              reviewContent.style.display = "block";
+              reviewForm.style.display = "none";
+              noReviewMessage.style.display = "none";
+            } else {
+              // Отзыв не найден, показываем форму для создания нового отзыва
+              reviewForm.style.display = "block";
+              reviewContent.style.display = "none";
+              noReviewMessage.style.display = "none";
+              initRatingStars(); // Инициализируем звёзды при загрузке формы
+            }
+          } else {
+            reviewSection.style.display = "none"; // Скрываем секцию, если заказ не завершён
+          }
+        } else {
+          showToast(data.error || "Ошибка загрузки отзыва", "error");
+        }
+      } catch (err) {
+        console.error("Ошибка в loadReview:", err);
+        showToast("Ошибка соединения при загрузке отзыва", "error");
+      }
+    }
+
+    // Отправка отзыва
+    document.getElementById("reviewForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      try {
+        const response = await fetch(e.target.action, {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (response.ok) {
+          showToast(data.message || "Отзыв успешно создан", "success");
+          loadReview("{{.Order.ID}}"); // Обновляем отображение после отправки
+        } else {
+          showToast(data.error || "Ошибка создания отзыва", "error");
+        }
+      } catch (err) {
+        console.error("Ошибка в отправке отзыва:", err);
+        showToast("Ошибка соединения при отправке отзыва", "error");
+      }
+    });
+
     window.addEventListener('load', () => {
       initTheme();
       const orderDetails = document.querySelector('.order-details');
       const chatSection = document.querySelector('.chat-section');
+      const reviewSection = document.querySelector('.review-section');
       orderDetails.classList.add('skeleton');
       chatSection.classList.add('skeleton');
+      reviewSection.classList.add('skeleton');
+      console.log("Страница загружается, добавляем скелетон-анимацию"); // Логирование
       setTimeout(() => {
         orderDetails.classList.remove('skeleton');
         chatSection.classList.remove('skeleton');
+        reviewSection.classList.remove('skeleton');
+        console.log("Скелетон-анимация удалена, подключаем чат и загружаем данные"); // Логирование
         connectChat();
         loadFiles();
         setupFileUpdates(); // Начинаем автоматическое обновление файлов
+        const orderStatus = "{{.Order.Status}}".toLowerCase();
+        console.log("Статус заказа в шаблоне:", orderStatus); // Логирование статуса
+        if (orderStatus === "завершён") {
+          loadReview("{{.Order.ID}}");
+        }
       }, 1000);
     });
 

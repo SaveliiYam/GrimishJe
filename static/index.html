@@ -3,10 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Громыш — профессиональная помощь студентам и школьникам в рефератах, курсовых и дипломных работах. Гарантия качества и индивидуального подхода.">
+  <meta name="keywords" content="Громыш, помощь студентам, рефераты, курсовые, дипломы, учеба">
+  <meta name="author" content="Громыш">
   <title>Громыш | Помощь студентам</title>
-  <link rel="stylesheet" href="/static/styles.css">
+  <!-- Подключаем CSS через относительный путь -->
+  <link rel="stylesheet" href="/static/css/styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha512-xh6+2sZO8K+QGZC3zzX2Skd5y3H5H1GwY5gY6ip7Ee4ePFyW4+9lJH1N3rKT4zBZNp3XGzA4EPYY1p/9u6H+IQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     body {
       font-family: 'Roboto', sans-serif;
@@ -14,11 +17,15 @@
       padding: 0;
       background-color: #f5f7fa;
       line-height: 1.6;
+      color: #333;
     }
 
     nav {
       padding: 1em;
       background: #007acc;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
     }
     nav ul {
       list-style-type: none;
@@ -26,17 +33,21 @@
       padding: 0;
       display: flex;
       justify-content: center;
+      gap: 2em;
     }
     nav ul li {
-      margin: 0 1em;
+      margin: 0;
     }
     nav ul li a {
       color: #fff;
       text-decoration: none;
       font-weight: bold;
+      font-size: 1.1em;
+      transition: color 0.3s ease;
     }
-    nav ul li a:hover {
+    nav ul li a:hover, nav ul li a:focus {
       color: #ff6347;
+      outline: none;
     }
 
     .hero {
@@ -66,18 +77,18 @@
       animation: fadeIn 1.5s ease-in-out;
     }
     .hero-content h1 {
-      font-size: 3.5em;
+      font-size: clamp(2.5em, 8vw, 3.5em);
       margin-bottom: 0.5em;
       text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.3);
     }
     .hero-content p {
-      font-size: 1.6em;
+      font-size: clamp(1.2em, 4vw, 1.6em);
       margin-bottom: 1.5em;
       text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
     }
     .order-button {
       padding: 1em 2.5em;
-      font-size: 1.3em;
+      font-size: clamp(1em, 3vw, 1.3em);
       color: #fff;
       background: linear-gradient(135deg, #00bfff 0%, #007acc 100%);
       text-decoration: none;
@@ -117,7 +128,7 @@
       padding: 2em;
       border-radius: 15px;
       width: 90%;
-      max-width: 400px;
+      max-width: 500px;
       box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
       animation: slideIn 0.3s ease;
       position: relative;
@@ -136,7 +147,7 @@
     }
     .switch-button {
       padding: 0.8em 1.5em;
-      font-size: 1em;
+      font-size: clamp(0.9em, 2vw, 1em);
       color: #fff;
       background: #00bfff;
       border: none;
@@ -160,14 +171,14 @@
     }
     .auth-form input {
       padding: 0.8em;
-      font-size: 1em;
+      font-size: clamp(0.9em, 2vw, 1em);
       border: 1px solid #e0e0e0;
       border-radius: 10px;
       background: #fafafa;
     }
     .auth-form button {
       padding: 0.8em;
-      font-size: 1em;
+      font-size: clamp(0.9em, 2vw, 1em);
       background: #00bfff;
       color: #fff;
       border: none;
@@ -204,7 +215,15 @@
       background: #d32f2f;
       padding: 0.5em 1em;
       border-radius: 10px;
-      font-size: 0.9em;
+      font-size: clamp(0.8em, 2vw, 0.9em);
+      margin-bottom: 1em;
+    }
+
+    .password-hint {
+      color: #666;
+      font-size: clamp(0.7em, 1.5vw, 0.8em);
+      margin-top: 0.5em;
+      font-style: italic;
     }
 
     footer {
@@ -212,7 +231,7 @@
       padding: 1em;
       background: #fafafa;
       color: #888;
-      font-size: 0.9em;
+      font-size: clamp(0.8em, 2vw, 0.9em);
     }
 
     /* Анимации */
@@ -238,15 +257,61 @@
         box-shadow: 0 4px 15px rgba(0, 191, 255, 0.5);
       }
     }
+
+    /* Адаптивность для мобильных устройств */
+    @media (max-width: 768px) {
+      nav ul {
+        flex-direction: column;
+        align-items: center;
+        gap: 1em;
+      }
+
+      .hero {
+        height: 80vh;
+      }
+
+      .hero-content h1 {
+        font-size: clamp(1.5em, 6vw, 2.5em);
+      }
+
+      .hero-content p {
+        font-size: clamp(0.9em, 3vw, 1.2em);
+      }
+
+      .order-button {
+        padding: 0.8em 2em;
+        font-size: clamp(0.9em, 3vw, 1.1em);
+      }
+
+      .modal-content {
+        width: 85%;
+        max-width: 400px;
+        padding: 1.5em;
+      }
+
+      .modal-content h2 {
+        font-size: clamp(1.1em, 4vw, 1.5em);
+      }
+    }
   </style>
 </head>
 <body>
+  <!-- Навигация с динамическим отображением (если пользователь авторизован) -->
   <nav>
     <ul>
-      <li><a href="/">Главная</a></li>
-      <li><a href="/about">О нас</a></li>
-      <li><a href="/services">Виды работ</a></li>
-      <li><a href="/reviews">Отзывы</a></li>
+      <!-- Используем относительные ссылки для маршрутов -->
+      <li><a href="/" class="circle-link">Главная</a></li>
+      <li><a href="/about" class="circle-link">О нас</a></li>
+      <li><a href="/services" class="circle-link">Виды работ</a></li>
+      <li><a href="/reviews" class="circle-link">Отзывы</a></li>
+      <!-- Динамическая часть: отображается, если пользователь авторизован -->
+      {{ if .User }}
+      <li><a href="/dashboard" class="circle-link">Личный кабинет</a></li>
+      <li><a href="/logout" class="circle-link">Выйти</a></li>
+      {{ else }}
+      <li><a href="/login" class="circle-link">Войти</a></li>
+      <li><a href="/register" class="circle-link">Регистрация</a></li>
+      {{ end }}
     </ul>
   </nav>
 
@@ -277,9 +342,12 @@
         <input type="text" id="registerName" name="name" placeholder="Имя" required>
         <input type="email" id="registerEmail" name="email" placeholder="Email" required>
         <input type="password" id="registerPassword" name="password" placeholder="Пароль" required>
+        <div class="password-hint">
+          Пароль должен содержать минимум 6 символов, включая хотя бы две из следующих категорий: заглавную букву, строчную букву, цифру или специальный символ (!@#$%^&*).
+        </div>
         <input type="tel" id="registerPhone" name="phone" placeholder="+7 (___) ___-__-__" required>
         <div class="telegram-wrapper">
-          <img src="/images/TG.png" alt="Telegram">
+          <img src="/images/TG.png" alt="Telegram" loading="lazy">
           <input type="text" id="registerTelegram" name="telegram" placeholder="@username" required>
         </div>
         <button type="submit">Зарегистрироваться</button>
@@ -288,7 +356,7 @@
   </div>
 
   <footer>
-    <p>© 2025 Громыш | Помощь студентам и школьникам</p>
+    <p>© {{ .Year }} Громыш | Помощь студентам и школьникам</p>
   </footer>
 
   <div class="toast" id="toast"></div>
@@ -308,6 +376,7 @@
     const phoneInput = document.getElementById('registerPhone');
     const loginGeneralError = document.getElementById('loginGeneralError');
     const registerGeneralError = document.getElementById('registerGeneralError');
+    const registerPassword = document.getElementById('registerPassword');
 
     // Форматирование номера телефона
     function formatPhone(value) {
@@ -392,22 +461,27 @@
       try {
         const response = await fetch('/login', {
           method: 'POST',
-          body: formData
+          body: formData,
+          credentials: 'include', // Убедимся, что куки передаются
         });
         if (!response.ok) {
           const data = await response.json();
           loginGeneralError.textContent = data.error || 'Ошибка авторизации';
           loginGeneralError.style.display = 'block';
+          showToast('Ошибка авторизации: ' + (data.error || 'Проверьте данные'));
         } else {
+          const data = await response.json();
           modal.classList.remove('show');
           setTimeout(() => {
             modal.style.display = 'none';
-            window.location.href = '/dashboard';
+            window.location.href = data.redirect || '/dashboard';
           }, 300);
+          showToast('Успешный вход!');
         }
       } catch (err) {
         loginGeneralError.textContent = 'Ошибка соединения с сервером';
         loginGeneralError.style.display = 'block';
+        showToast('Ошибка соединения с сервером');
       }
     });
 
@@ -418,22 +492,27 @@
       try {
         const response = await fetch('/register', {
           method: 'POST',
-          body: formData
+          body: formData,
+          credentials: 'include', // Убедимся, что куки передаются
         });
         if (!response.ok) {
           const data = await response.json();
           registerGeneralError.textContent = data.error || 'Ошибка регистрации';
           registerGeneralError.style.display = 'block';
+          showToast('Ошибка регистрации: ' + (data.error || 'Проверьте данные'));
         } else {
+          const data = await response.json();
           modal.classList.remove('show');
           setTimeout(() => {
             modal.style.display = 'none';
-            window.location.href = '/dashboard';
+            window.location.href = data.redirect || '/dashboard';
           }, 300);
+          showToast('Успешная регистрация!');
         }
       } catch (err) {
         registerGeneralError.textContent = 'Ошибка соединения с сервером';
         registerGeneralError.style.display = 'block';
+        showToast('Ошибка соединения с сервером');
       }
     });
 
@@ -443,6 +522,67 @@
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
+
+    // Проверка статуса авторизации через AJAX
+    function checkAuthStatus() {
+      fetch('/api/auth/status', {
+        method: 'GET',
+        credentials: 'include', // Убедимся, что куки отправляются
+      })
+      .then(response => response.json())
+      .then(data => {
+        const navUl = document.querySelector('nav ul');
+        if (data.user) {
+          navUl.innerHTML += `
+            <li><a href="/dashboard" class="circle-link">Личный кабинет</a></li>
+            <li><a href="/logout" class="circle-link">Выйти</a></li>
+          `;
+        } else {
+          navUl.innerHTML += `
+            <li><a href="/login" class="circle-link">Войти</a></li>
+            <li><a href="/register" class="circle-link">Регистрация</a></li>
+          `;
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка проверки авторизации:', error);
+        showToast('Ошибка проверки авторизации');
+      });
+    }
+
+    // Выполняем проверку при загрузке страницы
+    window.addEventListener('load', checkAuthStatus);
+
+    // Реальное время проверки сложности пароля
+    const passwordHint = document.querySelector('.password-hint');
+    registerPassword.addEventListener('input', function() {
+      const password = this.value;
+      let errorMessage = '';
+      if (password.length < 6) {
+        errorMessage = 'Пароль должен содержать минимум 6 символов';
+      } else {
+        const hasLower = /[a-z]/.test(password);
+        const hasUpper = /[A-Z]/.test(password);
+        const hasDigit = /\d/.test(password);
+        const hasSpecial = /[!@#$%^&*]/.test(password);
+        let conditionsMet = 0;
+        if (hasLower) conditionsMet++;
+        if (hasUpper) conditionsMet++;
+        if (hasDigit) conditionsMet++;
+        if (hasSpecial) conditionsMet++;
+
+        if (conditionsMet < 2) {
+          errorMessage = 'Пароль должен содержать хотя бы две из следующих категорий: заглавную букву, строчную букву, цифру или специальный символ (!@#$%^&*).';
+        }
+      }
+
+      if (errorMessage) {
+        registerGeneralError.textContent = errorMessage;
+        registerGeneralError.style.display = 'block';
+      } else {
+        registerGeneralError.style.display = 'none';
+      }
+    });
   </script>
 </body>
 </html>

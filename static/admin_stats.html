@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Статистика заказов</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background: #f4f7fa;
+      color: #2c3e50;
+    }
+
+    header {
+      background: #3498db;
+      color: #fff;
+      padding: 20px 40px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .back-link {
+      position: absolute;
+      top: 20px;
+      right: 40px;
+      padding: 10px 20px;
+      background: #fff;
+      color: #3498db;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .back-link:hover {
+      background: #ecf0f1;
+      transform: scale(1.05);
+    }
+
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 30px;
+    }
+
+    .filters {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 30px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .filters label {
+      font-weight: 600;
+    }
+
+    .filters select,
+    .filters input[type="date"] {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .filters button {
+      padding: 10px 20px;
+      background: #3498db;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .filters button:hover {
+      background: #2980b9;
+    }
+
+    .chart-container {
+      width: 100%;
+      max-width: 900px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      padding: 20px;
+    }
+
+    h2.chart-title {
+      margin: 0 0 20px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 600;
+      color: #34495e;
+    }
+
+    .loading-text {
+      text-align: center;
+      font-size: 18px;
+      color: #7f8c8d;
+      margin: 30px 0;
+      display: none;
+    }
+
+    .message {
+      text-align: center;
+      padding: 12px;
+      margin: 20px auto;
+      max-width: 800px;
+      border-radius: 6px;
+      display: none;
+    }
+    .message.success {
+      background: #d4edda;
+      color: #155724;
+    }
+    .message.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Статистика заказов</h1>
+    <a href="/admin_dashboard" class="back-link">← Назад</a>
+  </header>
+
+  <main>
+    <div id="msgBox" class="message"></div>
+
+    <div class="filters">
+      <label>Период с:</label>
+      <input type="date" id="startDate" />
+      <label>по:</label>
+      <input type="date" id="endDate" />
+      <label>Тип графика бюджета:</label>
+      <select id="budgetChartType">
+        <option value="line">Линейный</option>
+        <option value="bar">Столбчатый</option>
+      </select>
+      <button onclick="loadStats()">Обновить</button>
+    </div>
+
+    <div id="loadingText" class="loading-text">Загрузка статистики...</div>
+
+    <div class="chart-container">
+      <h2 class="chart-title">Распределение заказов по статусам</h2>
+      <canvas id="statusChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+      <h2 class="chart-title">Суммарный бюджет по датам</h2>
+      <canvas id="budgetChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+      <h2 class="chart-title">Новые заказы (кол-во) по дням</h2>
+      <canvas id="newOrdersChart"></canvas>
+    </div>
+  </main>
+
+  <script>
+    let statusChart, budgetChart, newOrdersChart;
+
+    window.addEventListener('load', loadStats);
+
+    function loadStats() {
+      const msgBox = document.getElementById('msgBox');
+      const loadingText = document.getElementById('loadingText');
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+
+      loadingText.style.display = 'block';
+      msgBox.style.display = 'none';
+
+      let url = '/api/admin/stats/all';
+      if (startDate || endDate) {
+        url += `?${startDate ? `start_date=${startDate}` : ''}${endDate ? `&end_date=${endDate}` : ''}`;
+      }
+
+      fetch(url, { credentials: 'include' })
+        .then(resp => {
+          if (!resp.ok) throw new Error('Ошибка: ' + resp.status);
+          return resp.json();
+        })
+        .then(data => {
+          loadingText.style.display = 'none';
+          renderCharts(data);
+          showMessage('Статистика обновлена!', 'success');
+        })
+        .catch(err => {
+          loadingText.style.display = 'none';
+          showMessage('Ошибка загрузки: ' + err.message, 'error');
+        });
+    }
+
+    function showMessage(msg, type) {
+      const msgBox = document.getElementById('msgBox');
+      msgBox.textContent = msg;
+      msgBox.className = `message ${type}`;
+      msgBox.style.display = 'block';
+      setTimeout(() => msgBox.style.display = 'none', 3000);
+    }
+
+    function renderCharts(data) {
+      // Статусы
+      if (statusChart) statusChart.destroy();
+      const statusCtx = document.getElementById('statusChart').getContext('2d');
+      statusChart = new Chart(statusCtx, {
+        type: 'pie',
+        data: {
+          labels: Object.keys(data.statusStats),
+          datasets: [{
+            data: Object.values(data.statusStats),
+            backgroundColor: ['#3498db', '#e74c3c', '#2ecc71', '#f1c40f'],
+            hoverOffset: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+
+      // Бюджет
+      if (budgetChart) budgetChart.destroy();
+      const budgetCtx = document.getElementById('budgetChart').getContext('2d');
+      const budgetType = document.getElementById('budgetChartType').value;
+      budgetChart = new Chart(budgetCtx, {
+        type: budgetType,
+        data: {
+          labels: data.budgetStats.map(item => item.date),
+          datasets: [{
+            label: 'Суммарный бюджет',
+            data: data.budgetStats.map(item => item.totalBudget),
+            borderColor: '#3498db',
+            backgroundColor: budgetType === 'line' ? 'rgba(52,152,219,0.2)' : '#3498db',
+            fill: budgetType === 'line',
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { beginAtZero: true } },
+          plugins: { legend: { position: 'top' } }
+        }
+      });
+
+      // Новые заказы
+      if (newOrdersChart) newOrdersChart.destroy();
+      const newOrdersCtx = document.getElementById('newOrdersChart').getContext('2d');
+      newOrdersChart = new Chart(newOrdersCtx, {
+        type: 'bar',
+        data: {
+          labels: data.newOrdersStats.map(item => item.date),
+          datasets: [{
+            label: 'Новые заказы',
+            data: data.newOrdersStats.map(item => item.count),
+            backgroundColor: '#2ecc71',
+            borderColor: '#27ae60',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { beginAtZero: true } },
+          plugins: { legend: { position: 'top' } }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

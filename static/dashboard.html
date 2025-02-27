@@ -3,9 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Личный кабинет Громыш — управление вашими заказами, создание новых заказов и просмотр статистики.">
+  <meta name="keywords" content="Громыш, личный кабинет, заказы, студенческие работы, управление проектами">
+  <meta name="author" content="Громыш">
   <title>Личный кабинет | {{.User.Name}}</title>
+  <!-- Подключаем CSS через относительный путь -->
+  <link rel="stylesheet" href="/static/css/styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     :root {
       --primary-color: #1e90ff;
@@ -71,6 +75,11 @@
       border: none;
       border-radius: 50%;
       cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
     }
 
     /* Хедер */
@@ -87,7 +96,7 @@
 
     header h1 {
       margin: 0;
-      font-size: 2.2em;
+      font-size: clamp(1.8em, 5vw, 2.2em);
       font-weight: 700;
     }
 
@@ -103,20 +112,20 @@
     }
 
     .welcome h1 {
-      font-size: 2em;
+      font-size: clamp(1.5em, 4vw, 2em);
       margin-bottom: 15px;
       color: var(--primary-color);
     }
 
     .welcome p {
-      font-size: 1.1em;
+      font-size: clamp(1em, 3vw, 1.1em);
       color: var(--text-light);
     }
 
     /* Кнопки */
     .new-order-btn {
       padding: 12px 32px;
-      font-size: 1.1em;
+      font-size: clamp(1em, 3vw, 1.1em);
       font-weight: 600;
       background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
       color: #fff;
@@ -140,7 +149,7 @@
     }
 
     .order-stats h2 {
-      font-size: 1.8em;
+      font-size: clamp(1.5em, 4vw, 1.8em);
       color: var(--primary-color);
       margin-bottom: 20px;
     }
@@ -156,7 +165,7 @@
       background: var(--card-bg);
       padding: 12px 20px;
       border-radius: 10px;
-      font-size: 1em;
+      font-size: clamp(0.9em, 2vw, 1em);
       color: var(--text-light);
       box-shadow: var(--shadow-sm);
       transition: transform 0.3s ease;
@@ -182,7 +191,7 @@
       max-width: 400px;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
-      font-size: 1em;
+      font-size: clamp(0.9em, 2vw, 1em);
       transition: all 0.3s ease;
     }
 
@@ -229,7 +238,7 @@
       color: #fff;
       border-radius: 50%;
       padding: 4px 8px;
-      font-size: 0.8em;
+      font-size: clamp(0.7em, 1.5vw, 0.8em);
       position: absolute;
       top: -8px;
       right: -8px;
@@ -245,7 +254,7 @@
       padding: 8px 12px;
       border-radius: 8px;
       border: 1px solid #e2e8f0;
-      font-size: 1em;
+      font-size: clamp(0.9em, 2vw, 1em);
     }
 
     /* Сетка заказов */
@@ -299,14 +308,14 @@
 
     .order-card h3 {
       margin: 0 0 10px;
-      font-size: 1.4em;
+      font-size: clamp(1.2em, 3vw, 1.4em);
       font-weight: 600;
       color: var(--secondary-color);
     }
 
     .order-card p {
       margin: 8px 0;
-      font-size: 1em;
+      font-size: clamp(0.9em, 2vw, 1em);
       color: var(--text-light);
     }
 
@@ -394,7 +403,7 @@
     }
 
     .modal-content h2 {
-      font-size: 1.8em;
+      font-size: clamp(1.5em, 4vw, 1.8em);
       margin-bottom: 20px;
       color: var(--primary-color);
       text-align: center;
@@ -414,7 +423,7 @@
       padding: 12px;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
-      font-size: 1em;
+      font-size: clamp(0.9em, 2vw, 1em);
       transition: all 0.3s ease;
     }
 
@@ -438,7 +447,7 @@
       color: #fff;
       border: none;
       border-radius: 8px;
-      font-size: 1.1em;
+      font-size: clamp(1em, 3vw, 1.1em);
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
@@ -477,28 +486,48 @@
       to { transform: translateX(0); opacity: 1; }
     }
 
-    /* Мобильная адаптация */
-    @media (max-width: 600px) {
+    /* Адаптивность для мобильных устройств */
+    @media (max-width: 768px) {
+      .container {
+        width: 95%;
+      }
+
+      .theme-toggle {
+        top: 10px;
+        right: 10px;
+      }
+
       .order-filter {
         overflow-x: auto;
         justify-content: flex-start;
       }
+
       .order-card {
         padding: 15px;
       }
+
       .new-order-btn {
         padding: 10px 20px;
-        font-size: 1em;
+        font-size: clamp(0.9em, 3vw, 1em);
       }
+
       .stats-container {
         flex-direction: column;
         align-items: center;
+      }
+
+      .modal-content {
+        width: 85%;
+        max-width: 400px;
+        padding: 20px;
       }
     }
   </style>
 </head>
 <body>
-  <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
+  <!-- Переключатель темы -->
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему"><i class="fas fa-moon"></i></button>
+
   <div class="container">
     {{if .Orders}}
       <header>
@@ -507,7 +536,7 @@
 
       <div class="order-stats">
         <h2>Статистика заказов</h2>
-        <div class="stats-container">
+        <div class="stats-container" role="region" aria-live="polite">
           <div class="stat-item"><i class="fas fa-list"></i> Все: <span id="count-all">0</span></div>
           <div class="stat-item"><i class="fas fa-bell"></i> Новые: <span id="count-new">0</span></div>
           <div class="stat-item"><i class="fas fa-cogs"></i> В работе: <span id="count-inprogress">0</span></div>
@@ -516,61 +545,66 @@
         </div>
       </div>
 
-      <div class="order-search">
-        <input type="text" id="searchInput" placeholder="Поиск заказа по теме...">
+      <div class="order-search" role="search">
+        <input type="text" id="searchInput" placeholder="Поиск заказа по теме..." aria-label="Поиск по темам заказов">
       </div>
 
-      <div class="order-filter">
-        <button class="filter-btn active" data-filter="all">Все</button>
+      <div class="order-filter" role="group" aria-label="Фильтры заказов">
+        <button class="filter-btn active" data-filter="all" aria-pressed="true">Все</button>
         <button class="filter-btn" data-filter="новый">Новые</button>
         <button class="filter-btn" data-filter="в работе">В работе</button>
         <button class="filter-btn" data-filter="завершён">Завершенные</button>
         <button class="filter-btn" data-filter="отменён">Отмененные</button>
       </div>
 
-      <div class="order-sort">
-        <select id="sortSelect">
+      <div class="order-sort" role="group" aria-label="Сортировка заказов">
+        <select id="sortSelect" aria-label="Сортировка заказов">
           <option value="default">Сортировка по умолчанию</option>
           <option value="budget-asc">Бюджет: по возрастанию</option>
           <option value="budget-desc">Бюджет: по убыванию</option>
         </select>
       </div>
 
-      <div class="orders-grid" id="ordersGrid">
+      <div class="orders-grid" id="ordersGrid" role="list">
         {{range .Orders}}
-          <div class="order-card {{if eq .Status "новый"}}new{{else if eq .Status "в работе"}}in-progress{{else if eq .Status "завершён"}}completed{{else if eq .Status "отменён"}}cancelled{{end}}" data-status="{{.Status}}" data-title="{{.Topic}}" data-budget="{{.Budget}}">
+          <div class="order-card {{if eq .Status "новый"}}new{{else if eq .Status "в работе"}}in-progress{{else if eq .Status "завершён"}}completed{{else if eq .Status "отменён"}}cancelled{{end}}" 
+               data-status="{{.Status}}" 
+               data-title="{{.Topic}}" 
+               data-budget="{{.Budget}}" 
+               role="listitem">
             <h3>{{.Topic}}</h3>
             <p><strong>Номер заказа:</strong> {{.OrderNumber}}</p>
-            {{if eq .Status "новый"}}<span class="new-indicator"></span>{{end}}
+            {{if eq .Status "новый"}}<span class="new-indicator" aria-label="Новый заказ"></span>{{end}}
             <p><strong>Статус:</strong> {{.Status}}</p>
             <p><strong>Срок:</strong> {{.Deadline}}</p>
             <p><strong>Бюджет:</strong> {{.Budget}} ₽</p>
-            <a href="/order?id={{.ID}}">Подробнее</a>
+            <a href="/order?id={{.ID}}" aria-label="Подробнее о заказе {{.Topic}}">Подробнее</a>
           </div>
         {{end}}
       </div>
       <div style="text-align: center;">
-        <button class="new-order-btn" id="openOrderModal">Новый заказ</button>
+        <button class="new-order-btn" id="openOrderModal" aria-label="Создать новый заказ">Новый заказ</button>
       </div>
     {{else}}
-      <div class="welcome">
+      <div class="welcome" role="alert" aria-live="polite">
         <h1>Добро пожаловать, {{.User.Name}}!</h1>
         <p>Здесь вы можете создать новый заказ и управлять своими проектами.</p>
-        <button class="new-order-btn" id="openOrderModal">Сделать заказ</button>
+        <button class="new-order-btn" id="openOrderModal" aria-label="Сделать заказ">Сделать заказ</button>
       </div>
     {{end}}
   </div>
 
-  <div class="modal" id="orderModal">
+  <div class="modal" id="orderModal" role="dialog" aria-labelledby="orderModalTitle" aria-hidden="true">
     <div class="modal-content">
-      <span class="close-button" id="closeOrderModal">×</span>
-      <h2>Создать заказ</h2>
-      <form id="orderForm" action="/api/order" method="POST">
+      <span class="close-button" id="closeOrderModal" aria-label="Закрыть модальное окно">×</span>
+      <h2 id="orderModalTitle">Создать заказ</h2>
+      <form id="orderForm" action="/api/order" method="POST" role="form">
+        <div id="orderFormError" class="error-message" style="display: none;" aria-live="polite"></div>
         <label for="orderTopic">Тема работы:</label>
-        <input type="text" id="orderTopic" name="topic" required>
+        <input type="text" id="orderTopic" name="topic" required aria-required="true">
 
         <label for="orderType">Тип работы:</label>
-        <select id="orderType" name="workType" required>
+        <select id="orderType" name="workType" required aria-required="true">
           <option value="" disabled selected>Выберите тип работы</option>
           <option value="Эссе">Эссе</option>
           <option value="Курсовая">Курсовая</option>
@@ -579,27 +613,28 @@
           <option value="Диссертация">Диссертация</option>
           <option value="Контрольная работа">Контрольная работа</option>
           <option value="Онлайн помощь">Онлайн помощь</option>
+          <option value="Доклад (Презентация+Речь)">Доклад (Презентация+Речь)</option>
         </select>
 
         <label for="orderDescription">Описание:</label>
-        <textarea id="orderDescription" name="description" rows="4" required></textarea>
+        <textarea id="orderDescription" name="description" rows="4" required aria-required="true"></textarea>
 
         <label for="orderDeadline">Срок выполнения:</label>
-        <input type="date" id="orderDeadline" name="deadline" required>
+        <input type="date" id="orderDeadline" name="deadline" required aria-required="true" min="{{.Today}}">
 
         <div class="checkbox-container">
           <label for="orderPlagiarismCheck">Требуется антиплагиат</label>
-          <input type="checkbox" id="orderPlagiarismCheck" name="plagiarismRequired" value="true">
+          <input type="checkbox" id="orderPlagiarismCheck" name="plagiarismRequired" value="true" aria-label="Требуется проверка на плагиат">
         </div>
         <div id="plagiarismContainer" style="display: none;">
           <label for="orderPlagiarismPercent">Минимальный % оригинальности:</label>
-          <input type="number" id="orderPlagiarismPercent" name="plagiarismPercent" min="0" max="100">
+          <input type="number" id="orderPlagiarismPercent" name="plagiarismPercent" min="0" max="100" aria-label="Процент оригинальности">
         </div>
 
         <label for="orderBudget">Бюджет (₽):</label>
-        <input type="number" id="orderBudget" name="budget" step="0.01" required>
+        <input type="number" id="orderBudget" name="budget" step="0.01" required aria-required="true">
 
-        <button type="submit">Создать заказ</button>
+        <button type="submit" aria-label="Создать заказ">Создать заказ</button>
       </form>
     </div>
   </div>
@@ -618,22 +653,69 @@
     const closeOrderModal = document.getElementById('closeOrderModal');
     const plagiarismCheck = document.getElementById('orderPlagiarismCheck');
     const plagiarismContainer = document.getElementById('plagiarismContainer');
+    const orderForm = document.getElementById('orderForm');
+    const orderFormError = document.getElementById('orderFormError');
+    const orderDeadline = document.getElementById('orderDeadline');
+
+    // Устанавливаем минимальную дату как сегодня
+    const today = new Date().toISOString().split('T')[0];
+    orderDeadline.min = today;
+
+    // Проверка даты при изменении
+    orderDeadline.addEventListener('change', (e) => {
+      const selectedDate = new Date(e.target.value);
+      const todayDate = new Date(today);
+      if (selectedDate < todayDate) {
+        e.target.value = today; // Сбрасываем на сегодняшнюю дату
+        showToast('Нельзя выбрать дату раньше сегодняшнего дня', 'error');
+      }
+    });
 
     openOrderModal.addEventListener('click', (e) => {
       e.preventDefault();
       orderModal.style.display = 'flex';
-      trackEvent('Order', 'Open Modal', 'New Order Button');
+      orderModal.setAttribute('aria-hidden', 'false');
+      orderFormError.style.display = 'none';
     });
+
     closeOrderModal.addEventListener('click', () => {
       orderModal.style.display = 'none';
+      orderModal.setAttribute('aria-hidden', 'true');
     });
+
     window.addEventListener('click', (e) => {
       if (e.target === orderModal) {
         orderModal.style.display = 'none';
+        orderModal.setAttribute('aria-hidden', 'true');
       }
     });
+
     plagiarismCheck.addEventListener('change', () => {
       plagiarismContainer.style.display = plagiarismCheck.checked ? 'block' : 'none';
+    });
+
+    // Обработка формы создания заказа
+    orderForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(orderForm);
+      try {
+        const response = await fetch(orderForm.action, {
+          method: 'POST',
+          body: formData,
+          credentials: 'include', // Убедимся, что куки передаются
+        });
+        const data = await response.json();
+        if (response.ok) {
+          showToast('Заказ успешно создан!', 'success');
+          setTimeout(() => {
+            window.location.href = `/order?id=${data.orderId}`;
+          }, 1000);
+        } else {
+          showToast(data.error || 'Произошла ошибка при создании заказа', 'error');
+        }
+      } catch (err) {
+        showToast('Ошибка соединения с сервером', 'error');
+      }
     });
 
     // Toast уведомления
@@ -641,6 +723,7 @@
       const toast = document.createElement('div');
       toast.className = `toast ${type}`;
       toast.textContent = message;
+      toast.setAttribute('role', 'alert');
       document.body.appendChild(toast);
       setTimeout(() => {
         toast.style.transition = 'opacity 0.5s';
@@ -649,47 +732,28 @@
       }, 3000);
     }
 
-    document.getElementById('orderForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const formData = new FormData(this);
-      try {
-        const response = await fetch(this.action, { method: 'POST', body: formData });
-        const data = await response.json();
-        if (response.ok) {
-          showToast('Заказ успешно создан!', 'success');
-          setTimeout(() => window.location.href = '/order?id=' + data.orderId, 1000);
-          trackEvent('Order', 'Create', 'Order Submitted');
-        } else {
-          showToast(data.error || 'Ошибка создания заказа', 'error');
-        }
-      } catch(err) {
-        showToast('Ошибка соединения с сервером', 'error');
-      }
-    });
-
     // Фильтрация и сортировка
     const filterButtons = document.querySelectorAll('.filter-btn');
     const orderCards = document.querySelectorAll('.order-card');
     const ordersGrid = document.getElementById('ordersGrid');
     const sortSelect = document.getElementById('sortSelect');
+    const searchInput = document.getElementById('searchInput');
 
     filterButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         filterButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
         applyFiltersAndSort();
-        trackEvent('Filter', 'Click', btn.getAttribute('data-filter'));
       });
     });
 
-    const searchInput = document.getElementById('searchInput');
     searchInput.addEventListener('input', () => {
       applyFiltersAndSort();
     });
 
     sortSelect.addEventListener('change', () => {
       applyFiltersAndSort();
-      trackEvent('Sort', 'Change', sortSelect.value);
     });
 
     function applyFiltersAndSort() {
@@ -713,7 +777,7 @@
 
       ordersGrid.innerHTML = '';
       if (visibleCards.length === 0) {
-        ordersGrid.innerHTML = '<p style="text-align: center; color: var(--text-light);">Заказы не найдены</p>';
+        ordersGrid.innerHTML = '<p style="text-align: center; color: var(--text-light);" role="alert">Заказы не найдены</p>';
       } else {
         visibleCards.forEach(card => ordersGrid.appendChild(card));
       }
@@ -755,12 +819,6 @@
         applyFiltersAndSort();
       }, 1000); // Имитация загрузки
     });
-
-    // Аналитика (имитация)
-    function trackEvent(category, action, label) {
-      console.log(`Event tracked: ${category}, ${action}, ${label}`);
-      // В реальном проекте здесь будет вызов gtag или другой аналитики
-    }
   </script>
 </body>
 </html>
