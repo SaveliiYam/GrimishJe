@@ -24,6 +24,7 @@ type Order struct {
 	CreatedAt          time.Time `gorm:"autoCreateTime;not null" json:"created_at"`                  // Время создания заказа
 	UpdatedAt          time.Time `gorm:"autoUpdateTime" json:"updated_at"`                           // Время последнего обновления
 	CompletedAt        time.Time `gorm:"type:timestamp" json:"completed_at"`                         // Время завершения заказа (опционально)
+	FinalFileURL       string    `gorm:"type:text" json:"final_file_url" db:"final_file_url"`        // Добавленное поле для итогового файла
 	User               User      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`              // Связь с пользователем, каскадное удаление
 }
 
@@ -66,4 +67,19 @@ type Review struct {
 // TableName определяет имя таблицы для модели Review.
 func (Review) TableName() string {
 	return "reviews"
+}
+
+type File struct {
+	gorm.Model
+	OrderID      uint      `gorm:"index;not null" json:"order_id"`                  // Связь с заказом, индекс для быстрого поиска
+	OriginalName string    `gorm:"type:varchar(255);not null" json:"original_name"` // Оригинальное имя файла
+	URL          string    `gorm:"type:text;not null" json:"url"`                   // URL файла в MinIO (увеличиваем до TEXT для поддержки длинных URL)
+	UploadedBy   string    `gorm:"type:varchar(50);not null" json:"uploaded_by"`    // Кто загрузил файл (user/admin)
+	CreatedAt    time.Time `gorm:"autoCreateTime;not null" json:"created_at"`       // Время загрузки файла
+	Order        Order     `gorm:"foreignKey:OrderID;constraint:OnDelete:CASCADE"`  // Связь с заказом, каскадное удаление
+}
+
+// TableName определяет имя таблицы для модели File.
+func (File) TableName() string {
+	return "files"
 }

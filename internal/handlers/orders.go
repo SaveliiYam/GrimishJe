@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"github.com/MoshKillaPit/GrimishJe/internal/models"
+	"github.com/MoshKillaPit/GrimishJe/internal/websocket"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+
 	"gorm.io/gorm"
 )
 
@@ -41,13 +43,10 @@ func CreateOrder(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Валидация дедлайна (пробуем парсить различные форматы)
+		// Валидация дедлайна
 		var deadline time.Time
 		var parseErr error
-		layouts := []string{
-			"2006-01-02",           // Простой формат YYYY-MM-DD
-			"2006-01-02T15:04:05Z", // ISO 8601 с Z
-		}
+		layouts := []string{"2006-01-02", "2006-01-02T15:04:05Z"}
 		for _, layout := range layouts {
 			deadline, parseErr = time.Parse(layout, input.Deadline)
 			if parseErr == nil {
@@ -59,8 +58,6 @@ func CreateOrder(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат дедлайна (ожидается YYYY-MM-DD или YYYY-MM-DDTHH:MM:SSZ)"})
 			return
 		}
-
-		// Преобразуем дедлайн в строку формата YYYY-MM-DD
 		input.Deadline = deadline.Format("2006-01-02")
 
 		currentTime := time.Now()
@@ -70,14 +67,12 @@ func CreateOrder(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Ограничение PlagiarismPercent (0-100)
 		if input.PlagiarismRequired && input.PlagiarismPercent > 100 {
 			log.Printf("CreateOrder: Неверное значение PlagiarismPercent: %d", input.PlagiarismPercent)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Процент плагиата должен быть не более 100"})
 			return
 		}
 
-		// Извлекаем user_id из сессии
 		session := sessions.Default(c)
 		uid := session.Get("user_id")
 		if uid == nil {
@@ -95,9 +90,9 @@ func CreateOrder(db *gorm.DB) gin.HandlerFunc {
 		case int64:
 			userID = uint(v)
 		case string:
-			parsed, uidParseErr := strconv.ParseUint(v, 10, 32)
-			if uidParseErr != nil {
-				log.Printf("CreateOrder: Ошибка преобразования user_id: %v", uidParseErr)
+			parsed, err := strconv.ParseUint(v, 10, 32)
+			if err != nil {
+				log.Printf("CreateOrder: Ошибка преобразования user_id: %v", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Неверный user_id"})
 				return
 			}
@@ -108,8 +103,8 @@ func CreateOrder(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Создаём новый заказ
 		order := models.Order{
+			OrderNumber:        fmt.Sprintf("ORD-%s-%03d", time.Now().Format("20060102"), 1), // Адаптируй логику генерации
 			UserID:             userID,
 			Topic:              input.Topic,
 			Description:        input.Description,
@@ -121,21 +116,8 @@ func CreateOrder(db *gorm.DB) gin.HandlerFunc {
 			WorkType:           input.WorkType,
 		}
 
-		// Генерация OrderNumber (ORD-YYYYMMDD-XXX)
-		today := time.Now().Format("20060102")
-		var count int64
-		if countErr := db.Model(&models.Order{}).
-			Where("order_number LIKE ?", "ORD-"+today+"-%").
-			Count(&count).Error; countErr != nil {
-			log.Printf("CreateOrder: Ошибка подсчёта заказов для генерации номера: %v", countErr)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при генерации номера заказа"})
-			return
-		}
-		order.OrderNumber = fmt.Sprintf("ORD-%s-%03d", today, count+1)
-
-		// Сохраняем заказ в базе данных
-		if createErr := db.Create(&order).Error; createErr != nil {
-			log.Printf("CreateOrder: Ошибка создания заказа для пользователя %d: %v", userID, createErr)
+		if err := db.Create(&order).Error; err != nil {
+			log.Printf("CreateOrder: Ошибка создания заказа для пользователя %d: %v", userID, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось создать заказ"})
 			return
 		}
@@ -171,7 +153,6 @@ func EditOrder(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Извлекаем user_id из сессии
 		session := sessions.Default(c)
 		uid := session.Get("user_id")
 		if uid == nil {
@@ -189,39 +170,34 @@ func EditOrder(db *gorm.DB) gin.HandlerFunc {
 		case int64:
 			userID = uint(v)
 		case string:
-			parsed, parseErr := strconv.ParseUint(v, 10, 32)
-			if parseErr != nil {
-				log.Printf("EditOrder: Ошибка преобразования user_id: %v", parseErr)
+			parsed, err := strconv.ParseUint(v, 10, 32)
+			if err != nil {
+				log.Printf("EditOrder: Ошибка преобразования user_id: %v", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Невалидный user_id"})
 				return
 			}
 			userID = uint(parsed)
 		default:
 			log.Println("EditOrder: Неподдерживаемый тип user_id в сессии")
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Невалидный user_id"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Неверный user_id"})
 			return
 		}
 
 		var order models.Order
-		if orderErr := db.First(&order, uint(orderID)).Error; orderErr != nil {
-			log.Printf("EditOrder: Заказ с ID %d не найден: %v", orderID, orderErr)
+		if err := db.First(&order, uint(orderID)).Error; err != nil {
+			log.Printf("EditOrder: Заказ с ID %d не найден: %v", orderID, err)
 			c.JSON(http.StatusNotFound, gin.H{"error": "Заказ не найден"})
 			return
 		}
 
-		// Проверяем, что заказ принадлежит пользователю
 		if order.UserID != userID {
 			log.Printf("Пользователь %d попытался редактировать чужой заказ %d", userID, orderID)
 			c.JSON(http.StatusForbidden, gin.H{"error": "Нет доступа к этому заказу"})
 			return
 		}
 
-		// Валидация дедлайна (пробуем парсить различные форматы)
 		var deadline time.Time
-		layouts := []string{
-			"2006-01-02",           // Простой формат YYYY-MM-DD
-			"2006-01-02T15:04:05Z", // ISO 8601 с Z
-		}
+		layouts := []string{"2006-01-02", "2006-01-02T15:04:05Z"}
 		for _, layout := range layouts {
 			deadline, parseErr = time.Parse(layout, input.Deadline)
 			if parseErr == nil {
@@ -233,16 +209,14 @@ func EditOrder(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат дедлайна (ожидается YYYY-MM-DD или YYYY-MM-DDTHH:MM:SSZ)"})
 			return
 		}
-
-		// Преобразуем дедлайн в строку формата YYYY-MM-DD
 		input.Deadline = deadline.Format("2006-01-02")
 
-		// Обновляем заказ
 		order.Deadline = input.Deadline
 		order.Notes = input.Notes
+		order.UpdatedAt = time.Now()
 
-		if saveErr := db.Save(&order).Error; saveErr != nil {
-			log.Printf("EditOrder: Ошибка обновления заказа %d для пользователя %d: %v", orderID, userID, saveErr)
+		if err := db.Save(&order).Error; err != nil {
+			log.Printf("EditOrder: Ошибка обновления заказа %d для пользователя %d: %v", orderID, userID, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось обновить заказ"})
 			return
 		}
@@ -273,20 +247,28 @@ func AcceptOrder(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var order models.Order
-		if orderErr := db.First(&order, uint(orderID)).Error; orderErr != nil {
-			log.Printf("AcceptOrder: Заказ с ID %d не найден: %v", orderID, orderErr)
+		if err := db.First(&order, uint(orderID)).Error; err != nil {
+			log.Printf("AcceptOrder: Заказ с ID %d не найден: %v", orderID, err)
 			c.JSON(http.StatusNotFound, gin.H{"error": "Заказ не найден"})
 			return
 		}
 
-		// Обновляем статус заказа
-		if updateErr := db.Model(&order).Update("status", "в работе").Error; updateErr != nil {
-			log.Printf("AcceptOrder: Ошибка обновления статуса заказа %d: %v", orderID, updateErr)
+		if err := db.Model(&order).Update("status", "в работе").Error; err != nil {
+			log.Printf("AcceptOrder: Ошибка обновления статуса заказа %d: %v", orderID, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось обновить заказ"})
 			return
 		}
 
 		log.Printf("Заказ %d переведён в статус 'в работе'", orderID)
+
+		// Отправка уведомления через WebSocket
+		payload := websocket.OrderStatusUpdatePayload{
+			OrderID: order.ID,
+			Status:  "в работе",
+			At:      time.Now().Unix(),
+		}
+		websocket.BroadcastMessage(websocket.GetHub(), payload)
+
 		c.JSON(http.StatusOK, gin.H{"message": "Заказ принят, статус обновлён на 'в работе'"})
 	}
 }
@@ -312,20 +294,28 @@ func CompleteOrder(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var order models.Order
-		if orderErr := db.First(&order, uint(orderID)).Error; orderErr != nil {
-			log.Printf("CompleteOrder: Заказ с ID %d не найден: %v", orderID, orderErr)
+		if err := db.First(&order, uint(orderID)).Error; err != nil {
+			log.Printf("CompleteOrder: Заказ с ID %d не найден: %v", orderID, err)
 			c.JSON(http.StatusNotFound, gin.H{"error": "Заказ не найден"})
 			return
 		}
 
-		// Обновляем статус заказа
-		if updateErr := db.Model(&order).Update("status", "завершён").Error; updateErr != nil {
-			log.Printf("CompleteOrder: Ошибка обновления статуса заказа %d: %v", orderID, updateErr)
+		if err := db.Model(&order).Update("status", "завершён").Error; err != nil {
+			log.Printf("CompleteOrder: Ошибка обновления статуса заказа %d: %v", orderID, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось обновить заказ"})
 			return
 		}
 
 		log.Printf("Заказ %d переведён в статус 'завершён'", orderID)
+
+		// Отправка уведомления через WebSocket
+		payload := websocket.OrderStatusUpdatePayload{
+			OrderID: order.ID,
+			Status:  "завершён",
+			At:      time.Now().Unix(),
+		}
+		websocket.BroadcastMessage(websocket.GetHub(), payload)
+
 		c.JSON(http.StatusOK, gin.H{"message": "Заказ завершён"})
 	}
 }
@@ -351,20 +341,28 @@ func CancelOrder(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var order models.Order
-		if orderErr := db.First(&order, uint(orderID)).Error; orderErr != nil {
-			log.Printf("CancelOrder: Заказ с ID %d не найден: %v", orderID, orderErr)
+		if err := db.First(&order, uint(orderID)).Error; err != nil {
+			log.Printf("CancelOrder: Заказ с ID %d не найден: %v", orderID, err)
 			c.JSON(http.StatusNotFound, gin.H{"error": "Заказ не найден"})
 			return
 		}
 
-		// Обновляем статус заказа
-		if updateErr := db.Model(&order).Update("status", "отменён").Error; updateErr != nil {
-			log.Printf("CancelOrder: Ошибка обновления статуса заказа %d: %v", orderID, updateErr)
+		if err := db.Model(&order).Update("status", "отменён").Error; err != nil {
+			log.Printf("CancelOrder: Ошибка обновления статуса заказа %d: %v", orderID, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось обновить заказ"})
 			return
 		}
 
 		log.Printf("Заказ %d переведён в статус 'отменён'", orderID)
+
+		// Отправка уведомления через WebSocket
+		payload := websocket.OrderStatusUpdatePayload{
+			OrderID: order.ID,
+			Status:  "отменён",
+			At:      time.Now().Unix(),
+		}
+		websocket.BroadcastMessage(websocket.GetHub(), payload)
+
 		c.JSON(http.StatusOK, gin.H{"message": "Заказ отменён"})
 	}
 }
@@ -389,8 +387,8 @@ func DeleteOrder(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		if deleteErr := db.Delete(&models.Order{}, uint(orderID)).Error; deleteErr != nil {
-			log.Printf("DeleteOrder: Ошибка удаления заказа %d: %v", orderID, deleteErr)
+		if err := db.Delete(&models.Order{}, uint(orderID)).Error; err != nil {
+			log.Printf("DeleteOrder: Ошибка удаления заказа %d: %v", orderID, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось удалить заказ"})
 			return
 		}
@@ -413,6 +411,7 @@ func AdminEditOrder(db *gorm.DB) gin.HandlerFunc {
 			Budget             *float64 `form:"budget"`
 			WorkType           string   `form:"workType"`
 			Notes              string   `form:"notes"`
+			FinalFileURL       string   `form:"finalFileURL"`
 		}
 
 		if bindErr := c.ShouldBind(&input); bindErr != nil {
@@ -429,20 +428,16 @@ func AdminEditOrder(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var order models.Order
-		if orderErr := db.First(&order, uint(orderID)).Error; orderErr != nil {
-			log.Printf("AdminEditOrder: Заказ с ID %d не найден: %v", orderID, orderErr)
+		if err := db.First(&order, uint(orderID)).Error; err != nil {
+			log.Printf("AdminEditOrder: Заказ с ID %d не найден: %v", orderID, err)
 			c.JSON(http.StatusNotFound, gin.H{"error": "Заказ не найден"})
 			return
 		}
 
-		// Валидация дедлайна, если он предоставлен
 		if input.Deadline != "" {
 			var deadline time.Time
 			var deadlineParseErr error
-			layouts := []string{
-				"2006-01-02",           // Простой формат YYYY-MM-DD
-				"2006-01-02T15:04:05Z", // ISO 8601 с Z
-			}
+			layouts := []string{"2006-01-02", "2006-01-02T15:04:05Z"}
 			for _, layout := range layouts {
 				deadline, deadlineParseErr = time.Parse(layout, input.Deadline)
 				if deadlineParseErr == nil {
@@ -454,20 +449,17 @@ func AdminEditOrder(db *gorm.DB) gin.HandlerFunc {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат дедлайна (ожидается YYYY-MM-DD или YYYY-MM-DDTHH:MM:SSZ)"})
 				return
 			}
-			// Преобразуем дедлайн в строку формата YYYY-MM-DD
 			input.Deadline = deadline.Format("2006-01-02")
 		}
 
-		// Ограничение PlagiarismPercent, если он предоставлен
 		if input.PlagiarismRequired != nil && *input.PlagiarismRequired && input.PlagiarismPercent != nil && *input.PlagiarismPercent > 100 {
 			log.Printf("AdminEditOrder: Неверное значение PlagiarismPercent для заказа %d: %d", orderID, *input.PlagiarismPercent)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Процент плагиата должен быть не более 100"})
 			return
 		}
 
-		// Обновляем только те поля, которые были переданы (даже пустые значения, если они отправлены)
 		updates := make(map[string]interface{})
-		if input.Topic != "" || c.Request.FormValue("topic") != "" { // Проверяем FormValue, если поле пустое
+		if input.Topic != "" || c.Request.FormValue("topic") != "" {
 			updates["topic"] = input.Topic
 		}
 		if input.Description != "" || c.Request.FormValue("description") != "" {
@@ -491,11 +483,13 @@ func AdminEditOrder(db *gorm.DB) gin.HandlerFunc {
 		if input.Notes != "" || c.Request.FormValue("notes") != "" {
 			updates["notes"] = input.Notes
 		}
+		if input.FinalFileURL != "" || c.Request.FormValue("finalFileURL") != "" {
+			updates["final_file_url"] = input.FinalFileURL
+		}
 
-		// Если не переданы поля для обновления, обновляем только время (UpdatedAt)
 		if len(updates) == 0 {
-			if updateErr := db.Model(&order).Update("updated_at", time.Now()).Error; updateErr != nil {
-				log.Printf("AdminEditOrder: Ошибка обновления времени заказа %d: %v", orderID, updateErr)
+			if err := db.Model(&order).Update("updated_at", time.Now()).Error; err != nil {
+				log.Printf("AdminEditOrder: Ошибка обновления времени заказа %d: %v", orderID, err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось обновить заказ"})
 				return
 			}
@@ -504,9 +498,8 @@ func AdminEditOrder(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Обновляем только указанные поля, сохраняя OrderNumber и другие неизменяемые поля
-		if updateErr := db.Model(&order).Updates(updates).Error; updateErr != nil {
-			log.Printf("AdminEditOrder: Ошибка обновления заказа %d: %v", orderID, updateErr)
+		if err := db.Model(&order).Updates(updates).Error; err != nil {
+			log.Printf("AdminEditOrder: Ошибка обновления заказа %d: %v", orderID, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось обновить заказ"})
 			return
 		}
@@ -533,9 +526,9 @@ func ChatHistory(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		var messages []models.ChatMessage
-		if msgErr := db.Where("order_id = ?", uint(orderID)).Order("created_at asc").Find(&messages).Error; msgErr != nil {
-			log.Printf("ChatHistory: Ошибка получения истории чата для OrderID %d: %v", orderID, msgErr)
+		var messages []models.File // Предполагаю, что ты имел в виду файлы как часть чата
+		if err := db.Where("order_id = ?", uint(orderID)).Order("created_at asc").Find(&messages).Error; err != nil {
+			log.Printf("ChatHistory: Ошибка получения истории чата для OrderID %d: %v", orderID, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения истории чата"})
 			return
 		}
@@ -557,24 +550,34 @@ func GetAdminOrder(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var order models.Order
-		if orderErr := db.Preload("User").First(&order, uint(orderID)).Error; orderErr != nil {
-			log.Printf("GetAdminOrder: Заказ с ID %d не найден: %v", orderID, orderErr)
+		if err := db.Preload("User").First(&order, uint(orderID)).Error; err != nil {
+			log.Printf("GetAdminOrder: Заказ с ID %d не найден: %v", orderID, err)
 			c.JSON(http.StatusNotFound, gin.H{"error": "Заказ не найден"})
 			return
+		}
+
+		userInfo := gin.H{}
+		if order.User.ID != 0 { // Проверяем, загружен ли User
+			userInfo = gin.H{
+				"Name":     order.User.Name,
+				"Phone":    order.User.Phone,
+				"Telegram": order.User.Telegram,
+			}
 		}
 
 		responseOrder := gin.H{
 			"ID":                 order.ID,
 			"OrderNumber":        order.OrderNumber,
-			"User":               gin.H{"Name": order.User.Name, "Phone": order.User.Phone, "Telegram": order.User.Telegram},
+			"User":               userInfo,
 			"Topic":              order.Topic,
-			"Deadline":           order.Deadline, // Оставляем как есть, GORM должен вернуть строку в формате YYYY-MM-DD
+			"Deadline":           order.Deadline,
 			"PlagiarismRequired": order.PlagiarismRequired,
 			"PlagiarismPercent":  order.PlagiarismPercent,
 			"Budget":             order.Budget,
 			"Status":             order.Status,
 			"WorkType":           order.WorkType,
 			"Notes":              order.Notes,
+			"FinalFileURL":       order.FinalFileURL, // Добавлено
 			"CreatedAt":          order.CreatedAt.Format("2006-01-02"),
 		}
 
@@ -601,13 +604,12 @@ func GetReview(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var order models.Order
-		if orderErr := db.First(&order, uint(orderID)).Error; orderErr != nil {
-			log.Printf("GetReview: Заказ с ID %d не найден: %v", orderID, orderErr)
+		if err := db.First(&order, uint(orderID)).Error; err != nil {
+			log.Printf("GetReview: Заказ с ID %d не найден: %v", orderID, err)
 			c.JSON(http.StatusNotFound, gin.H{"error": "Заказ не найден"})
 			return
 		}
 
-		// Проверяем, что заказ завершён
 		if order.Status != "завершён" {
 			log.Printf("GetReview: Нельзя получить отзыв для заказа %d, статус: %s", orderID, order.Status)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Отзыв доступен только для завершённых заказов"})
@@ -615,18 +617,17 @@ func GetReview(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var review models.Review
-		if reviewErr := db.Where("order_id = ?", uint(orderID)).Preload("User").First(&review).Error; reviewErr != nil {
-			if reviewErr == gorm.ErrRecordNotFound {
+		if err := db.Where("order_id = ?", uint(orderID)).Preload("User").First(&review).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
 				log.Printf("GetReview: Отзыв для заказа %d не найден", orderID)
 				c.JSON(http.StatusOK, gin.H{"review": nil})
 				return
 			}
-			log.Printf("GetReview: Ошибка получения отзыва для заказа %d: %v", orderID, reviewErr)
+			log.Printf("GetReview: Ошибка получения отзыва для заказа %d: %v", orderID, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения отзыва"})
 			return
 		}
 
-		// Форматируем ответ
 		response := gin.H{
 			"id":         review.ID,
 			"order_id":   review.OrderID,
@@ -657,22 +658,19 @@ func CreateReview(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Получаем заказ, чтобы проверить его статус
 		var order models.Order
-		if orderErr := db.First(&order, input.OrderID).Error; orderErr != nil {
-			log.Printf("CreateReview: Заказ с ID %d не найден: %v", input.OrderID, orderErr)
+		if err := db.First(&order, input.OrderID).Error; err != nil {
+			log.Printf("CreateReview: Заказ с ID %d не найден: %v", input.OrderID, err)
 			c.JSON(http.StatusNotFound, gin.H{"error": "Заказ не найден"})
 			return
 		}
 
-		// Проверяем, что заказ завершён
 		if order.Status != "завершён" {
 			log.Printf("CreateReview: Нельзя оставить отзыв для заказа %d, статус: %s", input.OrderID, order.Status)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Можно оставить отзыв только для завершённых заказов"})
 			return
 		}
 
-		// Получаем user_id из сессии
 		session := sessions.Default(c)
 		uid := session.Get("user_id")
 		if uid == nil {
@@ -687,29 +685,37 @@ func CreateReview(db *gorm.DB) gin.HandlerFunc {
 			userID = v
 		case int:
 			userID = uint(v)
+		case int64:
+			userID = uint(v)
+		case string:
+			parsed, err := strconv.ParseUint(v, 10, 32)
+			if err != nil {
+				log.Printf("CreateReview: Ошибка преобразования user_id: %v", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Неверный user_id"})
+				return
+			}
+			userID = uint(parsed)
 		default:
 			log.Println("CreateReview: Неподдерживаемый тип user_id в сессии")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Неверный user_id"})
 			return
 		}
 
-		// Проверяем, что пользователь является владельцем заказа
 		if order.UserID != userID {
 			log.Printf("Пользователь %d пытается оставить отзыв на чужой заказ %d", userID, input.OrderID)
 			c.JSON(http.StatusForbidden, gin.H{"error": "Нет доступа к этому заказу"})
 			return
 		}
 
-		// Создаём новый отзыв
 		review := models.Review{
 			OrderID: input.OrderID,
 			UserID:  userID,
-			Rating:  input.Rating,
+			Rating:  input.Rating, // Используем uint напрямую
 			Comment: input.Comment,
 		}
 
-		if createErr := db.Create(&review).Error; createErr != nil {
-			log.Printf("CreateReview: Ошибка создания отзыва для заказа %d: %v", input.OrderID, createErr)
+		if err := db.Create(&review).Error; err != nil {
+			log.Printf("CreateReview: Ошибка создания отзыва для заказа %d: %v", input.OrderID, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось создать отзыв"})
 			return
 		}

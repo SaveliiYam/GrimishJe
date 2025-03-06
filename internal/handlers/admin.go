@@ -74,6 +74,7 @@ func AdminDashboard(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
+// ListAdminOrders возвращает список заказов для админ-панели через API
 func ListAdminOrders(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
@@ -102,10 +103,19 @@ func ListAdminOrders(db *gorm.DB) gin.HandlerFunc {
 
 		responseOrders := make([]gin.H, len(orders))
 		for i, order := range orders {
+			userInfo := gin.H{}
+			if order.User.ID != 0 { // Проверяем, загружен ли User
+				userInfo = gin.H{
+					"Name":     order.User.Name,
+					"Phone":    order.User.Phone,
+					"Telegram": order.User.Telegram,
+				}
+			}
+
 			responseOrders[i] = gin.H{
 				"ID":                 order.ID,
 				"OrderNumber":        order.OrderNumber,
-				"User":               gin.H{"Name": order.User.Name, "Phone": order.User.Phone, "Telegram": order.User.Telegram},
+				"User":               userInfo,
 				"Topic":              order.Topic,
 				"Deadline":           order.Deadline,
 				"PlagiarismRequired": order.PlagiarismRequired,
@@ -114,11 +124,12 @@ func ListAdminOrders(db *gorm.DB) gin.HandlerFunc {
 				"Status":             order.Status,
 				"WorkType":           order.WorkType,
 				"Notes":              order.Notes,
-				"CreatedAt":          order.CreatedAt.Format("2006-01-02"), // Форматируем дату для фронтенда
+				"FinalFileURL":       order.FinalFileURL, // Добавляем поле в ответ
+				"CreatedAt":          order.CreatedAt.Format("2006-01-02"),
 			}
 		}
 
-		log.Printf("Возвращено %d заказов через API /api/admin/orders, первый заказ: %+v", len(orders), orders[0])
+		log.Printf("Возвращено %d заказов через API /api/admin/orders", len(orders))
 		c.JSON(http.StatusOK, gin.H{"orders": responseOrders})
 	}
 }

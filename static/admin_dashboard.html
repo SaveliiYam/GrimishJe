@@ -106,7 +106,6 @@
       font-weight: 700;
     }
 
-    /* Кнопка перехода на статистику */
     .stats-link {
       position: absolute;
       top: 25px;
@@ -119,6 +118,7 @@
       font-weight: 600;
       transition: background 0.3s ease, transform 0.3s ease;
     }
+
     .stats-link:hover {
       background: #218838;
       transform: translateY(-2px);
@@ -277,12 +277,6 @@
       font-size: 1.4em;
       color: var(--secondary-color);
       margin-bottom: 10px;
-    }
-
-    .order-card p {
-      margin: 5px 0;
-      font-size: 1em;
-      color: var(--text-light);
     }
 
     .order-card.new {
@@ -455,7 +449,7 @@
       font-size: 1.1em;
       color: var(--text-light);
       line-height: 1.8;
-      position: relative; /* для иконки редактирования */
+      position: relative;
     }
 
     .order-info strong {
@@ -463,13 +457,13 @@
       font-weight: 600;
     }
 
-    /* Иконка редактирования */
     .edit-icon {
       margin-left: 8px;
       cursor: pointer;
       color: var(--neutral-color);
       transition: color 0.3s ease;
     }
+
     .edit-icon:hover {
       color: var(--primary-color);
     }
@@ -535,7 +529,10 @@
     .file-name:hover {
       color: var(--primary-color);
     }
+    
+    /* Добавляем стили для финального файла (нет дополнительных стилей, можно использовать существующие стили кнопки btn-view-final) */
 
+    /* ====================== Завершение блока отзыва ====================== */
     #reviewSection {
       margin-top: 20px;
       padding-top: 20px;
@@ -782,7 +779,6 @@
       }
     }
 
-    /* Стили для inline-редактирования */
     .inline-edit-input {
       width: 90%;
       padding: 4px;
@@ -793,20 +789,12 @@
   </style>
 </head>
 <body>
-  <!-- Переключатель темы -->
   <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
-  
-  <!-- Основной контейнер -->
   <main class="container">
     <header>
       <h1>Админ панель | {{.User.Name}}</h1>
-
-      <!-- Кнопка перехода на страницу статистики -->
-      <a href="/admin_stats" class="stats-link">
-        Перейти к статистике
-      </a>
+      <a href="/admin_stats" class="stats-link">Перейти к статистике</a>
     </header>
-
     <div class="order-controls">
       <div class="order-stats">
         <h2>Статистика заказов</h2>
@@ -819,11 +807,7 @@
         </div>
       </div>
       <div class="order-search">
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="Поиск по теме, номеру, заказчику..."
-        />
+        <input type="text" id="searchInput" placeholder="Поиск по теме, номеру, заказчику..."/>
       </div>
       <div class="sort-container">
         <select id="sortSelect">
@@ -839,10 +823,8 @@
         <button class="filter-btn" data-filter="cancelled">Отменённые</button>
       </div>
     </div>
-
     <div class="orders-grid" id="ordersGrid">
       {{range .Orders}}
-      <!-- Переводим .Status в английский для data-status -->
       <div
         class="order-card {{if eq .Status "новый"}}new{{else if eq .Status "в работе"}}in-progress{{else if eq .Status "завершён"}}completed{{else if eq .Status "отменён"}}cancelled{{end}}"
         data-order-id="{{.ID}}"
@@ -884,116 +866,64 @@
       <span class="close-button" id="closeOrderDetailModal">×</span>
       <h2>Детали заказа</h2>
       <div class="modal-body">
-        <!-- Блок с информацией о заказе -->
         <div class="order-info">
           <div class="order-details-grid">
-            <!-- Номер заказа (не редактируем) -->
             <p>
               <strong>Номер заказа:</strong>
               <span id="orderNumber"></span>
             </p>
-
-            <!-- Тема (редактируется) -->
             <p>
               <strong>Тема:</strong>
               <span id="orderTopic"></span>
-              <i
-                class="fas fa-edit edit-icon"
-                onclick="startInlineEdit('orderTopic', 'topic')"
-              ></i>
+              <i class="fas fa-edit edit-icon" onclick="startInlineEdit('orderTopic', 'topic')"></i>
             </p>
-
-            <!-- Заказчик (не редактируем) -->
             <p>
               <strong>Заказчик:</strong>
               <span id="orderCustomer"></span>
             </p>
-
-            <!-- Телефон (редактируем) -->
             <p>
               <strong>Телефон:</strong>
               <span id="orderPhone"></span>
-              <i
-                class="fas fa-edit edit-icon"
-                onclick="startInlineEdit('orderPhone', 'phone')"
-              ></i>
+              <i class="fas fa-edit edit-icon" onclick="startInlineEdit('orderPhone', 'phone')"></i>
             </p>
-
-            <!-- Telegram (редактируем) -->
             <p>
               <strong>Telegram:</strong>
               <span id="orderTelegram"></span>
-              <i
-                class="fas fa-edit edit-icon"
-                onclick="startInlineEdit('orderTelegram', 'telegram')"
-              ></i>
+              <i class="fas fa-edit edit-icon" onclick="startInlineEdit('orderTelegram', 'telegram')"></i>
             </p>
-
-            <!-- Статус (редактируется только кнопками ниже) -->
             <p>
               <strong>Статус:</strong>
               <span id="orderStatus"></span>
             </p>
-
-            <!-- Срок (редактируем) -->
             <p>
               <strong>Срок:</strong>
               <span id="orderDeadline"></span>
-              <i
-                class="fas fa-edit edit-icon"
-                onclick="startInlineEdit('orderDeadline', 'deadline')"
-              ></i>
+              <i class="fas fa-edit edit-icon" onclick="startInlineEdit('orderDeadline', 'deadline')"></i>
             </p>
-
-            <!-- Бюджет (редактируем) -->
             <p>
               <strong>Бюджет:</strong>
               <span id="orderBudget"></span>
-              <i
-                class="fas fa-edit edit-icon"
-                onclick="startInlineEdit('orderBudget', 'budget')"
-              ></i>
+              <i class="fas fa-edit edit-icon" onclick="startInlineEdit('orderBudget', 'budget')"></i>
             </p>
-
-            <!-- Тип работы (редактируем) -->
             <p>
               <strong>Тип работы:</strong>
               <span id="orderWorkType"></span>
-              <i
-                class="fas fa-edit edit-icon"
-                onclick="startInlineEdit('orderWorkType', 'workType')"
-              ></i>
+              <i class="fas fa-edit edit-icon" onclick="startInlineEdit('orderWorkType', 'workType')"></i>
             </p>
-
-            <!-- Антиплагиат (не редактируем, так как логика сложнее) -->
             <p>
               <strong>Антиплагиат:</strong>
               <span id="orderPlagiarism"></span>
             </p>
-
-            <!-- Заметки (редактируем) -->
             <p style="grid-column: 1 / -1;">
               <strong>Заметки:</strong>
               <span id="orderNotes"></span>
-              <i
-                class="fas fa-edit edit-icon"
-                onclick="startInlineEdit('orderNotes', 'notes', true)"
-              ></i>
+              <i class="fas fa-edit edit-icon" onclick="startInlineEdit('orderNotes', 'notes', true)"></i>
             </p>
           </div>
 
           <div id="reviewSection" style="display: none;">
             <h3>Отзыв</h3>
             <div id="reviewContent" class="review-content"></div>
-            <!-- Если отзыва нет — показываем сообщение -->
-            <p id="noReviewMessage" style="display: none;">Отзыв не оставлен.</p>
-          </div>
-          
-          <!-- Отображение/добавление отзыва -->
-          <div id="reviewSection" style="display: none;">
-            <h3>Отзыв</h3>
-            <div id="reviewContent" class="review-content"></div>
-            <!-- Если отзыва нет - появляется форма -->
             <div id="reviewFormContainer" style="display: none;">
               <form id="reviewForm" action="/api/order/review" method="POST">
                 <input type="hidden" name="orderID" id="reviewOrderID" />
@@ -1006,20 +936,15 @@
                   <option value="5">5</option>
                 </select>
                 <label for="reviewComment">Комментарий:</label>
-                <textarea
-                  id="reviewComment"
-                  name="comment"
-                  rows="4"
-                  class="input-field"
-                ></textarea>
+                <textarea id="reviewComment" name="comment" rows="4"></textarea>
                 <button type="submit" class="modal-actions-btn btn-accept">
                   Сохранить
                 </button>
               </form>
             </div>
+            <p id="noReviewMessage" style="display: none;">Отзыв не оставлен.</p>
           </div>
 
-          <!-- Блок с файлами -->
           <div class="order-files">
             <h3>Файлы заказа</h3>
             <div class="file-section">
@@ -1044,11 +969,10 @@
             </form>
           </div>
 
-          <!-- Блок кнопок управления (Принять, Завершить, Отменить и т.д.) -->
+          <!-- Здесь будут добавляться кнопки управления заказом (включая ссылку на итоговый файл) -->
           <div class="modal-actions" id="modalActions"></div>
         </div>
 
-        <!-- Блок чата -->
         <div class="chat-section-modal">
           <h3>Чат с заказчиком</h3>
           <div class="chat-window" id="chatContainer"></div>
@@ -1076,22 +1000,41 @@
     <div class="loading-spinner"></div>
   </div>
 
+  <!-- Скрытый input для загрузки итогового файла -->
+  <input type="file" id="finalFileInput" style="display: none;" />
+
   <script defer>
     /* ====================== Глобальные переменные ====================== */
     let currentChatWS = null;
+    let fileWS = null; // WebSocket для файлов
     let loadedMessages = new Set();
     let currentOrderStatus = "новый";
     let userFiles = [];
     let adminFiles = [];
-    let currentOrderId = null; // хранит ID текущего открытого заказа
+    let currentOrderId = null; // ID текущего открытого заказа
 
-    // Маппинг русских статусов -> английские (для CSS-классов и фильтра)
+    // Маппинг русских статусов -> английские
     const statusMapping = {
       "новый": "new",
       "в работе": "in-progress",
       "завершён": "completed",
       "отменён": "cancelled",
     };
+
+    /* ====================== Функция отправки обновления статуса через WebSocket ====================== */
+    function sendOrderStatusUpdate(status, orderID) {
+      const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      // Предполагается, что сервер имеет эндпоинт /ws/order_status для обработки таких сообщений
+      const statusWsUrl = `${wsProtocol}//${window.location.host}/ws/order_status?orderID=${orderID}`;
+      const ws = new WebSocket(statusWsUrl);
+      ws.onopen = function() {
+        ws.send(JSON.stringify({ type: "order_status", status: status, order_id: orderID }));
+        ws.close();
+      };
+      ws.onerror = function(err) {
+        console.error("Ошибка WebSocket для статуса:", err);
+      };
+    }
 
     /* ====================== Смена темы ====================== */
     function initTheme() {
@@ -1106,8 +1049,7 @@
 
     const themeToggle = document.getElementById("themeToggle");
     themeToggle.addEventListener("click", () => {
-      const currentTheme =
-        document.body.dataset.theme === "dark" ? "dark" : "light";
+      const currentTheme = document.body.dataset.theme === "dark" ? "dark" : "light";
       const newTheme = currentTheme === "dark" ? "light" : "dark";
       document.body.dataset.theme = newTheme;
       localStorage.setItem("theme", newTheme);
@@ -1137,7 +1079,6 @@
         transition: "opacity 0.5s",
         opacity: "1",
       });
-
       document.body.appendChild(toast);
       setTimeout(() => {
         toast.style.opacity = "0";
@@ -1145,10 +1086,9 @@
       }, 3000);
     }
 
-    /* ====================== Прелоадер (лоадер) ====================== */
+    /* ====================== Прелоадер ====================== */
     function showLoading(show = true) {
-      const loadingOverlay = document.getElementById("loadingOverlay");
-      loadingOverlay.style.display = show ? "flex" : "none";
+      document.getElementById("loadingOverlay").style.display = show ? "flex" : "none";
     }
 
     /* ====================== Обновление списка заказов ====================== */
@@ -1172,7 +1112,7 @@
             ordersGrid.appendChild(card);
           });
           updateStats();
-          applyCurrentFilters(); // Применяем текущие фильтры после обновления
+          applyCurrentFilters();
           showToast("Заказы обновлены", "success");
         } else {
           throw new Error("Неверный формат данных: массив заказов отсутствует");
@@ -1190,11 +1130,10 @@
       const rusStatus = order.Status || "новый";
       const engStatus = statusMapping[rusStatus.toLowerCase()] || "new";
       const user = order.User || {};
-
       const card = document.createElement("div");
       card.className = `order-card ${engStatus}`;
       card.dataset.orderId = order.ID || 0;
-      card.dataset.status = engStatus; // для фильтра
+      card.dataset.status = engStatus;
       card.dataset.title = order.Topic || "";
       card.dataset.orderNumber = order.OrderNumber || "";
       card.dataset.customer = user.Name || "Не указано";
@@ -1208,8 +1147,6 @@
         ? `Да (${order.PlagiarismPercent || 0}%)`
         : "Нет";
       card.dataset.notes = order.Notes || "";
-
-      // HTML внутри карточки (показываем русский статус)
       card.innerHTML = `
         <h3>${order.Topic || ""}</h3>
         <p><strong>Номер:</strong> ${order.OrderNumber || ""}</p>
@@ -1223,12 +1160,8 @@
             : ""
         }
         <div class="admin-actions">
-          <button class="btn-view" onclick="viewOrder(${
-            order.ID || 0
-          })">Просмотреть</button>
-          <button class="btn-delete" onclick="deleteOrder(${
-            order.ID || 0
-          })">Удалить</button>
+          <button class="btn-view" onclick="viewOrder(${order.ID || 0})">Просмотреть</button>
+          <button class="btn-delete" onclick="deleteOrder(${order.ID || 0})">Удалить</button>
         </div>
       `;
       return card;
@@ -1241,33 +1174,6 @@
     }
 
     /* ====================== Кнопки управления заказом ====================== */
-    function updateModalActions(orderID, rusStatus) {
-      const modalActions = document.getElementById("modalActions");
-      modalActions.innerHTML = "";
-      const lowerStatus = rusStatus.toLowerCase();
-
-      switch (lowerStatus) {
-        case "новый":
-          modalActions.innerHTML += `<button class="modal-actions-btn btn-accept" onclick="acceptOrder(${orderID})">Принять заказ</button>`;
-          modalActions.innerHTML += `<button class="modal-actions-btn btn-cancel" onclick="cancelOrder(${orderID})">Отменить заказ</button>`;
-          break;
-        case "в работе":
-          modalActions.innerHTML += `<button class="modal-actions-btn btn-upload" onclick="uploadFinalFile(${orderID})">Загрузить итоговый файл</button>`;
-          modalActions.innerHTML += `<button class="modal-actions-btn btn-complete" onclick="completeOrder(${orderID})">Завершить заказ</button>`;
-          modalActions.innerHTML += `<button class="modal-actions-btn btn-cancel" onclick="cancelOrder(${orderID})">Отменить заказ</button>`;
-          break;
-        case "завершён":
-          modalActions.innerHTML += `<button class="modal-actions-btn btn-view-final" onclick="viewFinalFile(${orderID})">Просмотреть итоговый файл</button>`;
-          modalActions.innerHTML += `<button class="modal-actions-btn btn-delete" onclick="deleteOrder(${orderID})">Удалить заказ</button>`;
-          break;
-        case "отменён":
-          modalActions.innerHTML += `<button class="modal-actions-btn btn-delete" onclick="deleteOrder(${orderID})">Удалить заказ</button>`;
-          break;
-        default:
-          modalActions.innerHTML += "<p>Статус не определён</p>";
-      }
-    }
-
     async function acceptOrder(orderID) {
       if (!confirm("Принять заказ?")) return;
       showLoading(true);
@@ -1288,6 +1194,8 @@
           refreshOrders();
           document.getElementById("orderStatus").textContent = currentOrderStatus;
           updateModalActions(orderID, currentOrderStatus);
+          // Отправляем обновление статуса через WebSocket
+          sendOrderStatusUpdate(currentOrderStatus, orderID);
         } else {
           showToast(data.error || "Ошибка принятия", "error");
         }
@@ -1320,6 +1228,7 @@
           document.getElementById("orderStatus").textContent = currentOrderStatus;
           updateModalActions(orderID, currentOrderStatus);
           loadReview(orderID);
+          sendOrderStatusUpdate(currentOrderStatus, orderID);
         } else {
           showToast(data.error || "Ошибка завершения", "error");
         }
@@ -1351,6 +1260,7 @@
           refreshOrders();
           document.getElementById("orderStatus").textContent = currentOrderStatus;
           updateModalActions(orderID, currentOrderStatus);
+          sendOrderStatusUpdate(currentOrderStatus, orderID);
         } else {
           showToast(data.error || "Ошибка отмены", "error");
         }
@@ -1419,26 +1329,14 @@
     }
 
     /* ====================== Inline-редактирование ====================== */
-    /**
-     * Начинает inline-редактирование поля.
-     * @param {string} spanId - ID <span> с текстом (например "orderTopic")
-     * @param {string} fieldName - Название поля в модели (например "topic")
-     * @param {boolean} [isTextarea=false] - Если true, вместо <input> будет <textarea>
-     */
     function startInlineEdit(spanId, fieldName, isTextarea = false) {
       const span = document.getElementById(spanId);
       if (!span) return;
-      // Если уже в режиме редактирования, ничего не делаем
       if (span.querySelector("input") || span.querySelector("textarea")) return;
-
       let oldValue = span.textContent.trim();
-
-      // Если редактируем "budget", убираем из строки символ "₽" и прочие лишние
       if (fieldName === "budget") {
-        // Удаляем все символы, кроме цифр и точки
         oldValue = oldValue.replace(/[^\d.]/g, "");
       }
-
       let inputElem;
       if (isTextarea) {
         inputElem = document.createElement("textarea");
@@ -1449,90 +1347,77 @@
       }
       inputElem.value = oldValue;
       inputElem.className = "inline-edit-input";
-
-      // При потере фокуса сохраняем
       inputElem.addEventListener("blur", () =>
         finishInlineEdit(spanId, fieldName, isTextarea)
       );
-      // При нажатии Enter тоже сохраняем (для <input>)
       inputElem.addEventListener("keyup", (e) => {
         if (e.key === "Enter" && !isTextarea) {
           inputElem.blur();
         }
       });
-
-      span.textContent = ""; // очищаем
+      span.textContent = "";
       span.appendChild(inputElem);
       inputElem.focus();
     }
-/**
- * Завершает inline-редактирование и отправляет изменение на сервер.
- */
- async function finishInlineEdit(spanId, fieldName, isTextarea = false) {
-  const span = document.getElementById(spanId);
-  if (!span) return;
-  let inputElem;
-  if (isTextarea) {
-    inputElem = span.querySelector("textarea");
-  } else {
-    inputElem = span.querySelector("input");
-  }
-  if (!inputElem) return;
-  const newValue = inputElem.value.trim();
-  
-  // Форматирование для бюджета
-  let formattedValue = newValue;
-  if (fieldName === "budget") {
-    const numValue = parseFloat(newValue);
-    if (!isNaN(numValue)) {
-      formattedValue = numValue; // Отправляем только число для сервера
-      span.textContent = numValue.toFixed(2) + " ₽"; // Показываем с "₽" пользователю
-    } else if (newValue === "") {
-      formattedValue = "0.00"; // Отправляем 0.00, если поле пустое
-      span.textContent = "0.00 ₽";
-    } else {
-      span.textContent = "0.00 ₽"; // Значение по умолчанию, если число неверное
-      showToast("Неверное значение бюджета", "error");
-      return; // Не отправляем неверное значение
+
+    async function finishInlineEdit(spanId, fieldName, isTextarea = false) {
+      const span = document.getElementById(spanId);
+      if (!span) return;
+      let inputElem;
+      if (isTextarea) {
+        inputElem = span.querySelector("textarea");
+      } else {
+        inputElem = span.querySelector("input");
+      }
+      if (!inputElem) return;
+      const newValue = inputElem.value.trim();
+      let formattedValue = newValue;
+      if (fieldName === "budget") {
+        const numValue = parseFloat(newValue);
+        if (!isNaN(numValue)) {
+          formattedValue = numValue;
+          span.textContent = numValue.toFixed(2) + " ₽";
+        } else if (newValue === "") {
+          formattedValue = "0.00";
+          span.textContent = "0.00 ₽";
+        } else {
+          span.textContent = "0.00 ₽";
+          showToast("Неверное значение бюджета", "error");
+          return;
+        }
+      } else {
+        span.textContent = formattedValue || newValue || (fieldName === "notes" ? "" : "Не указано");
+      }
+      await updateOrderField(currentOrderId, fieldName, formattedValue || "");
     }
-  } else {
-    span.textContent = formattedValue || newValue || (fieldName === "notes" ? "" : "Не указано"); // Для других полей, показываем "Не указано", если пусто
-  }
 
-  // Отправляем запрос на сервер, даже если значение пустое (для очистки полей)
-  await updateOrderField(currentOrderId, fieldName, formattedValue || "");
-}
-
-async function updateOrderField(orderID, field, value) {
-  showLoading(true);
-  const formData = new FormData();
-  formData.append("orderID", orderID);
-  formData.append(field, value); // Отправляем поле и значение
-
-  try {
-    const response = await fetch("/api/order/admin-edit", {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      console.error("Ошибка от сервера:", data);
-      showToast(data.error || "Ошибка редактирования", "error");
-    } else {
-      showToast(data.message || "Изменения сохранены", "success");
-      // Обновим карточку, если надо
-      markOrderChanged(orderID);
-      // Обновляем данные в карточке после редактирования
-      updateOrderCardData(orderID, field, value);
+    async function updateOrderField(orderID, field, value) {
+      showLoading(true);
+      const formData = new FormData();
+      formData.append("orderID", orderID);
+      formData.append(field, value);
+      try {
+        const response = await fetch("/api/order/admin-edit", {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          console.error("Ошибка от сервера:", data);
+          showToast(data.error || "Ошибка редактирования", "error");
+        } else {
+          showToast(data.message || "Изменения сохранены", "success");
+          markOrderChanged(orderID);
+          updateOrderCardData(orderID, field, value);
+        }
+      } catch (err) {
+        console.error("Ошибка в updateOrderField:", err);
+        showToast("Ошибка соединения", "error");
+      } finally {
+        showLoading(false);
+      }
     }
-  } catch (err) {
-    console.error("Ошибка в updateOrderField:", err);
-    showToast("Ошибка соединения", "error");
-  } finally {
-    showLoading(false);
-  }
-}
 
     function markOrderChanged(orderID) {
       const card = document.querySelector(`.order-card[data-order-id="${orderID}"]`);
@@ -1543,9 +1428,6 @@ async function updateOrderField(orderID, field, value) {
       }
     }
 
-    /**
-     * Обновляет данные в карточке после редактирования.
-     */
     function updateOrderCardData(orderID, field, value) {
       const card = document.querySelector(`.order-card[data-order-id="${orderID}"]`);
       if (card) {
@@ -1562,7 +1444,7 @@ async function updateOrderField(orderID, field, value) {
             break;
           case "deadline":
             card.dataset.deadline = value;
-            card.querySelector("p:nth-child(4)").textContent = `Срок: ${value}`; // Предполагается, что это 4-й p-элемент
+            card.querySelector("p:nth-child(4)").textContent = `Срок: ${value}`;
             break;
           case "budget":
             card.dataset.budget = value;
@@ -1578,9 +1460,6 @@ async function updateOrderField(orderID, field, value) {
       }
     }
 
-    /**
-     * Обновляет карточку в списке (смена CSS-класса статуса).
-     */
     function updateOrderCard(orderID, rusStatus) {
       const card = document.querySelector(`.order-card[data-order-id="${orderID}"]`);
       if (card) {
@@ -1599,12 +1478,11 @@ async function updateOrderField(orderID, field, value) {
         showLoading(false);
         return;
       }
-
-      currentOrderId = orderID; // сохраняем глобально
-      // Заполняем поля в модалке
+      currentOrderId = orderID;
       document.getElementById("orderNumber").textContent =
         order.dataset.orderNumber || "";
-      document.getElementById("orderTopic").textContent = order.dataset.title || "";
+      document.getElementById("orderTopic").textContent =
+        order.dataset.title || "";
       document.getElementById("orderCustomer").textContent =
         order.dataset.customer || "Не указано";
       document.getElementById("orderPhone").textContent =
@@ -1613,15 +1491,12 @@ async function updateOrderField(orderID, field, value) {
         order.dataset.telegram || "Не указан";
 
       const engStatus = order.dataset.status || "new";
-      // Обратно приводим к русскому
       let rusStatus =
         Object.keys(statusMapping).find(
           (key) => statusMapping[key] === engStatus
         ) || "новый";
-
-      currentOrderStatus = rusStatus; // сохраняем
+      currentOrderStatus = rusStatus;
       document.getElementById("orderStatus").textContent = rusStatus;
-
       document.getElementById("orderDeadline").textContent =
         order.dataset.deadline || "";
       document.getElementById("orderBudget").textContent =
@@ -1632,40 +1507,30 @@ async function updateOrderField(orderID, field, value) {
         order.dataset.plagiarism || "Нет";
       document.getElementById("orderNotes").textContent =
         order.dataset.notes || "";
-
-      // Очистим иконку new-indicator, если была
       const indicator = order.querySelector(".new-indicator");
       if (indicator) indicator.remove();
-
-      // Открываем модалку
       document.getElementById("orderDetailModal").style.display = "flex";
-
-      // Обновляем блок кнопок (Принять, Отменить, Завершить и т.п.)
       updateModalActions(orderID, rusStatus);
-
-      // Загружаем файлы
       loadFilesModal(orderID);
-
-      // Загружаем чат
       loadChatHistory(orderID);
 
-      // Подключаемся по WebSocket
+      // Подключаем WebSocket для чата
       const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsHost = window.location.host;
-      const wsUrl = `${wsProtocol}//${wsHost}/ws/chat?orderID=${orderID}`;
+      const chatWsUrl = `${wsProtocol}//${window.location.host}/ws/chat?orderID=${orderID}`;
       if (currentChatWS) {
         currentChatWS.close();
       }
-      currentChatWS = new WebSocket(wsUrl);
+      currentChatWS = new WebSocket(chatWsUrl);
       currentChatWS.onopen = () => {
-        console.log("Чат подключён:", wsUrl);
+        console.log("Чат подключён:", chatWsUrl);
       };
       currentChatWS.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
-          if (!loadedMessages.has(msg.message + msg.created_at)) {
+          const msgKey = msg.message + msg.created_at;
+          if (!loadedMessages.has(msgKey)) {
             appendChatMessage(msg);
-            loadedMessages.add(msg.message + msg.created_at);
+            loadedMessages.add(msgKey);
           }
         } catch (e) {
           console.error("Ошибка парсинга сообщения:", e);
@@ -1680,13 +1545,54 @@ async function updateOrderField(orderID, field, value) {
         currentChatWS = null;
       };
 
-      // Загрузка отзыва (если заказ завершён — есть смысл загружать)
+      // Подключаем WebSocket для файлов
+      const fileWsUrl = `${wsProtocol}//${window.location.host}/ws/chat?orderID=${orderID}`;
+      if (fileWS) {
+        fileWS.close();
+      }
+      fileWS = new WebSocket(fileWsUrl);
+      fileWS.onopen = () => {
+        console.log("WebSocket для файлов подключён:", fileWsUrl);
+      };
+      fileWS.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log("WebSocket message received:", data); // Для отладки
+          if (data.OrderID && data.URL && data.OrderID == currentOrderId) {
+            const newFile = {
+              url: data.URL,
+              originalName: data.OriginalName,
+              uploadedBy: data.UploadedBy || "admin",
+            };
+            const exists = userFiles.concat(adminFiles).some(f => f.url === newFile.url);
+            if (!exists) {
+              if (newFile.uploadedBy === "user") {
+                userFiles.push(newFile);
+              } else {
+                adminFiles.push(newFile);
+              }
+              updateFilesList();
+              showToast(`Новый файл добавлен: ${newFile.originalName}`, "success");
+            }
+          }
+        } catch (e) {
+          console.error("Ошибка парсинга WebSocket-сообщения для файлов:", e);
+          showToast("Ошибка обработки обновления файлов", "error");
+        }
+      };
+      fileWS.onerror = (err) => {
+        console.error("WebSocket для файлов ошибка:", err);
+      };
+      fileWS.onclose = () => {
+        console.log("WebSocket для файлов отключён");
+        fileWS = null;
+      };
+
       if (rusStatus.toLowerCase() === "завершён") {
         loadReview(orderID);
       } else {
         document.getElementById("reviewSection").style.display = "none";
       }
-
       showLoading(false);
     }
 
@@ -1699,6 +1605,10 @@ async function updateOrderField(orderID, field, value) {
           currentChatWS = null;
           loadedMessages.clear();
         }
+        if (fileWS) {
+          fileWS.close();
+          fileWS = null;
+        }
       });
 
     window.addEventListener("click", (e) => {
@@ -1708,6 +1618,10 @@ async function updateOrderField(orderID, field, value) {
           currentChatWS.close();
           currentChatWS = null;
           loadedMessages.clear();
+        }
+        if (fileWS) {
+          fileWS.close();
+          fileWS = null;
         }
       }
     });
@@ -1729,9 +1643,10 @@ async function updateOrderField(orderID, field, value) {
         };
         currentChatWS.send(JSON.stringify(msgObj));
         input.value = "";
-        if (!loadedMessages.has(message + msgObj.created_at)) {
+        const msgKey = msgObj.message + msgObj.created_at;
+        if (!loadedMessages.has(msgKey)) {
           appendChatMessage(msgObj);
-          loadedMessages.add(message + msgObj.created_at);
+          loadedMessages.add(msgKey);
         }
         showToast("Сообщение отправлено", "success");
       } else {
@@ -1818,14 +1733,17 @@ async function updateOrderField(orderID, field, value) {
         const fileItem = document.createElement("div");
         fileItem.className = "file-item";
         let fileName =
+          file.originalName ||
           file.original_name ||
           file.OriginalName ||
           file.url.split("/").pop() ||
           "Неизвестный файл";
-        if (fileName.includes("_") && fileName.split("_")[0] == currentOrderId) {
-          fileName = fileName.split("_").slice(1).join("_");
+        if (fileName.includes("_") && fileName.split("_")[0].startsWith("user_")) {
+          fileName = fileName.split("_").slice(2).join("_");
         }
-        const ext = fileName.substring(fileName.lastIndexOf(".")).toLowerCase() || ".unknown";
+        const ext =
+          fileName.substring(fileName.lastIndexOf(".")).toLowerCase() ||
+          ".unknown";
         const iconHTML = getIconForExtension(ext);
         fileItem.innerHTML = `
           <div class="file-icon">${iconHTML}</div>
@@ -1838,14 +1756,17 @@ async function updateOrderField(orderID, field, value) {
         const fileItem = document.createElement("div");
         fileItem.className = "file-item";
         let fileName =
+          file.originalName ||
           file.original_name ||
           file.OriginalName ||
           file.url.split("/").pop() ||
           "Неизвестный файл";
-        if (fileName.includes("_") && fileName.split("_")[0] == currentOrderId) {
-          fileName = fileName.split("_").slice(1).join("_");
+        if (fileName.includes("_") && fileName.split("_")[0].startsWith("admin_")) {
+          fileName = fileName.split("_").slice(2).join("_");
         }
-        const ext = fileName.substring(fileName.lastIndexOf(".")).toLowerCase() || ".unknown";
+        const ext =
+          fileName.substring(fileName.lastIndexOf(".")).toLowerCase() ||
+          ".unknown";
         const iconHTML = getIconForExtension(ext);
         fileItem.innerHTML = `
           <div class="file-icon">${iconHTML}</div>
@@ -1876,52 +1797,81 @@ async function updateOrderField(orderID, field, value) {
       }
     }
 
-    document
-      .getElementById("uploadFormModal")
-      .addEventListener("submit", async function (e) {
-        e.preventDefault();
-        showLoading(true);
-        const formData = new FormData(this);
-        try {
-          const response = await fetch(this.action, {
-            method: "POST",
-            body: formData,
-            credentials: "include",
-          });
-          const data = await response.json();
-          if (response.ok) {
-            showToast(data.message || "Файлы загружены", "success");
-            data.files.forEach((file) => {
-              file.uploadedBy = "admin";
-              adminFiles.push(file);
-            });
-            updateFilesList();
-            markOrderChanged(document.getElementById("modalOrderID").value);
-          } else {
-            showToast(data.error || "Ошибка загрузки", "error");
-          }
-        } catch (err) {
-          console.error("Ошибка в uploadFormModal:", err);
-          showToast("Ошибка соединения при загрузке файлов", "error");
-        } finally {
-          showLoading(false);
-        }
-      });
+    /* ===== Новые доработки: Загрузка итогового файла ===== */
+    function uploadFinalFile(orderID) {
+      currentOrderId = orderID;
+      const finalFileInput = document.getElementById("finalFileInput");
+      finalFileInput.value = "";
+      finalFileInput.click();
+    }
 
-    /* ====================== Загрузка / отправка отзыва ====================== */
+    document.getElementById("finalFileInput").addEventListener("change", async function() {
+      const file = this.files[0];
+      if (!file) return;
+      const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png'];
+      if (file.size > 10 * 1024 * 1024) {
+        showToast("Файл слишком большой (максимум 10 МБ)", "error");
+        return;
+      }
+      const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
+      if (!allowedExtensions.includes(ext)) {
+        showToast("Недопустимый формат файла", "error");
+        return;
+      }
+      const formData = new FormData();
+      formData.append("orderID", currentOrderId);
+      formData.append("finalFile", file);
+      showLoading(true);
+      try {
+        const response = await fetch("/api/admin/upload-final-file", {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (response.ok) {
+          showToast(data.message || "Итоговый файл загружен", "success");
+          if (data.finalFileURL) {
+            updateFinalFileDisplay(data.finalFileURL);
+          }
+        } else {
+          showToast(data.error || "Ошибка загрузки итогового файла", "error");
+        }
+      } catch (err) {
+        console.error("Ошибка загрузки итогового файла:", err);
+        showToast("Ошибка соединения при загрузке итогового файла", "error");
+      } finally {
+        showLoading(false);
+      }
+    });
+
+    function updateFinalFileDisplay(url) {
+      const modalActions = document.getElementById("modalActions");
+      let finalFileLink = document.getElementById("finalFileLink");
+      if (!finalFileLink) {
+        finalFileLink = document.createElement("a");
+        finalFileLink.id = "finalFileLink";
+        finalFileLink.className = "modal-actions-btn btn-view-final";
+        finalFileLink.target = "_blank";
+        modalActions.appendChild(finalFileLink);
+      }
+      finalFileLink.href = url;
+      finalFileLink.textContent = "Просмотреть итоговый файл";
+    }
+    /* =================================================================== */
+
+    /* ====================== Загрузка/отправка отзыва ====================== */
     async function loadReview(orderID) {
       showLoading(true);
       try {
         const response = await fetch(`/api/order/review?orderID=${orderID}`, {
           credentials: "include",
         });
-        const data = await response.json(); // Пытаемся распарсить JSON
+        const data = await response.json();
         const reviewSection = document.getElementById("reviewSection");
         const reviewContent = document.getElementById("reviewContent");
         const reviewFormContainer = document.getElementById("reviewFormContainer");
-
         document.getElementById("reviewOrderID").value = orderID;
-
         if (response.ok && data.review) {
           let userName = "Пользователь неизвестен";
           if (data.review.User && data.review.User.Name) {
@@ -2014,8 +1964,6 @@ async function updateOrderField(orderID, field, value) {
         countInProgress = 0,
         countCompleted = 0,
         countCancelled = 0;
-
-      // Подсчёт по всем карточкам (вне зависимости, скрыты они или нет).
       const cards = document.querySelectorAll(".order-card");
       cards.forEach((card) => {
         const status = (card.dataset.status || "new").toLowerCase();
@@ -2025,14 +1973,11 @@ async function updateOrderField(orderID, field, value) {
         if (status === "completed") countCompleted++;
         if (status === "cancelled") countCancelled++;
       });
-
       document.getElementById("count-all").textContent = countAll;
       document.getElementById("count-new").textContent = countNew;
       document.getElementById("count-inprogress").textContent = countInProgress;
       document.getElementById("count-completed").textContent = countCompleted;
       document.getElementById("count-cancelled").textContent = countCancelled;
-
-      // Обновим кнопку "Новые"
       const newBtn = document.querySelector('.filter-btn[data-filter="new"]');
       if (countNew > 0) {
         newBtn.innerHTML = `Новые <span class="badge">${countNew}</span>`;
@@ -2085,6 +2030,62 @@ async function updateOrderField(orderID, field, value) {
       initTheme();
       refreshOrders();
       updateStats();
+    });
+
+    /* ====================== Обработчик отправки формы загрузки файлов ====================== */
+    const uploadForm = document.getElementById("uploadFormModal");
+    uploadForm.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const orderID = currentOrderId;
+      if (!orderID) {
+        showToast("orderID не установлен", "error");
+        return;
+      }
+      document.getElementById("modalOrderID").value = orderID;
+      const files = this.querySelector('input[type="file"]').files;
+      const allowedExtensions = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png'];
+      const maxFileSize = 10 * 1024 * 1024; // 10 MB
+
+      for (let file of files) {
+        const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
+        if (file.size > maxFileSize) {
+          showToast(`Файл ${file.name} слишком большой (максимум 10 МБ)`, "error");
+          return;
+        }
+        if (!allowedExtensions.includes(ext)) {
+          showToast(`Недопустимый формат файла ${file.name}`, "error");
+          return;
+        }
+      }
+
+      const formData = new FormData(this);
+      showLoading(true);
+      fetch("/api/order/upload", {
+        method: "POST",
+        body: formData,
+        credentials: "include"
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.message) {
+          showToast(data.message || "Файлы успешно загружены", "success");
+          this.querySelector('input[type="file"]').value = "";
+        } else {
+          throw new Error(data.error || "Неизвестная ошибка");
+        }
+      })
+      .catch(err => {
+        console.error("Ошибка при загрузке файлов:", err);
+        showToast("Ошибка соединения при загрузке файлов", "error");
+      })
+      .finally(() => {
+        showLoading(false);
+      });
     });
 
     /* ====================== Вспомогательная функция трекинга ====================== */

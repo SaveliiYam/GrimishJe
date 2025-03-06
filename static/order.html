@@ -265,6 +265,21 @@
       display: none;
     }
 
+    /* Секция итогового файла */
+    .final-file-section {
+      background: var(--card-bg);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      margin-top: 20px;
+    }
+
+    .final-file-section h3 {
+      font-size: clamp(1.2em, 3vw, 1.4em);
+      color: var(--primary-color);
+      margin-bottom: 15px;
+    }
+
     /* Чат */
     .chat-section {
       background: var(--card-bg);
@@ -287,6 +302,16 @@
       margin-bottom: 15px;
       border-bottom: 2px solid #e2e8f0;
       padding-bottom: 10px;
+    }
+
+    .chat-status {
+      font-size: clamp(0.9em, 2vw, 1em);
+      margin-bottom: 10px;
+      color: gray;
+    }
+
+    .chat-status.online {
+      color: green;
     }
 
     .chat-window {
@@ -327,6 +352,17 @@
       position: relative;
       border-bottom-left-radius: 0;
       color: #2f6f44;
+    }
+
+    .chat-message.notification {
+      background: #e2e8f0;
+      align-self: center;
+      margin: 0 auto;
+      font-style: italic;
+      color: var(--text-light);
+      border-radius: 8px;
+      padding: 8px 12px;
+      max-width: 90%;
     }
 
     .chat-message.sent::before,
@@ -440,14 +476,14 @@
 
     .review-section .star {
       font-size: 1.5em;
-      color: #ccc; /* Цвет неактивной звезды */
+      color: #ccc;
       cursor: pointer;
       transition: color 0.3s ease;
     }
 
     .review-section .star:hover,
     .review-section .star.active {
-      color: #ffd700; /* Цвет активной (жёлтой) звезды */
+      color: #ffd700;
     }
 
     .review-section textarea {
@@ -563,7 +599,7 @@
     <section class="order-details">
       <h2>Детали заказа</h2>
       <p><strong>Номер заказа:</strong> <span class="order-number">{{.Order.OrderNumber}}</span> <button class="copy-btn" onclick="copyOrderNumber()">Копировать</button></p>
-      <p><strong>Статус:</strong> {{.Order.Status}}</p>
+      <p><strong>Статус:</strong> <span id="orderStatus">{{.Order.Status}}</span></p>
       <p><strong>Описание:</strong> {{.Order.Description}}</p>
       <p><strong>Срок выполнения:</strong> {{formatDateString .Order.Deadline}}</p>
       <p><strong>Бюджет:</strong> {{.Order.Budget}} ₽</p>
@@ -588,12 +624,28 @@
         <h4>Файлы администратора</h4>
         <div id="adminFilesContainer" class="files-grid"></div>
       </div>
-      <form id="uploadForm" enctype="multipart/form-data">
+      <form id="uploadForm" action="/api/order/upload" enctype="multipart/form-data">
         <input type="hidden" name="orderID" value="{{.Order.ID}}">
+        <input type="hidden" name="uploaded_by" value="user">
         <input type="file" name="files" multiple required aria-label="Выберите файлы для загрузки" onchange="validateFileCount(this)">
         <button type="submit">Загрузить файлы</button>
       </form>
       <button class="download-all-btn" id="downloadAll" style="margin-top: 10px; display: none;" aria-label="Скачать все файлы">Скачать все</button>
+    </section>
+
+    <!-- Секция для итогового файла -->
+    <section class="final-file-section" style="display: {{if .Order.FinalFileURL}}block{{else}}none{{end}};">
+      <h3>Итоговый файл</h3>
+      {{if .Order.FinalFileURL}}
+        <div class="files-grid">
+          <div class="file-item">
+            <div class="file-icon"><i class="fa-solid fa-file" style="color: #808080;"></i></div>
+            <a href="{{.Order.FinalFileURL}}" target="_blank" class="file-name" aria-label="Скачать итоговый файл">Итоговый файл</a>
+          </div>
+        </div>
+      {{else}}
+        <p>Итоговый файл ещё не загружен администратором.</p>
+      {{end}}
     </section>
 
     <section class="review-section" id="reviewSection" style="display: none;">
@@ -624,6 +676,7 @@
 
     <section class="chat-section">
       <h3>Чат с исполнителем</h3>
+      <div id="chatStatus" class="chat-status">Статус исполнителя: неизвестен</div>
       <div class="chat-window" id="chatWindow" role="log" aria-live="polite"></div>
       <div class="chat-input">
         <input type="text" id="chatInput" placeholder="Напишите сообщение..." aria-label="Введите сообщение для чата">
@@ -635,6 +688,10 @@
   <script defer>
     let currentChatWS = null;
     let loadedMessages = new Set(); // Для предотвращения дублирования сообщений
+    let loadedFiles = new Set();   // Для предотвращения дублирования файлов
+    let retryCount = 0;
+    const maxRetries = 5;
+    const retryDelay = 1000; // 1 секунда начальная задержка
 
     // Инициализация темы из localStorage
     function initTheme() {
@@ -679,18 +736,17 @@
         .catch(() => showToast('Ошибка копирования номера заказа', 'error'));
     }
 
-    // Загрузка истории чатов при открытии страницы с сортировкой по created_at
+    // Загрузка истории чатов
     async function loadChatHistory(orderID) {
       try {
         const response = await fetch(`/api/order/chat_history?orderID=${orderID}`);
         const data = await response.json();
         if (response.ok) {
           const chatWindow = document.getElementById("chatWindow");
-          // Сортируем сообщения по created_at (от старых к новым)
           const sortedMessages = data.messages.sort((a, b) => a.created_at - b.created_at);
-          chatWindow.innerHTML = ''; // Очищаем окно чата перед добавлением
+          chatWindow.innerHTML = '';
           sortedMessages.forEach(msg => {
-            const msgKey = `${msg.sender}-${msg.message}-${msg.created_at}`; // Уникальный ключ для сообщения
+            const msgKey = `${msg.sender}-${msg.message}-${msg.created_at}`;
             if (!loadedMessages.has(msgKey)) {
               const msgDiv = document.createElement("div");
               msgDiv.className = `chat-message ${msg.sender === "user" ? "sent" : "received"}`;
@@ -700,13 +756,25 @@
               loadedMessages.add(msgKey);
             }
           });
-          chatWindow.scrollTop = chatWindow.scrollHeight; // Прокрутка к последнему сообщению
+          chatWindow.scrollTop = chatWindow.scrollHeight;
         } else {
           showToast(data.error || "Ошибка загрузки истории чата", 'error');
         }
       } catch (err) {
         console.error(err);
         showToast("Ошибка соединения с сервером при загрузке истории чата", 'error');
+      }
+    }
+
+    function updateChatStatus(isOnline, lastSeen) {
+      const statusElement = document.getElementById("chatStatus");
+      if (isOnline) {
+        statusElement.textContent = "Исполнитель: Онлайн";
+        statusElement.classList.add("online");
+      } else {
+        const lastSeenDate = lastSeen ? new Date(lastSeen).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' }) : "неизвестно";
+        statusElement.textContent = `Исполнитель: Последний визит: ${lastSeenDate}`;
+        statusElement.classList.remove("online");
       }
     }
 
@@ -720,39 +788,81 @@
 
       currentChatWS.onopen = () => {
         console.log("Чат подключён (user) через:", wsUrl);
+        retryCount = 0;
+        currentChatWS.send(JSON.stringify({ type: 'status', user_id: parseInt("{{.Order.UserID}}", 10), is_online: true }));
         loadChatHistory(orderID);
       };
 
       currentChatWS.onmessage = (event) => {
         try {
-          const msg = JSON.parse(event.data);
-          console.log("Получено сообщение от сервера:", msg); // Логирование для отладки
+          const data = JSON.parse(event.data);
+          console.log("Получено сообщение от сервера:", data);
           const chatWindow = document.getElementById("chatWindow");
-          const msgKey = `${msg.sender}-${msg.message}-${msg.created_at}`; // Уникальный ключ для сообщения
-          if (!loadedMessages.has(msgKey)) {
-            const msgDiv = document.createElement("div");
-            msgDiv.className = `chat-message ${msg.sender === "user" ? "sent" : "received"}`;
-            msgDiv.textContent = msg.message;
-            msgDiv.setAttribute('role', 'log');
-            chatWindow.appendChild(msgDiv);
-            loadedMessages.add(msgKey);
-            chatWindow.scrollTop = chatWindow.scrollHeight; // Прокрутка к последнему сообщению
+
+          if (data.type === 'status') {
+            updateChatStatus(data.is_online, data.last_seen);
+          } else if (data.order_id && data.sender && data.message && data.created_at) {
+            const msg = data;
+            const msgKey = `${msg.sender}-${msg.message}-${msg.created_at}`;
+            if (!loadedMessages.has(msgKey)) {
+              const msgDiv = document.createElement("div");
+              msgDiv.className = `chat-message ${msg.sender === "user" ? "sent" : "received"}`;
+              msgDiv.textContent = msg.message;
+              msgDiv.setAttribute('role', 'log');
+              chatWindow.appendChild(msgDiv);
+              loadedMessages.add(msgKey);
+              chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
+          } else if (data.type === 'file') {
+            const file = data;
+            const fileKey = `${file.filename}-${file.uploadedBy}-${file.url}`;
+            if (!loadedFiles.has(fileKey)) {
+              updateFilesListWithNewFile(file);
+              loadedFiles.add(fileKey);
+              // Добавляем уведомление в чат
+              const notificationDiv = document.createElement("div");
+              notificationDiv.className = "chat-message notification";
+              notificationDiv.textContent = `${file.uploadedBy} загрузил: ${file.originalName}`;
+              chatWindow.appendChild(notificationDiv);
+              chatWindow.scrollTop = chatWindow.scrollHeight;
+              showToast(`${file.uploadedBy} загрузил: ${file.originalName}`, 'success');
+            }
+          }
+          // Обработка обновления статуса заказа в реальном времени
+          else if (data.type === 'order_status') {
+            document.getElementById('orderStatus').textContent = data.status;
+            showToast(`Статус заказа обновлён: ${data.status}`, 'success');
           }
         } catch (e) {
           console.error("Ошибка парсинга сообщения:", e);
-          showToast("Ошибка обработки сообщения чата", 'error');
+          showToast("Ошибка обработки сообщения чата, файла или статуса", 'error');
         }
       };
 
       currentChatWS.onerror = (err) => {
         console.error("WebSocket ошибка:", err);
         showToast("Ошибка подключения к чату: " + (err.message || 'Неизвестная ошибка'), 'error');
+        attemptReconnect();
       };
 
       currentChatWS.onclose = () => {
         console.log("Чат отключён");
         showToast("Подключение к чату потеряно", 'error');
+        attemptReconnect();
       };
+    }
+
+    function attemptReconnect() {
+      if (retryCount < maxRetries) {
+        retryCount++;
+        const delay = retryDelay * Math.pow(2, retryCount - 1);
+        setTimeout(() => {
+          console.log(`Попытка переподключения №${retryCount} через ${delay} мс`);
+          connectChat();
+        }, delay);
+      } else {
+        showToast("Не удалось восстановить соединение после нескольких попыток", 'error');
+      }
     }
 
     document.getElementById("sendMessage").addEventListener("click", () => {
@@ -769,7 +879,7 @@
           message: message,
           created_at: Math.floor(Date.now() / 1000)
         };
-        currentChatWS.send(JSON.stringify(msgObj));
+        currentChatWS.send(JSON.stringify({ type: 'message', ...msgObj }));
         input.value = "";
         trackEvent('Chat', 'Send', 'Message');
       } else {
@@ -781,7 +891,7 @@
       const files = input.files;
       if (files.length > 10) {
         showToast("Можно загрузить не более 10 файлов за раз", 'error');
-        input.value = ''; // Сбрасываем выбор файлов
+        input.value = '';
         return false;
       }
       return true;
@@ -794,15 +904,20 @@
         const data = await response.json();
         console.log("Данные файлов от сервера:", JSON.stringify(data, null, 2));
         if (response.ok) {
-          const userFiles = (data.files || []).filter(file => file.uploadedBy === "user" || !file.uploadedBy); // Включаем файлы без uploadedBy
-          const adminFiles = (data.files || []).filter(file => file.uploadedBy === "admin");
+          const userFiles = (data.files || []).filter(f => 
+            f.uploadedBy?.toLowerCase() === "user" || !f.uploadedBy
+          );
+          const adminFiles = (data.files || []).filter(f => 
+            f.uploadedBy?.toLowerCase() === "admin"
+          );
           updateFilesList(userFiles, adminFiles);
+          cacheFiles(orderID, data.files); // Кэшируем все файлы с сервера
         } else {
           showToast(data.error || "Ошибка получения файлов заказа", "error");
         }
       } catch (err) {
         console.error("Ошибка загрузки файлов:", err);
-        showToast("Ошибка соединения с сервером при загрузке файлов", "error");
+        showToast("Ошибка соединения с сервером при загрузке файлов", 'error');
       }
     }
 
@@ -811,9 +926,8 @@
       const adminFilesContainer = document.getElementById("adminFilesContainer");
       const downloadAllBtn = document.getElementById("downloadAll");
 
-      // Убираем сообщения "Файлы не найдены" и показываем только файлы
-      userFilesContainer.innerHTML = userFiles.length > 0 ? "" : "";
-      adminFilesContainer.innerHTML = adminFiles.length > 0 ? "" : "";
+      userFilesContainer.innerHTML = userFiles.length > 0 ? "" : '<p>Файлы заказчика не найдены.</p>';
+      adminFilesContainer.innerHTML = adminFiles.length > 0 ? "" : '<p>Файлы администратора не найдены.</p>';
 
       userFiles.forEach(file => {
         const fileItem = createFileItem(file);
@@ -828,21 +942,37 @@
       downloadAllBtn.style.display = (userFiles.length + adminFiles.length) > 0 ? "block" : "none";
     }
 
+    function updateFilesListWithNewFile(file) {
+      const container = file.uploadedBy?.toLowerCase() === "admin" ? 
+        document.getElementById("adminFilesContainer") : 
+        document.getElementById("userFilesContainer");
+      const fileItem = createFileItem(file);
+      container.appendChild(fileItem);
+      container.querySelector('p')?.remove();
+      const downloadAllBtn = document.getElementById("downloadAll");
+      downloadAllBtn.style.display = "block";
+      // Обновляем кэш, добавляя новый файл
+      const orderID = "{{.Order.ID}}";
+      const cachedFiles = getCachedFiles(orderID) || [];
+      cachedFiles.push(file);
+      cacheFiles(orderID, cachedFiles);
+      // Также перезагружаем файлы с сервера для синхронизации
+      loadFiles();
+    }
+
     function createFileItem(file) {
       const fileItem = document.createElement("div");
       fileItem.className = "file-item";
-      let fileName = file.original_name || (file.url || file.URL || "Неизвестное имя файла").split('/').pop();
-      if (fileName && fileName.includes('_') && fileName.split('_')[0] === "{{.Order.ID}}") {
-        fileName = fileName.split('_').slice(1).join('_');
-      }
-      if (!fileName || fileName.trim() === "") {
-        fileName = (file.url || file.URL || "Неизвестный файл").split('/').pop() || "Неизвестное имя файла";
+      let fileName = file.originalName || file.original_name || "Неизвестное имя файла";
+      const orderID = "{{.Order.ID}}";
+      if (fileName.startsWith(`${orderID}_`)) {
+        fileName = fileName.substring((`${orderID}_`).length);
       }
       const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase() || '.unknown';
       const iconHTML = getIconForExtension(ext);
       fileItem.innerHTML = `
         <div class="file-icon">${iconHTML}</div>
-        <a href="${file.url || file.URL || '#'}" target="_blank" class="file-name" aria-label="Скачать файл: ${fileName}">${fileName}</a>
+        <a href="${file.url || '#'}" target="_blank" class="file-name" aria-label="Скачать файл: ${fileName}">${fileName}</a>
       `;
       return fileItem;
     }
@@ -868,18 +998,31 @@
       }
     }
 
+    // Кэширование файлов в localStorage
+    function cacheFiles(orderID, files) {
+      localStorage.setItem(`files_${orderID}`, JSON.stringify(files));
+    }
+
+    function getCachedFiles(orderID) {
+      const cached = localStorage.getItem(`files_${orderID}`);
+      return cached ? JSON.parse(cached) : null;
+    }
+
     // Автоматическое обновление списка файлов через периодический опрос
     function setupFileUpdates() {
       const orderID = "{{.Order.ID}}";
-      setInterval(() => loadFiles(), 5000);
+      setInterval(() => {
+        loadFiles(); // Загружаем актуальные данные с сервера вместо использования кэша
+      }, 5000); // Обновляем каждые 5 секунд
     }
 
+    // Обработка загрузки файлов
     document.getElementById("uploadForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const form = e.target;
       const formData = new FormData(form);
       try {
-        const response = await fetch("/api/order/upload", {
+        const response = await fetch(form.action, {
           method: "POST",
           body: formData,
           credentials: 'include',
@@ -887,7 +1030,9 @@
         const data = await response.json();
         if (response.ok) {
           showToast(data.message || "Файлы успешно загружены", 'success');
-          loadFiles(); // Обновляем список файлов после загрузки
+          loadFiles(); // Перезагрузка файлов с сервера
+          // Очистка кэша для данного orderID
+          localStorage.removeItem(`files_${form.querySelector("input[name='orderID']").value}`);
         } else {
           showToast(data.error || "Ошибка загрузки файлов", 'error');
         }
@@ -938,7 +1083,6 @@
       }
     });
 
-    // Функция для обработки рейтинга звёзд
     function initRatingStars() {
       const stars = document.querySelectorAll('.star');
       const hiddenRating = document.getElementById('hiddenRating');
@@ -950,7 +1094,7 @@
           for (let i = 0; i < value; i++) {
             stars[i].classList.add('active');
           }
-          hiddenRating.value = value; // Обновляем скрытое поле с значением рейтинга
+          hiddenRating.value = value;
           console.log(`Выбрана оценка: ${value}`);
         });
 
@@ -964,7 +1108,6 @@
 
         star.addEventListener('mouseout', () => {
           stars.forEach(s => s.classList.remove('hover'));
-          // Восстанавливаем активные звёзды на основе текущего значения
           const currentRating = parseInt(hiddenRating.value) || 0;
           stars.forEach((s, index) => {
             if (index < currentRating) s.classList.add('active');
@@ -974,16 +1117,15 @@
       });
     }
 
-    // Загрузка отзыва при открытии страницы с улучшенным отображением
     async function loadReview(orderID) {
       try {
         const response = await fetch(`/api/order/review?orderID=${orderID}`, {
           credentials: "include",
         });
-        console.log("Статус ответа от сервера для /api/order/review:", response.status); // Логирование статуса
-        console.log("Полные заголовки ответа:", response.headers); // Логирование заголовков
+        console.log("Статус ответа от сервера для /api/order/review:", response.status);
+        console.log("Полные заголовки ответа:", response.headers);
         const data = await response.json();
-        console.log("Данные отзыва от сервера:", JSON.stringify(data, null, 2)); // Логирование данных
+        console.log("Данные отзыва от сервера:", JSON.stringify(data, null, 2));
         const reviewSection = document.getElementById("reviewSection");
         const reviewContent = document.getElementById("reviewContent");
         const reviewForm = document.getElementById("reviewForm");
@@ -991,11 +1133,10 @@
 
         if (response.ok) {
           const orderStatus = "{{.Order.Status}}".toLowerCase();
-          console.log("Статус заказа в шаблоне:", orderStatus); // Логирование статуса заказа
+          console.log("Статус заказа в шаблоне:", orderStatus);
           if (orderStatus === "завершён") {
-            reviewSection.style.display = "block"; // Явно показываем секцию, если заказ завершён
+            reviewSection.style.display = "block";
             if (data.review) {
-              // Отзыв существует, отображаем его
               reviewContent.innerHTML = `
                 <p><strong>Ваш отзыв:</strong></p>
                 <p><strong>Оценка:</strong> ${data.review.rating}/5</p>
@@ -1006,14 +1147,13 @@
               reviewForm.style.display = "none";
               noReviewMessage.style.display = "none";
             } else {
-              // Отзыв не найден, показываем форму для создания нового отзыва
               reviewForm.style.display = "block";
               reviewContent.style.display = "none";
               noReviewMessage.style.display = "none";
-              initRatingStars(); // Инициализируем звёзды при загрузке формы
+              initRatingStars();
             }
           } else {
-            reviewSection.style.display = "none"; // Скрываем секцию, если заказ не завершён
+            reviewSection.style.display = "none";
           }
         } else {
           showToast(data.error || "Ошибка загрузки отзыва", "error");
@@ -1024,7 +1164,6 @@
       }
     }
 
-    // Отправка отзыва
     document.getElementById("reviewForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
@@ -1037,7 +1176,7 @@
         const data = await response.json();
         if (response.ok) {
           showToast(data.message || "Отзыв успешно создан", "success");
-          loadReview("{{.Order.ID}}"); // Обновляем отображение после отправки
+          loadReview("{{.Order.ID}}");
         } else {
           showToast(data.error || "Ошибка создания отзыва", "error");
         }
@@ -1047,6 +1186,48 @@
       }
     });
 
+    // Инициализация Push-уведомлений
+    function initializePushNotifications() {
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(registration => {
+            console.log('Service Worker зарегистрирован:', registration);
+            askPermission(registration);
+          })
+          .catch(error => {
+            console.error('Ошибка регистрации Service Worker:', error);
+          });
+      }
+    }
+
+    function askPermission(registration) {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          console.log('Разрешение на уведомления получено');
+          subscribeUser(registration);
+        } else {
+          console.log('Разрешение на уведомления не получено');
+        }
+      });
+    }
+
+    function subscribeUser(registration) {
+      registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: 'YOUR_VAPID_PUBLIC_KEY'
+      }).then(subscription => {
+        console.log('Подписка на push-уведомления:', subscription);
+        fetch('/api/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(subscription),
+          credentials: 'include'
+        });
+      }).catch(error => {
+        console.error('Ошибка подписки:', error);
+      });
+    }
+
     window.addEventListener('load', () => {
       initTheme();
       const orderDetails = document.querySelector('.order-details');
@@ -1055,17 +1236,18 @@
       orderDetails.classList.add('skeleton');
       chatSection.classList.add('skeleton');
       reviewSection.classList.add('skeleton');
-      console.log("Страница загружается, добавляем скелетон-анимацию"); // Логирование
+      console.log("Страница загружается, добавляем скелетон-анимацию");
       setTimeout(() => {
         orderDetails.classList.remove('skeleton');
         chatSection.classList.remove('skeleton');
         reviewSection.classList.remove('skeleton');
-        console.log("Скелетон-анимация удалена, подключаем чат и загружаем данные"); // Логирование
+        console.log("Скелетон-анимация удалена, подключаем чат и загружаем данные");
         connectChat();
         loadFiles();
-        setupFileUpdates(); // Начинаем автоматическое обновление файлов
+        setupFileUpdates();
+        initializePushNotifications();
         const orderStatus = "{{.Order.Status}}".toLowerCase();
-        console.log("Статус заказа в шаблоне:", orderStatus); // Логирование статуса
+        console.log("Статус заказа в шаблоне:", orderStatus);
         if (orderStatus === "завершён") {
           loadReview("{{.Order.ID}}");
         }
@@ -1077,5 +1259,26 @@
     }
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-messaging.js"></script>
+  <script>
+    // Настройка Firebase для Push-уведомлений
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
+
+    messaging.onMessage((payload) => {
+      console.log('Получено сообщение:', payload);
+      showToast(payload.notification.body, 'success');
+    });
+  </script>
 </body>
 </html>
