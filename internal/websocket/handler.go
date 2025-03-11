@@ -116,8 +116,10 @@ func WebSocketHandler(hub *Hub) gin.HandlerFunc {
 			return
 		}
 
+		// Создаем клиента с дополнительным полем UserID
 		client := &Client{
 			OrderID:    uint(orderID),
+			UserID:     user.ID, // Добавляем ID пользователя (админа или обычного)
 			Conn:       ws,
 			Send:       make(chan interface{}, 100),
 			DB:         db,

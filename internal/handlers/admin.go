@@ -175,3 +175,18 @@ func GetOrderReview(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"review": responseReview})
 	}
 }
+
+func GetAdminLastLogin(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Получаем администратора (предполагается, что админ один)
+		var admin models.User
+		if err := db.Where("is_admin = ?", true).First(&admin).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Администратор не найден"})
+			return
+		}
+
+		// Форматируем время последнего входа администратора
+		lastLogin := admin.LastLogin.Format("02.01.2006 15:04")
+		c.JSON(http.StatusOK, gin.H{"lastLogin": lastLogin})
+	}
+}

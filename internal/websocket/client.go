@@ -2,9 +2,8 @@ package websocket
 
 import (
 	"log"
-	"time"
-
 	"regexp"
+	"time"
 
 	"github.com/MoshKillaPit/GrimishJe/internal/models"
 	"github.com/gorilla/websocket"
@@ -13,6 +12,7 @@ import (
 
 type Client struct {
 	OrderID    uint
+	UserID     uint
 	Conn       *websocket.Conn
 	Send       chan interface{}
 	DB         *gorm.DB
@@ -22,16 +22,35 @@ type Client struct {
 
 func (c *Client) readPump() {
 	defer func() {
+		if c.IsAdmin {
+			// Обновляем время последнего входа (LastLogin) для администратора
+			c.DB.Model(&models.User{}).
+				Where("id = ?", c.UserID).
+				Update("last_login", time.Now())
+
+			// Отправляем уведомление о том, что админ ушёл (Оффлайн) с типом "executor_status"
+			offlinePayload := OrderStatusUpdatePayload{
+				Type:    "executor_status",
+				OrderID: c.OrderID,
+				Status:  "Оффлайн (был в сети: " + time.Now().Format("02.01.2006 15:04") + ")",
+				At:      time.Now().Unix(),
+			}
+			BroadcastMessage(GetHub(), offlinePayload)
+		}
+
+		// Удаляем клиента из хаба и закрываем соединение
 		hub.Unregister <- c
 		c.Conn.Close()
-		log.Printf("Клиент отключён от чата для OrderID: %d (админ: %v, отправитель: %s)", c.OrderID, c.IsAdmin, c.UploadedBy)
+		log.Printf("Клиент отключён от чата для OrderID: %d (админ: %v, отправитель: %s)",
+			c.OrderID, c.IsAdmin, c.UploadedBy)
 	}()
 
 	c.Conn.SetReadLimit(512 * 1024)
 	c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 	c.Conn.SetPongHandler(func(string) error {
 		c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
-		log.Printf("Получен pong для OrderID: %d (админ: %v, отправитель: %s)", c.OrderID, c.IsAdmin, c.UploadedBy)
+		log.Printf("Получен pong для OrderID: %d (админ: %v, отправитель: %s)",
+			c.OrderID, c.IsAdmin, c.UploadedBy)
 		return nil
 	})
 
@@ -40,22 +59,26 @@ func (c *Client) readPump() {
 		err := c.Conn.ReadJSON(&msg)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("WebSocket ошибка для OrderID %d (админ: %v, отправитель: %s): %v", c.OrderID, c.IsAdmin, c.UploadedBy, err)
+				log.Printf("WebSocket ошибка для OrderID %d (админ: %v, отправитель: %s): %v",
+					c.OrderID, c.IsAdmin, c.UploadedBy, err)
 			}
 			break
 		}
 
 		// Валидация сообщения
 		if len(msg.Message) > 1000 {
-			log.Printf("Сообщение слишком длинное для OrderID %d, пропущено (админ: %v, отправитель: %s)", c.OrderID, c.IsAdmin, c.UploadedBy)
+			log.Printf("Сообщение слишком длинное для OrderID %d, пропущено (админ: %v, отправитель: %s)",
+				c.OrderID, c.IsAdmin, c.UploadedBy)
 			continue
 		}
 		if len(msg.Sender) > 50 || !isValidSender(msg.Sender) {
-			log.Printf("Недопустимый sender для OrderID %d: %s (админ: %v, отправитель: %s)", c.OrderID, msg.Sender, c.IsAdmin, c.UploadedBy)
+			log.Printf("Недопустимый sender для OrderID %d: %s (админ: %v, отправитель: %s)",
+				c.OrderID, msg.Sender, c.IsAdmin, c.UploadedBy)
 			continue
 		}
 
-		log.Printf("Получено сообщение для OrderID %d от %s (админ: %v): %+v", c.OrderID, c.UploadedBy, c.IsAdmin, msg)
+		log.Printf("Получено сообщение для OrderID %d от %s (админ: %v): %+v",
+			c.OrderID, c.UploadedBy, c.IsAdmin, msg)
 		msg.OrderID = c.OrderID
 		msg.CreatedAt = time.Now().Unix()
 		msg.UploadedBy = c.UploadedBy
@@ -67,11 +90,15 @@ func (c *Client) readPump() {
 			CreatedAt: time.Unix(msg.CreatedAt, 0),
 		}
 		if err := c.DB.Create(&chatMsg).Error; err != nil {
-			log.Printf("Ошибка сохранения сообщения для OrderID %d: %v (админ: %v, отправитель: %s)", c.OrderID, err, c.IsAdmin, c.UploadedBy)
+			log.Printf("Ошибка сохранения сообщения для OrderID %d: %v (админ: %v, отправитель: %s)",
+				c.OrderID, err, c.IsAdmin, c.UploadedBy)
 			continue
 		}
-		if err := c.DB.Where("order_id = ? AND sender = ? AND message = ? AND created_at = ?", chatMsg.OrderID, chatMsg.Sender, chatMsg.Message, chatMsg.CreatedAt).FirstOrCreate(&chatMsg).Error; err != nil {
-			log.Printf("Ошибка сохранения или проверки дубликата сообщения для OrderID %d: %v (админ: %v, отправитель: %s)", c.OrderID, err, c.IsAdmin, c.UploadedBy)
+		if err := c.DB.Where("order_id = ? AND sender = ? AND message = ? AND created_at = ?",
+			chatMsg.OrderID, chatMsg.Sender, chatMsg.Message, chatMsg.CreatedAt).
+			FirstOrCreate(&chatMsg).Error; err != nil {
+			log.Printf("Ошибка проверки дубликата сообщения для OrderID %d: %v (админ: %v, отправитель: %s)",
+				c.OrderID, err, c.IsAdmin, c.UploadedBy)
 			continue
 		}
 

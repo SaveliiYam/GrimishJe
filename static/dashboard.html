@@ -8,7 +8,7 @@
   <meta name="author" content="Громыш">
   <title>Личный кабинет | {{.User.Name}}</title>
   <!-- Подключаем CSS через относительный путь -->
-  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="stylesheet" href="/static/styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -26,22 +26,14 @@
     }
 
     /* Тёмная тема */
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --background-light: #1a202c;
-        --card-bg: #2d3748;
-        --text-color: #e2e8f0;
-        --text-light: #a0aec0;
-        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
-      }
-    }
-
     [data-theme="dark"] {
       --background-light: #1a202c;
       --card-bg: #2d3748;
       --text-color: #e2e8f0;
       --text-light: #a0aec0;
       --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+      --primary-color: #66b3ff;
+      --secondary-color: #3399ff;
     }
 
     * {
@@ -55,7 +47,7 @@
       font-family: 'Inter', sans-serif;
       color: var(--text-color);
       line-height: 1.6;
-      transition: background 0.3s ease;
+      transition: background 0.3s ease, color 0.3s ease;
     }
 
     .container {
@@ -69,17 +61,24 @@
       position: fixed;
       top: 20px;
       right: 20px;
-      padding: 8px;
+      padding: 8px 12px;
       background: var(--primary-color);
       color: #fff;
       border: none;
       border-radius: 50%;
       cursor: pointer;
       transition: all 0.3s ease;
+      font-size: 1.2em;
+      z-index: 1100;
     }
 
     .theme-toggle:hover {
       transform: scale(1.1);
+      background: var(--secondary-color);
+    }
+
+    [data-theme="dark"] .theme-toggle {
+      background: var(--secondary-color);
     }
 
     /* Хедер */
@@ -195,6 +194,12 @@
       transition: all 0.3s ease;
     }
 
+    [data-theme="dark"] .order-search input {
+      border-color: #4a5568;
+      background: #2d3748;
+      color: var(--text-color);
+    }
+
     .order-search input:focus {
       border-color: var(--primary-color);
       box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
@@ -220,6 +225,11 @@
       cursor: pointer;
       transition: all 0.3s ease;
       position: relative;
+    }
+
+    [data-theme="dark"] .order-filter button {
+      background: #4a5568;
+      color: var(--text-color);
     }
 
     .order-filter button.active {
@@ -257,6 +267,12 @@
       font-size: clamp(0.9em, 2vw, 1em);
     }
 
+    [data-theme="dark"] .order-sort select {
+      border-color: #4a5568;
+      background: #2d3748;
+      color: var(--text-color);
+    }
+
     /* Сетка заказов */
     .orders-grid {
       display: grid;
@@ -279,6 +295,10 @@
       background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
       background-size: 200% 100%;
       animation: shimmer 1.5s infinite;
+    }
+
+    [data-theme="dark"] .order-card.skeleton {
+      background: linear-gradient(90deg, #2d3748 25%, #4a5568 50%, #2d3748 75%);
     }
 
     @keyframes shimmer {
@@ -367,6 +387,10 @@
       animation: fadeIn 0.3s ease;
     }
 
+    [data-theme="dark"] .modal {
+      background: rgba(0, 0, 0, 0.7);
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
@@ -425,6 +449,14 @@
       border-radius: 8px;
       font-size: clamp(0.9em, 2vw, 1em);
       transition: all 0.3s ease;
+    }
+
+    [data-theme="dark"] .modal-content input,
+    [data-theme="dark"] .modal-content textarea,
+    [data-theme="dark"] .modal-content select {
+      border-color: #4a5568;
+      background: #2d3748;
+      color: var(--text-color);
     }
 
     .modal-content input:focus,
@@ -526,7 +558,9 @@
 </head>
 <body>
   <!-- Переключатель темы -->
-  <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему"><i class="fas fa-moon"></i></button>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
+    <span class="theme-icon">🌙</span>
+  </button>
 
   <div class="container">
     {{if .Orders}}
@@ -642,9 +676,29 @@
   <script defer>
     // Тёмная тема
     const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+
+    // Проверяем сохранённую тему или системную настройку
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      body.dataset.theme = 'dark';
+      themeToggle.innerHTML = '<span class="theme-icon">☀️</span>';
+    } else {
+      body.dataset.theme = '';
+      themeToggle.innerHTML = '<span class="theme-icon">🌙</span>';
+    }
+
     themeToggle.addEventListener('click', () => {
-      document.body.dataset.theme = document.body.dataset.theme === 'dark' ? '' : 'dark';
-      themeToggle.innerHTML = document.body.dataset.theme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+      if (body.dataset.theme === 'dark') {
+        body.dataset.theme = '';
+        themeToggle.innerHTML = '<span class="theme-icon">🌙</span>';
+        localStorage.setItem('theme', 'light');
+      } else {
+        body.dataset.theme = 'dark';
+        themeToggle.innerHTML = '<span class="theme-icon">☀️</span>';
+        localStorage.setItem('theme', 'dark');
+      }
     });
 
     // Модальное окно

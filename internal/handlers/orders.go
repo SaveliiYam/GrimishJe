@@ -62,7 +62,8 @@ func CreateOrder(db *gorm.DB) gin.HandlerFunc {
 
 		currentTime := time.Now()
 		if !deadline.After(currentTime) {
-			log.Printf("CreateOrder: Дедлайн (%s) не может быть раньше текущей даты (%s)", input.Deadline, currentTime.Format("2006-01-02"))
+			log.Printf("CreateOrder: Дедлайн (%s) не может быть раньше текущей даты (%s)",
+				input.Deadline, currentTime.Format("2006-01-02"))
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Срок выполнения должен быть не раньше сегодняшнего дня"})
 			return
 		}
@@ -103,8 +104,12 @@ func CreateOrder(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		// Формируем уникальный номер заказа с использованием даты и UnixNano
+		// Пример: ORD-20250307-1678195743694
+		orderNumber := fmt.Sprintf("ORD-%s-%d", time.Now().Format("20060102"), time.Now().UnixNano())
+
 		order := models.Order{
-			OrderNumber:        fmt.Sprintf("ORD-%s-%03d", time.Now().Format("20060102"), 1), // Адаптируй логику генерации
+			OrderNumber:        orderNumber,
 			UserID:             userID,
 			Topic:              input.Topic,
 			Description:        input.Description,
@@ -122,7 +127,9 @@ func CreateOrder(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		log.Printf("Создан новый заказ для пользователя %d (OrderID: %d, OrderNumber: %s)", userID, order.ID, order.OrderNumber)
+		log.Printf("Создан новый заказ для пользователя %d (OrderID: %d, OrderNumber: %s)",
+			userID, order.ID, order.OrderNumber)
+
 		c.JSON(http.StatusCreated, gin.H{
 			"message":  "Заказ успешно создан",
 			"orderId":  order.ID,
@@ -538,51 +545,44 @@ func ChatHistory(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-// GetAdminOrder возвращает детали конкретного заказа для админ-панели.
-func GetAdminOrder(db *gorm.DB) gin.HandlerFunc {
+// GetOrderFiles возвращает список файлов для заказа.
+// GetOrderFiles возвращает список файлов для заказа.
+func GetOrderFiles(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		orderIDStr := c.Param("id")
+		orderIDStr := c.Query("orderID")
+		if orderIDStr == "" {
+			log.Println("Отсутствует orderID в запросе файлов")
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует orderID"})
+			return
+		}
+
 		orderID, parseErr := strconv.ParseUint(orderIDStr, 10, 64)
 		if parseErr != nil {
-			log.Printf("GetAdminOrder: Неверный format orderID: %v", parseErr)
+			log.Printf("GetOrderFiles: Неверный формат orderID: %v", parseErr)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный orderID"})
 			return
 		}
 
-		var order models.Order
-		if err := db.Preload("User").First(&order, uint(orderID)).Error; err != nil {
-			log.Printf("GetAdminOrder: Заказ с ID %d не найден: %v", orderID, err)
-			c.JSON(http.StatusNotFound, gin.H{"error": "Заказ не найден"})
+		var files []models.File
+		if err := db.Where("order_id = ?", uint(orderID)).Order("created_at asc").Find(&files).Error; err != nil {
+			log.Printf("GetOrderFiles: Ошибка получения файлов для OrderID %d: %v", orderID, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения файлов"})
 			return
 		}
 
-		userInfo := gin.H{}
-		if order.User.ID != 0 { // Проверяем, загружен ли User
-			userInfo = gin.H{
-				"Name":     order.User.Name,
-				"Phone":    order.User.Phone,
-				"Telegram": order.User.Telegram,
+		responseFiles := make([]gin.H, len(files))
+		for i, file := range files {
+			responseFiles[i] = gin.H{
+				"filename":     file.OriginalName, // Используем OriginalName вместо Filename
+				"originalName": file.OriginalName,
+				"uploadedBy":   file.UploadedBy,
+				"url":          file.URL,
+				"created_at":   file.CreatedAt.Format("2006-01-02 15:04:05"),
 			}
 		}
 
-		responseOrder := gin.H{
-			"ID":                 order.ID,
-			"OrderNumber":        order.OrderNumber,
-			"User":               userInfo,
-			"Topic":              order.Topic,
-			"Deadline":           order.Deadline,
-			"PlagiarismRequired": order.PlagiarismRequired,
-			"PlagiarismPercent":  order.PlagiarismPercent,
-			"Budget":             order.Budget,
-			"Status":             order.Status,
-			"WorkType":           order.WorkType,
-			"Notes":              order.Notes,
-			"FinalFileURL":       order.FinalFileURL, // Добавлено
-			"CreatedAt":          order.CreatedAt.Format("2006-01-02"),
-		}
-
-		log.Printf("Детали заказа %d успешно возвращены", orderID)
-		c.JSON(http.StatusOK, gin.H{"order": responseOrder})
+		log.Printf("Файлы для OrderID %d успешно возвращены (всего: %d)", orderID, len(files))
+		c.JSON(http.StatusOK, gin.H{"files": responseFiles})
 	}
 }
 

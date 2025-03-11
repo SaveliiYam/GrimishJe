@@ -26,6 +26,7 @@ type Order struct {
 	CompletedAt        time.Time `gorm:"type:timestamp" json:"completed_at"`                         // Время завершения заказа (опционально)
 	FinalFileURL       string    `gorm:"type:text" json:"final_file_url" db:"final_file_url"`        // Добавленное поле для итогового файла
 	User               User      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`              // Связь с пользователем, каскадное удаление
+	Reviews            []Review  `gorm:"foreignKey:OrderID" json:"reviews"`
 }
 
 // ValidStatuses список допустимых статусов заказа.

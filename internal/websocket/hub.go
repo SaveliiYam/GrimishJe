@@ -9,7 +9,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// Глобальная переменная для хаба
 var hub *Hub
 
 type Hub struct {
@@ -29,12 +28,12 @@ func NewHub(db *gorm.DB) *Hub {
 		Unregister: make(chan *Client),
 		DB:         db,
 	}
-	hub = h // Инициализируем глобальную переменную
+	hub = h
 	return h
 }
 
 func (h *Hub) Run() {
-	ticker := time.NewTicker(30 * time.Second) // Heartbeat для проверки клиентов
+	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
 	for {
@@ -46,7 +45,20 @@ func (h *Hub) Run() {
 			}
 			h.Clients[client.OrderID][client] = true
 			h.Mutex.Unlock()
-			log.Printf("Клиент зарегистрирован для OrderID %d (админ: %v, отправитель: %s), общее количество клиентов: %d", client.OrderID, client.IsAdmin, client.UploadedBy, len(h.Clients[client.OrderID]))
+
+			log.Printf("Клиент зарегистрирован для OrderID %d (админ: %v, отправитель: %s), общее количество клиентов: %d",
+				client.OrderID, client.IsAdmin, client.UploadedBy, len(h.Clients[client.OrderID]))
+
+			// Если клиент админ — отправляем уведомление, что он онлайн, используя тип "executor_status"
+			if client.IsAdmin {
+				statusPayload := OrderStatusUpdatePayload{
+					Type:    "executor_status",
+					OrderID: client.OrderID,
+					Status:  "Онлайн",
+					At:      time.Now().Unix(),
+				}
+				h.Broadcast <- statusPayload
+			}
 
 		case client := <-h.Unregister:
 			h.Mutex.Lock()
@@ -60,7 +72,8 @@ func (h *Hub) Run() {
 				}
 			}
 			h.Mutex.Unlock()
-			log.Printf("Клиент отключён от OrderID %d (админ: %v, отправитель: %s), осталось клиентов: %d", client.OrderID, client.IsAdmin, client.UploadedBy, len(h.Clients[client.OrderID]))
+			log.Printf("Клиент отключён от OrderID %d (админ: %v, отправитель: %s), осталось клиентов: %d",
+				client.OrderID, client.IsAdmin, client.UploadedBy, len(h.Clients[client.OrderID]))
 
 		case message := <-h.Broadcast:
 			h.Mutex.RLock()
@@ -73,7 +86,8 @@ func (h *Hub) Run() {
 						default:
 							close(client.Send)
 							delete(clients, client)
-							log.Printf("Клиент отключён из-за переполнения канала для OrderID %d (админ: %v, отправитель: %s)", client.OrderID, client.IsAdmin, client.UploadedBy)
+							log.Printf("Клиент отключён из-за переполнения канала для OrderID %d (админ: %v, отправитель: %s)",
+								client.OrderID, client.IsAdmin, client.UploadedBy)
 						}
 					}
 				}
@@ -81,11 +95,19 @@ func (h *Hub) Run() {
 				if clients, ok := h.Clients[payload.OrderID]; ok {
 					for client := range clients {
 						select {
-						case client.Send <- message:
+						case client.Send <- map[string]interface{}{
+							"type":          "file", // изменено с "file_update" на "file"
+							"order_id":      payload.OrderID,
+							"filename":      payload.Filename,
+							"original_name": payload.OriginalName,
+							"uploaded_by":   payload.UploadedBy,
+							"url":           payload.URL,
+						}:
 						default:
 							close(client.Send)
 							delete(clients, client)
-							log.Printf("Клиент отключён из-за переполнения канала для OrderID %d (админ: %v, отправитель: %s)", client.OrderID, client.IsAdmin, client.UploadedBy)
+							log.Printf("Клиент отключён из-за переполнения канала для OrderID %d (админ: %v, отправитель: %s)",
+								client.OrderID, client.IsAdmin, client.UploadedBy)
 						}
 					}
 				}
@@ -97,7 +119,8 @@ func (h *Hub) Run() {
 						default:
 							close(client.Send)
 							delete(clients, client)
-							log.Printf("Клиент отключён из-за переполнения канала для OrderID %d (админ: %v, отправитель: %s)", client.OrderID, client.IsAdmin, client.UploadedBy)
+							log.Printf("Клиент отключён из-за переполнения канала для OrderID %d (админ: %v, отправитель: %s)",
+								client.OrderID, client.IsAdmin, client.UploadedBy)
 						}
 					}
 				}
@@ -122,12 +145,33 @@ func (h *Hub) Run() {
 	}
 }
 
-// BroadcastMessage отправляет сообщение через хаб.
-func BroadcastMessage(h *Hub, message interface{}) {
-	h.Broadcast <- message
+func BroadcastMessage(hub *Hub, payload interface{}) {
+	if hub == nil {
+		log.Println("WebSocket hub не инициализирован")
+		return
+	}
+
+	switch v := payload.(type) {
+	case FileUpdatePayload:
+		hub.Broadcast <- map[string]interface{}{
+			"type":          "file", // изменено с "file_update" на "file"
+			"order_id":      v.OrderID,
+			"filename":      v.Filename,
+			"original_name": v.OriginalName,
+			"uploaded_by":   v.UploadedBy,
+			"url":           v.URL,
+		}
+	case FileDeletePayload:
+		hub.Broadcast <- map[string]interface{}{
+			"type":     "file_deleted",
+			"order_id": v.OrderID,
+			"file_id":  v.FileID,
+		}
+	default:
+		hub.Broadcast <- payload
+	}
 }
 
-// GetHub возвращает глобальный хаб.
 func GetHub() *Hub {
 	return hub
 }

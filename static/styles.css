@@ -23,6 +23,10 @@
   --text-color: #e2e8f0;
   --text-light: #a0aec0;
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --primary-color: #66b3ff; /* Более светлый оттенок для тёмной темы */
+  --secondary-color: #3399ff;
+  --highlight-color: #ffeb3b;
+  --highlight-hover: #fdd835;
 }
 
 /* Сброс стилей */
@@ -57,8 +61,16 @@ nav {
   transition: background 0.3s ease;
 }
 
+[data-theme="dark"] nav {
+  background: rgba(30, 144, 255, 0.3);
+}
+
 nav:hover {
   background: rgba(30, 144, 255, 0.3);
+}
+
+[data-theme="dark"] nav:hover {
+  background: rgba(30, 144, 255, 0.4);
 }
 
 nav ul {
@@ -105,6 +117,10 @@ header {
   animation: fadeInUp 1s ease-out;
 }
 
+[data-theme="dark"] header {
+  background: rgba(51, 153, 255, 0.9); /* Более тёмный оттенок для контраста */
+}
+
 header h1 {
   font-size: 2.5em;
   margin-bottom: 0.5em;
@@ -147,6 +163,10 @@ header p {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+[data-theme="dark"] .services-list ul li {
+  background: rgba(60, 70, 90, 0.95);
+}
+
 .services-list ul li:hover {
   transform: translateY(-3px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -160,6 +180,10 @@ footer {
   padding: 2em 0;
   margin-top: 2em;
   box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] footer {
+  background: rgba(30, 144, 255, 0.8);
 }
 
 /* Секция Hero */
@@ -182,6 +206,10 @@ footer {
   height: 100%;
   background: rgba(0, 0, 0, 0.6);
   z-index: 1;
+}
+
+[data-theme="dark"] .hero::before {
+  background: rgba(0, 0, 0, 0.7); /* Увеличиваем затемнение фона */
 }
 
 .hero-content {
@@ -294,91 +322,98 @@ footer {
   text-align: center;
 }
 
-/* ... (текущие стили остаются неизменными) ... */
+[data-theme="dark"] .error-message {
+  background: #ff3333; /* Более яркий красный для тёмной темы */
+}
 
 /* Стили для файлов */
 .order-files {
-    margin-top: 20px;
-  }
-  
-  .order-files h3 {
-    font-size: 1.4em;
-    color: var(--primary-color);
-    margin-bottom: 15px;
-  }
-  
-  .files-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 15px;
-  }
-  
-  .file-item {
-    background: var(--card-bg);
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  
-  .file-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-  }
-  
-  .file-icon {
-    font-size: 2.5em;
-    margin-bottom: 10px;
-    color: var(--text-light);
-  }
-  
-  .file-name {
-    font-size: 1em;
-    color: var(--text-color);
-    text-decoration: none;
-    word-break: break-all; /* Обеспечивает перенос длинных имен файлов */
-  }
-  
-  .file-name:hover {
-    color: var(--primary-color);
-  }
-  
-  .order-files form {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 15px;
-  }
-  
-  .order-files input[type="file"] {
-    padding: 8px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    flex: 1;
-  }
-  
-  .order-files button, .download-all-btn {
-    padding: 10px 20px;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  
-  .order-files button:hover, .download-all-btn:hover {
-    background: var(--secondary-color);
-    transform: translateY(-2px);
-  }
-  
-  .download-all-btn {
-    margin-top: 10px;
-    display: none;
-  }
+  margin-top: 20px;
+}
+
+.order-files h3 {
+  font-size: 1.4em;
+  color: var(--primary-color);
+  margin-bottom: 15px;
+}
+
+.files-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.file-item {
+  background: var(--card-bg);
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.file-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.file-icon {
+  font-size: 2.5em;
+  margin-bottom: 10px;
+  color: var(--text-light);
+}
+
+.file-name {
+  font-size: 1em;
+  color: var(--text-color);
+  text-decoration: none;
+  word-break: break-all; /* Обеспечивает перенос длинных имен файлов */
+}
+
+.file-name:hover {
+  color: var(--primary-color);
+}
+
+.order-files form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.order-files input[type="file"] {
+  padding: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  flex: 1;
+}
+
+.order-files button, .download-all-btn {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .order-files button,
+[data-theme="dark"] .download-all-btn {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+}
+
+.order-files button:hover, .download-all-btn:hover {
+  background: var(--secondary-color);
+  transform: translateY(-2px);
+}
+
+.download-all-btn {
+  margin-top: 10px;
+  display: none;
+}

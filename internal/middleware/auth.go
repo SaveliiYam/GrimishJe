@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/MoshKillaPit/GrimishJe/internal/models"
 	"github.com/gin-contrib/sessions"
@@ -83,6 +84,14 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 			log.Printf("Login: Неверный пароль для пользователя %s", user.Email)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверный email или пароль"})
 			return
+		}
+
+		// Если пользователь является администратором, обновляем время последнего входа
+		if user.IsAdmin {
+			user.LastLogin = time.Now()
+			if err := db.Save(&user).Error; err != nil {
+				log.Printf("Login: Ошибка обновления LastLogin для администратора %s: %v", user.Email, err)
+			}
 		}
 
 		session := sessions.Default(c)

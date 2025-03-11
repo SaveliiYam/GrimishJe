@@ -3,13 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Детали заказа {{.Order.Topic}} — управление файлами, чат с исполнителем и информация о заказе в Громыш.">
+  <meta name="description" content="Детали заказа {{.Order.Topic}} — управление файлами, чат с исполнителем и информация о заказе.">
   <meta name="keywords" content="Громыш, заказ, детали заказа, файлы, чат, студенческие работы">
   <meta name="author" content="Громыш">
   <title>{{.Order.Topic}} | Громыш</title>
-  <!-- Подключаем Font Awesome для иконок -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <!-- Подключаем CSS -->
+  <link rel="stylesheet" href="/static/css/styles.css">
+  
+  <!-- Шрифт Inter и Font Awesome -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
   <style>
     :root {
       --primary-color: #1e90ff;
@@ -23,20 +31,16 @@
       --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
       --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
     }
-
-    /* Тёмная тема */
     [data-theme="dark"] {
       --background-light: #1a202c;
       --card-bg: #2d3748;
       --text-color: #e2e8f0;
       --text-light: #a0aec0;
       --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+      --primary-color: #66b3ff;
+      --secondary-color: #3399ff;
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 20px;
@@ -46,33 +50,32 @@
       line-height: 1.6;
       transition: background 0.3s ease, color 0.3s ease;
     }
-
     .container {
       width: 90%;
       max-width: 1280px;
       margin: 0 auto;
     }
-
-    /* Переключатель темы */
     .theme-toggle {
       position: fixed;
       top: 20px;
       right: 20px;
-      padding: 8px;
+      padding: 8px 12px;
       background: var(--primary-color);
       color: #fff;
       border: none;
       border-radius: 50%;
       cursor: pointer;
       transition: all 0.3s ease;
+      font-size: 1.2em;
+      z-index: 1100;
     }
-
     .theme-toggle:hover {
       transform: scale(1.1);
       background: var(--secondary-color);
     }
-
-    /* Хедер */
+    [data-theme="dark"] .theme-toggle {
+      background: var(--secondary-color);
+    }
     header {
       background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
       color: #fff;
@@ -82,14 +85,11 @@
       margin-bottom: 30px;
       box-shadow: var(--shadow-md);
     }
-
     header h1 {
       margin: 0;
       font-size: clamp(1.8em, 5vw, 2.2em);
       font-weight: 700;
     }
-
-    /* Кнопка "Вернуться к заказам" */
     .back-to-orders {
       display: inline-block;
       margin-bottom: 20px;
@@ -102,14 +102,17 @@
       transition: all 0.3s ease;
       box-shadow: var(--shadow-sm);
     }
-
     .back-to-orders:hover {
       background: var(--secondary-color);
       transform: translateY(-2px);
       box-shadow: var(--shadow-md);
     }
-
-    /* Детали заказа */
+    #adminLastLoginInfo {
+      text-align: right;
+      font-size: 0.9em;
+      color: var(--text-light);
+      margin-bottom: 10px;
+    }
     .order-details {
       background: var(--card-bg);
       padding: 25px;
@@ -117,19 +120,20 @@
       box-shadow: var(--shadow-sm);
       margin-bottom: 30px;
       position: relative;
+      transition: background 0.3s ease;
     }
-
     .order-details.skeleton {
       background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
       background-size: 200% 100%;
       animation: shimmer 1.5s infinite;
     }
-
+    [data-theme="dark"] .order-details.skeleton {
+      background: linear-gradient(90deg, #2d3748 25%, #4a5568 50%, #2d3748 75%);
+    }
     @keyframes shimmer {
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
-
     .order-details h2 {
       font-size: clamp(1.5em, 4vw, 1.8em);
       color: var(--secondary-color);
@@ -137,18 +141,15 @@
       border-bottom: 2px solid #e2e8f0;
       padding-bottom: 10px;
     }
-
+    [data-theme="dark"] .order-details h2 {
+      border-bottom: 2px solid #4a5568;
+    }
     .order-details p {
       margin: 12px 0;
       font-size: clamp(1em, 2.5vw, 1.1em);
       color: var(--text-light);
     }
-
-    .order-number {
-      font-weight: 600;
-      color: #d35400;
-    }
-
+    .order-number { font-weight: 600; color: #d35400; }
     .copy-btn {
       background: var(--primary-color);
       color: #fff;
@@ -160,63 +161,46 @@
       margin-left: 10px;
       transition: all 0.3s ease;
     }
-
     .copy-btn:hover {
       background: var(--secondary-color);
       transform: translateY(-2px);
     }
-
-    /* Файлы заказа */
-    .order-files {
-      margin-top: 20px;
-    }
-
+    .order-files { margin-top: 20px; }
     .order-files h3 {
       font-size: clamp(1.2em, 3vw, 1.4em);
       color: var(--primary-color);
       margin-bottom: 15px;
     }
-
-    .file-section {
-      margin-bottom: 20px;
-    }
-
+    .file-section { margin-bottom: 20px; }
     .file-section h4 {
       font-size: clamp(1.1em, 2.5vw, 1.2em);
       color: var(--text-color);
       margin-bottom: 10px;
+      font-weight: 600;
     }
-
     .files-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 15px;
       margin-bottom: 15px;
     }
-
     .file-item {
       background: var(--card-bg);
       padding: 15px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+      position: relative;
     }
-
     .file-item:hover {
       transform: translateY(-5px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      box-shadow: var(--shadow-md);
     }
-
-    .file-icon {
-      font-size: 2.5em;
-      margin-bottom: 10px;
-      color: var(--text-light);
-    }
-
+    .file-icon { font-size: 2.5em; margin-bottom: 10px; color: var(--text-light); }
     .file-name {
       font-size: clamp(0.9em, 2vw, 1em);
       color: var(--text-color);
@@ -224,27 +208,30 @@
       word-break: break-all;
       text-align: center;
       margin-top: 5px;
+      transition: color 0.3s ease;
     }
-
-    .file-name:hover {
-      color: var(--primary-color);
-    }
-
+    .file-name:hover { color: var(--primary-color); }
     .order-files form {
       display: flex;
       gap: 10px;
       align-items: center;
       margin-bottom: 15px;
     }
-
     .order-files input[type="file"] {
       padding: 8px;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
       flex: 1;
+      background: var(--card-bg);
+      color: var(--text-color);
+      transition: border-color 0.3s ease, background 0.3s ease;
     }
-
-    .order-files button, .download-all-btn {
+    [data-theme="dark"] .order-files input[type="file"] {
+      border-color: #4a5568;
+      background: #2d3748;
+    }
+    .order-files button,
+    .download-all-btn {
       padding: 10px 20px;
       background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
       color: #fff;
@@ -254,33 +241,29 @@
       cursor: pointer;
       transition: all 0.3s ease;
     }
-
-    .order-files button:hover, .download-all-btn:hover {
+    [data-theme="dark"] .order-files button,
+    [data-theme="dark"] .download-all-btn {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+    .order-files button:hover,
+    .download-all-btn:hover {
       background: var(--secondary-color);
       transform: translateY(-2px);
     }
-
-    .download-all-btn {
-      margin-top: 10px;
-      display: none;
-    }
-
-    /* Секция итогового файла */
+    .download-all-btn { margin-top: 10px; display: none; }
     .final-file-section {
       background: var(--card-bg);
       padding: 25px;
       border-radius: 12px;
       box-shadow: var(--shadow-sm);
       margin-top: 20px;
+      transition: background 0.3s ease;
     }
-
     .final-file-section h3 {
       font-size: clamp(1.2em, 3vw, 1.4em);
       color: var(--primary-color);
       margin-bottom: 15px;
     }
-
-    /* Чат */
     .chat-section {
       background: var(--card-bg);
       padding: 25px;
@@ -288,14 +271,16 @@
       box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
+      transition: background 0.3s ease;
     }
-
     .chat-section.skeleton {
       background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
       background-size: 200% 100%;
       animation: shimmer 1.5s infinite;
     }
-
+    [data-theme="dark"] .chat-section.skeleton {
+      background: linear-gradient(90deg, #2d3748 25%, #4a5568 50%, #2d3748 75%);
+    }
     .chat-section h3 {
       font-size: clamp(1.3em, 3.5vw, 1.6em);
       color: var(--primary-color);
@@ -303,17 +288,15 @@
       border-bottom: 2px solid #e2e8f0;
       padding-bottom: 10px;
     }
-
+    [data-theme="dark"] .chat-section h3 {
+      border-bottom: 2px solid #4a5568;
+    }
     .chat-status {
       font-size: clamp(0.9em, 2vw, 1em);
       margin-bottom: 10px;
-      color: gray;
+      color: var(--text-light);
     }
-
-    .chat-status.online {
-      color: green;
-    }
-
+    .chat-status.online { color: #28a745; }
     .chat-window {
       border: 1px solid #e2e8f0;
       border-radius: 8px;
@@ -324,8 +307,12 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+      transition: background 0.3s ease, border-color 0.3s ease;
     }
-
+    [data-theme="dark"] .chat-window {
+      border-color: #4a5568;
+      background: #2d3748;
+    }
     .chat-message {
       padding: 12px;
       border-radius: 8px;
@@ -334,37 +321,33 @@
       line-height: 1.5;
       box-shadow: var(--shadow-sm);
       word-wrap: break-word;
+      background: var(--card-bg);
+      transition: transform 0.3s ease, background 0.3s ease;
     }
-
     .chat-message.sent {
       background: #e0f7fa;
       align-self: flex-end;
       margin-left: auto;
-      position: relative;
       border-bottom-right-radius: 0;
       color: #0c4a6e;
+      position: relative;
     }
-
+    [data-theme="dark"] .chat-message.sent {
+      background: #4a90e2;
+      color: #e2e8f0;
+    }
     .chat-message.received {
       background: #f1f8e9;
       align-self: flex-start;
       margin-right: auto;
-      position: relative;
       border-bottom-left-radius: 0;
       color: #2f6f44;
+      position: relative;
     }
-
-    .chat-message.notification {
-      background: #e2e8f0;
-      align-self: center;
-      margin: 0 auto;
-      font-style: italic;
-      color: var(--text-light);
-      border-radius: 8px;
-      padding: 8px 12px;
-      max-width: 90%;
+    [data-theme="dark"] .chat-message.received {
+      background: #68d391;
+      color: #1a202c;
     }
-
     .chat-message.sent::before,
     .chat-message.received::before {
       content: "";
@@ -373,73 +356,79 @@
       height: 0;
       border-style: solid;
     }
-
     .chat-message.sent::before {
       bottom: -10px;
       right: 10px;
       border-width: 0 10px 10px 0;
       border-color: transparent #e0f7fa transparent transparent;
     }
-
+    [data-theme="dark"] .chat-message.sent::before {
+      border-color: transparent #4a90e2 transparent transparent;
+    }
     .chat-message.received::before {
       bottom: -10px;
       left: 10px;
       border-width: 0 0 10px 10px;
       border-color: transparent transparent #f1f8e9 transparent;
     }
-
+    [data-theme="dark"] .chat-message.received::before {
+      border-color: transparent transparent #68d391 transparent;
+    }
     .chat-input {
       display: flex;
-      gap: 10px;
-      margin-top: 20px;
+      gap: 15px;
+      margin-top: 15px;
+      align-items: center;
     }
-
     .chat-input input {
       flex: 1;
       padding: 12px;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
-      font-size: clamp(0.9em, 2vw, 1em);
-      transition: all 0.3s ease;
+      font-size: 1em;
+      background: var(--card-bg);
+      color: var(--text-color);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
     }
-
+    [data-theme="dark"] .chat-input input {
+      border-color: #4a5568;
+      background: #2d3748;
+    }
     .chat-input input:focus {
       border-color: var(--primary-color);
       box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
       outline: none;
     }
-
     .chat-input button {
       padding: 12px 24px;
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      background: var(--primary-color);
       color: #fff;
       border: none;
       border-radius: 8px;
-      font-weight: 600;
+      font-size: 1em;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: background 0.3s ease, transform 0.3s ease;
     }
-
     .chat-input button:hover {
       background: var(--secondary-color);
       transform: translateY(-2px);
     }
-
-    /* Отзывы */
     .review-section {
       background: var(--card-bg);
       padding: 25px;
       border-radius: 12px;
       box-shadow: var(--shadow-sm);
       margin-bottom: 30px;
+      transition: background 0.3s ease;
     }
-
     .review-section.skeleton {
       background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
       background-size: 200% 100%;
       animation: shimmer 1.5s infinite;
     }
-
+    [data-theme="dark"] .review-section.skeleton {
+      background: linear-gradient(90deg, #2d3748 25%, #4a5568 50%, #2d3748 75%);
+    }
     .review-section h3 {
       font-size: clamp(1.3em, 3.5vw, 1.6em);
       color: var(--primary-color);
@@ -447,60 +436,68 @@
       border-bottom: 2px solid #e2e8f0;
       padding-bottom: 10px;
     }
-
+    [data-theme="dark"] .review-section h3 {
+      border-bottom: 2px solid #4a5568;
+    }
     .review-content {
       padding: 15px;
       background: rgba(255, 255, 255, 0.1);
       border-radius: 8px;
       margin-bottom: 15px;
+      transition: background 0.3s ease;
     }
-
+    [data-theme="dark"] .review-content {
+      background: rgba(255, 255, 255, 0.05);
+    }
     .review-content p {
       margin: 10px 0;
       font-size: clamp(0.9em, 2vw, 1em);
       color: var(--text-light);
     }
-
     .review-section label {
       display: block;
       margin: 15px 0 5px;
       font-weight: 600;
       color: var(--text-color);
     }
-
-    .review-section .star-rating {
-      display: flex;
-      gap: 5px;
-      margin: 10px 0;
+    .review-section select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: clamp(0.9em, 2vw, 1em);
+      background: var(--card-bg);
+      color: var(--text-color);
+      transition: border-color 0.3s ease, background 0.3s ease;
     }
-
-    .review-section .star {
-      font-size: 1.5em;
-      color: #ccc;
-      cursor: pointer;
-      transition: color 0.3s ease;
+    [data-theme="dark"] .review-section select {
+      border-color: #4a5568;
+      background: #2d3748;
     }
-
-    .review-section .star:hover,
-    .review-section .star.active {
-      color: #ffd700;
+    .review-section select:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+      outline: none;
     }
-
     .review-section textarea {
       width: 100%;
       padding: 12px;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
       font-size: clamp(0.9em, 2vw, 1em);
+      background: var(--card-bg);
+      color: var(--text-color);
       transition: all 0.3s ease;
     }
-
+    [data-theme="dark"] .review-section textarea {
+      border-color: #4a5568;
+      background: #2d3748;
+    }
     .review-section textarea:focus {
       border-color: var(--primary-color);
       box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
       outline: none;
     }
-
     .review-section button {
       width: 100%;
       padding: 12px;
@@ -512,13 +509,10 @@
       cursor: pointer;
       transition: all 0.3s ease;
     }
-
     .review-section button:hover {
       background: var(--secondary-color);
       transform: translateY(-2px);
     }
-
-    /* Toast уведомления */
     .toast {
       position: fixed;
       bottom: 20px;
@@ -529,76 +523,60 @@
       animation: slideInToast 0.5s ease forwards;
       z-index: 2000;
     }
-
     .toast.success { background: var(--success-color); }
     .toast.error { background: var(--error-color); }
-
     @keyframes slideInToast {
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
-
-    /* Адаптивность для мобильных устройств */
+    .online-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background-color: #28a745;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+    .offline-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background-color: #dc3545;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
     @media (max-width: 768px) {
-      .container {
-        width: 95%;
-      }
-
-      .theme-toggle {
-        top: 10px;
-        right: 10px;
-      }
-
-      header h1 {
-        font-size: clamp(1.5em, 4vw, 1.8em);
-      }
-
-      .order-details, .chat-section, .review-section {
-        padding: 15px;
-      }
-
-      .chat-window {
-        height: clamp(200px, 30vh, 250px);
-      }
-
-      .chat-input {
-        flex-direction: column;
-      }
-
-      .chat-input button {
-        width: 100%;
-      }
-
-      .order-files form {
-        flex-direction: column;
-      }
-
-      .order-files button, .download-all-btn {
-        width: 100%;
-      }
-
-      .back-to-orders {
-        padding: 8px 16px;
-        font-size: clamp(0.9em, 2vw, 1em);
-      }
+      .container { width: 95%; }
+      .theme-toggle { top: 10px; right: 10px; }
+      header h1 { font-size: clamp(1.5em, 4vw, 1.8em); }
+      .order-details, .chat-section, .review-section, .final-file-section { padding: 15px; }
+      .chat-window { height: clamp(200px, 30vh, 250px); }
+      .chat-input { flex-direction: column; }
+      .chat-input button { width: 100%; }
+      .order-files form { flex-direction: column; }
+      .order-files button, .download-all-btn { width: 100%; }
+      .back-to-orders { padding: 8px 16px; font-size: clamp(0.9em, 2vw, 1em); }
     }
   </style>
 </head>
 <body>
   <!-- Переключатель темы -->
-  <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему"><i class="fas fa-moon"></i></button>
-
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
+    <span class="theme-icon">🌙</span>
+  </button>
   <div class="container">
-    <!-- Кнопка "Вернуться к заказам" -->
     <a href="/dashboard" class="back-to-orders" aria-label="Вернуться к списку заказов">Вернуться к заказам</a>
-
+    <p id="adminLastLoginInfo"></p>
     <header>
       <h1>{{.Order.Topic}}</h1>
     </header>
-
     <section class="order-details">
       <h2>Детали заказа</h2>
-      <p><strong>Номер заказа:</strong> <span class="order-number">{{.Order.OrderNumber}}</span> <button class="copy-btn" onclick="copyOrderNumber()">Копировать</button></p>
+      <p>
+        <strong>Номер заказа:</strong>
+        <span class="order-number">{{.Order.OrderNumber}}</span>
+        <button class="copy-btn" onclick="copyOrderNumber()">Копировать</button>
+      </p>
       <p><strong>Статус:</strong> <span id="orderStatus">{{.Order.Status}}</span></p>
       <p><strong>Описание:</strong> {{.Order.Description}}</p>
       <p><strong>Срок выполнения:</strong> {{formatDateString .Order.Deadline}}</p>
@@ -613,7 +591,6 @@
         <p><strong>Заметки:</strong> {{.Order.Notes}}</p>
       {{end}}
     </section>
-
     <section class="order-files">
       <h3>Файлы заказа</h3>
       <div class="file-section">
@@ -624,7 +601,7 @@
         <h4>Файлы администратора</h4>
         <div id="adminFilesContainer" class="files-grid"></div>
       </div>
-      <form id="uploadForm" action="/api/order/upload" enctype="multipart/form-data">
+      <form id="uploadForm" enctype="multipart/form-data">
         <input type="hidden" name="orderID" value="{{.Order.ID}}">
         <input type="hidden" name="uploaded_by" value="user">
         <input type="file" name="files" multiple required aria-label="Выберите файлы для загрузки" onchange="validateFileCount(this)">
@@ -632,51 +609,35 @@
       </form>
       <button class="download-all-btn" id="downloadAll" style="margin-top: 10px; display: none;" aria-label="Скачать все файлы">Скачать все</button>
     </section>
-
-    <!-- Секция для итогового файла -->
-    <section class="final-file-section" style="display: {{if .Order.FinalFileURL}}block{{else}}none{{end}};">
-      <h3>Итоговый файл</h3>
-      {{if .Order.FinalFileURL}}
-        <div class="files-grid">
-          <div class="file-item">
-            <div class="file-icon"><i class="fa-solid fa-file" style="color: #808080;"></i></div>
-            <a href="{{.Order.FinalFileURL}}" target="_blank" class="file-name" aria-label="Скачать итоговый файл">Итоговый файл</a>
-          </div>
-        </div>
-      {{else}}
-        <p>Итоговый файл ещё не загружен администратором.</p>
-      {{end}}
+    <section class="final-file-section">
+      <h3>Итоговые файлы</h3>
+      <div id="finalFilesContainer" class="files-grid"></div>
+      <p id="noFinalFileMessage" style="display: none;">Итоговые файлы не найдены.</p>
     </section>
-
     <section class="review-section" id="reviewSection" style="display: none;">
       <h3>Оставить отзыв</h3>
-      <div id="reviewContent" class="review-content" style="display: none;">
-        <p><strong>Ваш отзыв:</strong></p>
-        <p><strong>Оценка:</strong> <span id="reviewRating"></span>/5</p>
-        <p><strong>Комментарий:</strong> <span id="reviewComment"></span></p>
-        <p><strong>Дата:</strong> <span id="reviewDate"></span></p>
+      <div id="reviewContent" class="review-content" style="display: none;"></div>
+      <div id="reviewFormContainer" style="display: none;">
+        <form id="reviewForm" action="/api/order/review" method="POST">
+          <input type="hidden" name="orderID" id="reviewOrderID" value="{{.Order.ID}}"/>
+          <label for="reviewRating">Оценка:</label>
+          <select id="reviewRating" name="rating">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+          <label for="reviewComment">Комментарий:</label>
+          <textarea id="reviewComment" name="comment" rows="4"></textarea>
+          <button type="submit">Сохранить</button>
+        </form>
       </div>
-      <form id="reviewForm" action="/api/order/review" method="POST" style="display: none;">
-        <input type="hidden" name="orderID" value="{{.Order.ID}}">
-        <label for="reviewRating">Оценка (1-5):</label>
-        <div class="star-rating" id="reviewRating" role="radiogroup" aria-label="Выберите оценку от 1 до 5 звёзд">
-          <i class="fas fa-star star" data-value="1"></i>
-          <i class="fas fa-star star" data-value="2"></i>
-          <i class="fas fa-star star" data-value="3"></i>
-          <i class="fas fa-star star" data-value="4"></i>
-          <i class="fas fa-star star" data-value="5"></i>
-        </div>
-        <input type="hidden" name="rating" id="hiddenRating" value="">
-        <label for="reviewComment">Комментарий (опционально):</label>
-        <textarea id="reviewComment" name="comment" rows="4" aria-label="Комментарий к отзыву"></textarea>
-        <button type="submit" aria-label="Отправить отзыв">Отправить отзыв</button>
-      </form>
       <p id="noReviewMessage" style="display: none;">Отзыв не оставлен.</p>
     </section>
-
     <section class="chat-section">
       <h3>Чат с исполнителем</h3>
-      <div id="chatStatus" class="chat-status">Статус исполнителя: неизвестен</div>
+      <div id="chatStatus" class="chat-status">Статус исполнителя: Неизвестен</div>
       <div class="chat-window" id="chatWindow" role="log" aria-live="polite"></div>
       <div class="chat-input">
         <input type="text" id="chatInput" placeholder="Напишите сообщение..." aria-label="Введите сообщение для чата">
@@ -684,174 +645,176 @@
       </div>
     </section>
   </div>
-
+  <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+    <div class="loading-spinner"></div>
+  </div>
+  <input type="file" id="finalFileInput" style="display: none;" />
+  
   <script defer>
     let currentChatWS = null;
-    let loadedMessages = new Set(); // Для предотвращения дублирования сообщений
-    let loadedFiles = new Set();   // Для предотвращения дублирования файлов
+    let loadedMessages = new Set();
+    let loadedFiles = new Set();
     let retryCount = 0;
     const maxRetries = 5;
-    const retryDelay = 1000; // 1 секунда начальная задержка
-
-    // Инициализация темы из localStorage
-    function initTheme() {
-      const savedTheme = localStorage.getItem('theme') || 'light';
-      document.body.dataset.theme = savedTheme;
-      const themeToggle = document.getElementById('themeToggle');
-      themeToggle.innerHTML = savedTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-    }
-
-    // Переключение темы
+    const retryDelay = 1000; // 1 сек
+    let currentOrderStatus = "{{.Order.Status}}".toLowerCase();
+    let currentOrderId = {{.Order.ID}};
+  
+    // Тёмная тема
     const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      body.dataset.theme = 'dark';
+      themeToggle.innerHTML = '<span class="theme-icon">☀️</span>';
+    } else {
+      body.dataset.theme = '';
+      themeToggle.innerHTML = '<span class="theme-icon">🌙</span>';
+    }
     themeToggle.addEventListener('click', () => {
-      const currentTheme = document.body.dataset.theme === 'dark' ? 'dark' : 'light';
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      document.body.dataset.theme = newTheme;
-      localStorage.setItem('theme', newTheme);
-      themeToggle.innerHTML = newTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-      trackEvent('Theme', 'Toggle', newTheme);
+      if (body.dataset.theme === 'dark') {
+        body.dataset.theme = '';
+        themeToggle.innerHTML = '<span class="theme-icon">🌙</span>';
+        localStorage.setItem('theme', 'light');
+      } else {
+        body.dataset.theme = 'dark';
+        themeToggle.innerHTML = '<span class="theme-icon">☀️</span>';
+        localStorage.setItem('theme', 'dark');
+      }
+      trackEvent("Theme", "Toggle", body.dataset.theme);
     });
-
-    // Toast уведомления
-    function showToast(message, type = 'success') {
-      const toast = document.createElement('div');
+  
+    function showToast(message, type = "success") {
+      const toast = document.createElement("div");
       toast.className = `toast ${type}`;
       toast.textContent = message;
-      toast.setAttribute('role', 'alert');
+      toast.setAttribute("role", "alert");
       document.body.appendChild(toast);
       setTimeout(() => {
-        toast.style.transition = 'opacity 0.5s';
-        toast.style.opacity = '0';
+        toast.style.transition = "opacity 0.5s";
+        toast.style.opacity = "0";
         setTimeout(() => toast.remove(), 500);
       }, 3000);
     }
-
+  
+    function showLoading(show = true) {
+      document.getElementById("loadingOverlay").style.display = show ? "flex" : "none";
+    }
+  
     function copyOrderNumber() {
-      const orderNumber = document.querySelector('.order-number').innerText;
+      const orderNumber = document.querySelector(".order-number").innerText;
       navigator.clipboard.writeText(orderNumber)
         .then(() => {
-          showToast('Номер заказа скопирован!', 'success');
-          trackEvent('Order', 'Copy', 'Order Number');
+          showToast("Номер заказа скопирован!", "success");
+          trackEvent("Order", "Copy", "Order Number");
         })
-        .catch(() => showToast('Ошибка копирования номера заказа', 'error'));
+        .catch(() => showToast("Ошибка копирования номера заказа", "error"));
     }
-
-    // Загрузка истории чатов
-    async function loadChatHistory(orderID) {
+  
+    async function loadOrderStatus() {
       try {
-        const response = await fetch(`/api/order/chat_history?orderID=${orderID}`);
+        const response = await fetch(`/api/order/status?orderID=${currentOrderId}`, { credentials: "include" });
         const data = await response.json();
-        if (response.ok) {
-          const chatWindow = document.getElementById("chatWindow");
-          const sortedMessages = data.messages.sort((a, b) => a.created_at - b.created_at);
-          chatWindow.innerHTML = '';
-          sortedMessages.forEach(msg => {
-            const msgKey = `${msg.sender}-${msg.message}-${msg.created_at}`;
-            if (!loadedMessages.has(msgKey)) {
-              const msgDiv = document.createElement("div");
-              msgDiv.className = `chat-message ${msg.sender === "user" ? "sent" : "received"}`;
-              msgDiv.textContent = msg.message;
-              msgDiv.setAttribute('role', 'log');
-              chatWindow.appendChild(msgDiv);
-              loadedMessages.add(msgKey);
-            }
-          });
-          chatWindow.scrollTop = chatWindow.scrollHeight;
+        const chatStatusElem = document.getElementById("chatStatus");
+        if (response.ok && data.status) {
+          // Обновляем статус исполнителя – только toast
+          chatStatusElem.innerHTML = `<span class="${data.status.startsWith("Онлайн") ? "online-indicator" : "offline-indicator"}"></span>Статус исполнителя: ${data.status}`;
+          showToast(`Статус исполнителя: ${data.status}`, "success");
         } else {
-          showToast(data.error || "Ошибка загрузки истории чата", 'error');
+          chatStatusElem.innerHTML = "Статус исполнителя: Неизвестен";
         }
       } catch (err) {
-        console.error(err);
-        showToast("Ошибка соединения с сервером при загрузке истории чата", 'error');
+        console.error("Ошибка загрузки статуса:", err);
+        document.getElementById("chatStatus").innerHTML = "Статус исполнителя: Неизвестен";
       }
     }
-
-    function updateChatStatus(isOnline, lastSeen) {
-      const statusElement = document.getElementById("chatStatus");
-      if (isOnline) {
-        statusElement.textContent = "Исполнитель: Онлайн";
-        statusElement.classList.add("online");
-      } else {
-        const lastSeenDate = lastSeen ? new Date(lastSeen).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' }) : "неизвестно";
-        statusElement.textContent = `Исполнитель: Последний визит: ${lastSeenDate}`;
-        statusElement.classList.remove("online");
-      }
-    }
-
+  
+    // Подключаем WebSocket – обновления через него
     function connectChat() {
-      const orderID = "{{.Order.ID}}";
       const currentURL = window.location.hostname;
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsPort = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
-      const wsUrl = `${wsProtocol}//${currentURL}:${wsPort}/ws/chat_user?orderID=${orderID}`;
+      const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsPort = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
+      const wsUrl = `${wsProtocol}//${currentURL}:${wsPort}/ws/chat_user?orderID=${currentOrderId}`;
       currentChatWS = new WebSocket(wsUrl);
-
       currentChatWS.onopen = () => {
-        console.log("Чат подключён (user) через:", wsUrl);
+        console.log("Чат подключён через:", wsUrl);
         retryCount = 0;
-        currentChatWS.send(JSON.stringify({ type: 'status', user_id: parseInt("{{.Order.UserID}}", 10), is_online: true }));
-        loadChatHistory(orderID);
+        loadChatHistory(currentOrderId);
+        loadOrderStatus();
       };
-
       currentChatWS.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log("Получено сообщение от сервера:", data);
-          const chatWindow = document.getElementById("chatWindow");
-
-          if (data.type === 'status') {
-            updateChatStatus(data.is_online, data.last_seen);
-          } else if (data.order_id && data.sender && data.message && data.created_at) {
-            const msg = data;
-            const msgKey = `${msg.sender}-${msg.message}-${msg.created_at}`;
-            if (!loadedMessages.has(msgKey)) {
-              const msgDiv = document.createElement("div");
-              msgDiv.className = `chat-message ${msg.sender === "user" ? "sent" : "received"}`;
-              msgDiv.textContent = msg.message;
-              msgDiv.setAttribute('role', 'log');
-              chatWindow.appendChild(msgDiv);
-              loadedMessages.add(msgKey);
-              chatWindow.scrollTop = chatWindow.scrollHeight;
-            }
-          } else if (data.type === 'file') {
-            const file = data;
-            const fileKey = `${file.filename}-${file.uploadedBy}-${file.url}`;
-            if (!loadedFiles.has(fileKey)) {
-              updateFilesListWithNewFile(file);
-              loadedFiles.add(fileKey);
-              // Добавляем уведомление в чат
-              const notificationDiv = document.createElement("div");
-              notificationDiv.className = "chat-message notification";
-              notificationDiv.textContent = `${file.uploadedBy} загрузил: ${file.originalName}`;
-              chatWindow.appendChild(notificationDiv);
-              chatWindow.scrollTop = chatWindow.scrollHeight;
-              showToast(`${file.uploadedBy} загрузил: ${file.originalName}`, 'success');
-            }
+          // Если нет type, определяем его
+          if (!data.type && data.filename && data.url) {
+            data.type = "file";
+          } else if (!data.type && data.status && !data.message) {
+            data.type = "executor_status";
+          } else if (!data.type && data.message) {
+            data.type = "message";
           }
-          // Обработка обновления статуса заказа в реальном времени
-          else if (data.type === 'order_status') {
-            document.getElementById('orderStatus').textContent = data.status;
-            showToast(`Статус заказа обновлён: ${data.status}`, 'success');
+          switch(data.type) {
+            // Обработка статуса исполнителя
+            case "order_status":
+            case "executor_status":
+              {
+                const chatStatusElem = document.getElementById("chatStatus");
+                if (data.status.startsWith("Онлайн")) {
+                  chatStatusElem.innerHTML = `<span class="online-indicator"></span>Статус исполнителя: ${data.status}`;
+                } else {
+                  chatStatusElem.innerHTML = `<span class="offline-indicator"></span>Статус исполнителя: ${data.status}`;
+                }
+                showToast(`Статус исполнителя: ${data.status}`, "success");
+              }
+              break;
+            // Изменение статуса заказа
+            case "order_status_change":
+              {
+                const orderStatusElem = document.getElementById("orderStatus");
+                orderStatusElem.textContent = data.status;
+                currentOrderStatus = data.status.toLowerCase().trim();
+                if (currentOrderStatus === "в работе") {
+                  addChatNotification(`Администратор изменил статус заказа на: ${data.status}`);
+                } else {
+                  addChatNotification(`Статус заказа обновлён: ${data.status}`);
+                }
+                showToast(`Статус заказа обновлён: ${data.status}`, "success");
+                if (currentOrderStatus === "завершён") {
+                  loadReview(currentOrderId);
+                }
+              }
+              break;
+            case "message":
+              handleChatMessage(data);
+              break;
+            case "file":
+              handleFileMessage(data);
+              if ((data.uploadedBy || data.uploaded_by)?.toLowerCase() === "admin") {
+                addChatNotification(`Администратор загрузил файл: ${data.originalName || data.original_name || data.filename.split("_").slice(2).join("_")}`);
+              }
+              break;
+            default:
+              console.log("Неизвестный тип сообщения:", data);
           }
-        } catch (e) {
+          saveChatHistory();
+        } catch(e) {
           console.error("Ошибка парсинга сообщения:", e);
-          showToast("Ошибка обработки сообщения чата, файла или статуса", 'error');
+          showToast("Ошибка обработки сообщения", "error");
         }
       };
-
       currentChatWS.onerror = (err) => {
         console.error("WebSocket ошибка:", err);
-        showToast("Ошибка подключения к чату: " + (err.message || 'Неизвестная ошибка'), 'error');
+        showToast("Ошибка подключения к чату", "error");
         attemptReconnect();
       };
-
       currentChatWS.onclose = () => {
         console.log("Чат отключён");
-        showToast("Подключение к чату потеряно", 'error');
+        showToast("Подключение к чату потеряно", "error");
         attemptReconnect();
       };
     }
-
+  
     function attemptReconnect() {
       if (retryCount < maxRetries) {
         retryCount++;
@@ -861,280 +824,432 @@
           connectChat();
         }, delay);
       } else {
-        showToast("Не удалось восстановить соединение после нескольких попыток", 'error');
+        showToast("Не удалось восстановить соединение", "error");
       }
     }
-
+  
+    function handleChatMessage(data) {
+      const chatWindow = document.getElementById("chatWindow");
+      const msgKey = `${data.sender || ''}-${data.type || "message"}-${data.message}-${data.created_at}`;
+      if (!loadedMessages.has(msgKey) && data.message && data.message.trim() !== "") {
+        const msgDiv = document.createElement("div");
+        msgDiv.className = `chat-message ${data.sender === "user" ? "sent" : "received"}`;
+        msgDiv.textContent = data.message;
+        msgDiv.setAttribute("role", "log");
+        chatWindow.appendChild(msgDiv);
+        loadedMessages.add(msgKey);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+      }
+    }
+  
+    function handleFileMessage(file) {
+      const fileKey = `${file.filename || file.fileName}-${file.uploadedBy || file.uploaded_by}-${file.url}`;
+      if (!loadedFiles.has(fileKey)) {
+        updateFilesListWithNewFile({
+          filename: file.filename || file.fileName,
+          originalName: file.originalName || file.original_name || file.filename.split("_").slice(2).join("_"),
+          uploadedBy: file.uploadedBy || file.uploaded_by,
+          url: file.url
+        });
+        loadedFiles.add(fileKey);
+      }
+    }
+  
+    function addChatNotification(text) {
+      const chatWindow = document.getElementById("chatWindow");
+      const notificationDiv = document.createElement("div");
+      notificationDiv.className = "chat-message notification";
+      notificationDiv.setAttribute("data-timestamp", Math.floor(Date.now() / 1000));
+      notificationDiv.textContent = text;
+      chatWindow.appendChild(notificationDiv);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+      showToast(text, "success");
+    }
+  
     document.getElementById("sendMessage").addEventListener("click", () => {
       const input = document.getElementById("chatInput");
       const message = input.value.trim();
       if (message === "") {
-        showToast("Сообщение не может быть пустым", 'error');
+        showToast("Сообщение не может быть пустым", "error");
         return;
       }
       if (currentChatWS && currentChatWS.readyState === WebSocket.OPEN) {
         const msgObj = {
-          order_id: parseInt("{{.Order.ID}}", 10),
+          type: "message",
+          order_id: currentOrderId,
           sender: "user",
           message: message,
           created_at: Math.floor(Date.now() / 1000)
         };
-        currentChatWS.send(JSON.stringify({ type: 'message', ...msgObj }));
+        currentChatWS.send(JSON.stringify(msgObj));
         input.value = "";
-        trackEvent('Chat', 'Send', 'Message');
+        trackEvent("Chat", "Send", "Message");
       } else {
-        showToast("Чат не подключён, попробуйте позже", 'error');
+        showToast("Чат не подключён, попробуйте позже", "error");
       }
     });
-
+  
+    document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const input = e.target.querySelector('input[type="file"]');
+      const files = input.files;
+      if (!validateFileCount(input)) return;
+      if (!files.length) {
+        showToast("Выберите хотя бы один файл", "error");
+        return;
+      }
+      const formData = new FormData(e.target);
+      showLoading(true);
+      try {
+        const response = await fetch("/api/order/upload", {
+          method: "POST",
+          body: formData,
+          credentials: "include"
+        });
+        const data = await response.json();
+        if (response.ok) {
+          showToast(data.message || "Файлы загружены успешно", "success");
+        } else {
+          showToast(data.error || "Ошибка загрузки файлов", "error");
+        }
+      } catch (err) {
+        console.error("Ошибка загрузки файлов:", err);
+        showToast("Ошибка соединения при загрузке файлов", "error");
+      } finally {
+        showLoading(false);
+        input.value = "";
+      }
+    });
+  
+    document.getElementById("downloadAll").addEventListener("click", () => {
+      const userFilesContainer = document.getElementById("userFilesContainer");
+      const adminFilesContainer = document.getElementById("adminFilesContainer");
+      const finalFilesContainer = document.getElementById("finalFilesContainer");
+      const userLinks = userFilesContainer.getElementsByTagName("a");
+      const adminLinks = adminFilesContainer.getElementsByTagName("a");
+      const finalLinks = finalFilesContainer.getElementsByTagName("a");
+      const allLinks = [...userLinks, ...adminLinks, ...finalLinks];
+      if (allLinks.length > 0) {
+        const zip = new JSZip();
+        let count = 0;
+        allLinks.forEach(link => {
+          fetch(link.href)
+            .then(resp => resp.blob())
+            .then(blob => {
+              zip.file(link.textContent, blob);
+              count++;
+              if (count === allLinks.length) {
+                zip.generateAsync({ type: "blob" }).then(content => {
+                  const url = window.URL.createObjectURL(content);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = "files.zip";
+                  document.body.appendChild(a);
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                });
+              }
+            })
+            .catch(err => {
+              console.error("Ошибка скачивания файла:", err);
+              showToast("Ошибка скачивания одного из файлов", "error");
+            });
+        });
+        showToast("Скачивание всех файлов началось", "success");
+        trackEvent("Files", "Download All", "All Files");
+      } else {
+        showToast("Нет файлов для скачивания", "error");
+      }
+    });
+  
+    async function loadChatHistory(orderID) {
+      try {
+        const chatWindow = document.getElementById("chatWindow");
+        chatWindow.innerHTML = "";
+        const response = await fetch(`/api/order/chat_history?orderID=${orderID}`);
+        const data = await response.json();
+        let chatHistory = [];
+        if (response.ok) {
+          if (data.messages && Array.isArray(data.messages)) {
+            chatHistory = data.messages;
+          }
+        } else {
+          showToast(data.error || "Ошибка загрузки истории чата", "error");
+        }
+        const uniqueHistory = [];
+        const seen = new Set();
+        chatHistory.forEach(item => {
+          const key = `${item.sender || ''}-${item.type || "message"}-${item.message}-${item.created_at}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueHistory.push(item);
+          }
+        });
+        if (uniqueHistory.length > 100) {
+          uniqueHistory.sort((a, b) => a.created_at - b.created_at);
+          chatHistory = uniqueHistory.slice(-100);
+        } else {
+          chatHistory = uniqueHistory;
+        }
+        const chatHistoryKey = `chatHistory_${orderID}`;
+        localStorage.setItem(chatHistoryKey, JSON.stringify(chatHistory));
+        loadedMessages.clear();
+        chatHistory.forEach(item => {
+          const msgKey = `${item.sender || ''}-${item.type || "message"}-${item.message}-${item.created_at}`;
+          if (!loadedMessages.has(msgKey) && item.message && item.message.trim() !== "") {
+            const msgDiv = document.createElement("div");
+            if (item.type === "notification") {
+              msgDiv.className = "chat-message notification";
+              msgDiv.textContent = item.message;
+            } else {
+              msgDiv.className = `chat-message ${item.sender === "user" ? "sent" : "received"}`;
+              msgDiv.textContent = item.message;
+              msgDiv.setAttribute("role", "log");
+            }
+            chatWindow.appendChild(msgDiv);
+            loadedMessages.add(msgKey);
+          }
+        });
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+      } catch (err) {
+        console.error("Ошибка загрузки истории чата:", err);
+        showToast("Ошибка соединения при загрузке истории чата", "error");
+      }
+    }
+  
+    function saveChatHistory() {
+      const chatWindow = document.getElementById("chatWindow");
+      const chatHistoryKey = `chatHistory_${currentOrderId}`;
+      let chatHistory = [];
+      Array.from(chatWindow.children).forEach(msg => {
+        if (msg.classList.contains("notification")) {
+          if (msg.textContent && msg.textContent.trim() !== "") {
+            if (!chatHistory.some(item => item.type === "notification" && item.message === msg.textContent)) {
+              chatHistory.push({
+                type: "notification",
+                message: msg.textContent,
+                created_at: parseInt(msg.getAttribute("data-timestamp") || Math.floor(Date.now() / 1000))
+              });
+            }
+          }
+        } else {
+          const sender = msg.classList.contains("sent") ? "user" : "admin";
+          if (msg.textContent && msg.textContent.trim() !== "") {
+            if (!chatHistory.some(item => item.sender === sender && item.type === "message" && item.message === msg.textContent)) {
+              chatHistory.push({
+                type: "message",
+                sender: sender,
+                message: msg.textContent,
+                created_at: Math.floor(Date.now() / 1000)
+              });
+            }
+          }
+        }
+      });
+      const uniqueHistory = [];
+      const seen = new Set();
+      chatHistory.forEach(item => {
+        const key = `${item.sender || ''}-${item.type || "message"}-${item.message}-${item.created_at}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueHistory.push(item);
+        }
+      });
+      localStorage.setItem(chatHistoryKey, JSON.stringify(uniqueHistory));
+    }
+  
     function validateFileCount(input) {
       const files = input.files;
       if (files.length > 10) {
-        showToast("Можно загрузить не более 10 файлов за раз", 'error');
-        input.value = '';
+        showToast("Можно загрузить не более 10 файлов за раз", "error");
+        input.value = "";
         return false;
       }
       return true;
     }
-
+  
     async function loadFiles() {
-      const orderID = "{{.Order.ID}}";
+      showLoading(true);
       try {
-        const response = await fetch(`/api/order/files?orderID=${orderID}`);
+        const response = await fetch(`/api/order/files?orderID=${currentOrderId}`, { credentials: "include" });
         const data = await response.json();
-        console.log("Данные файлов от сервера:", JSON.stringify(data, null, 2));
         if (response.ok) {
-          const userFiles = (data.files || []).filter(f => 
-            f.uploadedBy?.toLowerCase() === "user" || !f.uploadedBy
-          );
-          const adminFiles = (data.files || []).filter(f => 
-            f.uploadedBy?.toLowerCase() === "admin"
-          );
-          updateFilesList(userFiles, adminFiles);
-          cacheFiles(orderID, data.files); // Кэшируем все файлы с сервера
+          const userFiles = (data.files || []).filter(f => f.uploadedBy?.toLowerCase() === "user");
+          const adminFiles = (data.files || []).filter(f => f.uploadedBy?.toLowerCase() === "admin" && !f.url.includes("final_"));
+          const finalFiles = (data.files || []).filter(f => f.uploadedBy?.toLowerCase() === "final" || f.url.includes("final_"));
+          updateFilesList(userFiles, adminFiles, finalFiles);
         } else {
           showToast(data.error || "Ошибка получения файлов заказа", "error");
         }
       } catch (err) {
         console.error("Ошибка загрузки файлов:", err);
-        showToast("Ошибка соединения с сервером при загрузке файлов", 'error');
+        showToast("Ошибка соединения при загрузке файлов", "error");
+      } finally {
+        showLoading(false);
       }
     }
-
-    function updateFilesList(userFiles, adminFiles) {
+  
+    function updateFilesList(userFiles, adminFiles, finalFiles) {
       const userFilesContainer = document.getElementById("userFilesContainer");
       const adminFilesContainer = document.getElementById("adminFilesContainer");
-      const downloadAllBtn = document.getElementById("downloadAll");
-
-      userFilesContainer.innerHTML = userFiles.length > 0 ? "" : '<p>Файлы заказчика не найдены.</p>';
-      adminFilesContainer.innerHTML = adminFiles.length > 0 ? "" : '<p>Файлы администратора не найдены.</p>';
-
+      const finalFilesContainer = document.getElementById("finalFilesContainer");
+      userFilesContainer.innerHTML = userFiles.length > 0 ? "" : "<p>Файлы пользователя не найдены.</p>";
+      adminFilesContainer.innerHTML = adminFiles.length > 0 ? "" : "<p>Файлы администратора не найдены.</p>";
+      finalFilesContainer.innerHTML = finalFiles.length > 0 ? "" : "<p>Итоговый файл не загружен.</p>";
       userFiles.forEach(file => {
-        const fileItem = createFileItem(file);
+        const fileItem = document.createElement("div");
+        fileItem.className = "file-item";
+        let fileName = file.originalName || file.url.split("/").pop() || "Неизвестный файл";
+        if (fileName.includes("_") && fileName.split("_")[0].startsWith("user_")) {
+          fileName = fileName.split("_").slice(2).join("_");
+        }
+        const ext = fileName.substring(fileName.lastIndexOf(".")).toLowerCase() || ".unknown";
+        const iconHTML = getIconForExtension(ext);
+        fileItem.innerHTML = `
+            <div class="file-icon">${iconHTML}</div>
+            <a href="${file.url}" target="_blank" class="file-name">${fileName}</a>
+            <i class="fas fa-times delete-file" data-file-id="${file.id}" style="cursor: pointer; color: #dc3545; position: absolute; top: 5px; right: 5px;"></i>
+        `;
         userFilesContainer.appendChild(fileItem);
       });
-
       adminFiles.forEach(file => {
-        const fileItem = createFileItem(file);
+        const fileItem = document.createElement("div");
+        fileItem.className = "file-item";
+        let fileName = file.originalName || file.url.split("/").pop() || "Неизвестный файл";
+        if (fileName.includes("_") && fileName.split("_")[0].startsWith("admin_")) {
+          fileName = fileName.split("_").slice(2).join("_");
+        }
+        const ext = fileName.substring(fileName.lastIndexOf(".")).toLowerCase() || ".unknown";
+        const iconHTML = getIconForExtension(ext);
+        fileItem.innerHTML = `
+            <div class="file-icon">${iconHTML}</div>
+            <a href="${file.url}" target="_blank" class="file-name">${fileName}</a>
+            <i class="fas fa-times delete-file" data-file-id="${file.id}" style="cursor: pointer; color: #dc3545; position: absolute; top: 5px; right: 5px;"></i>
+        `;
         adminFilesContainer.appendChild(fileItem);
       });
-
-      downloadAllBtn.style.display = (userFiles.length + adminFiles.length) > 0 ? "block" : "none";
+      finalFiles.forEach(file => {
+        const fileItem = document.createElement("div");
+        fileItem.className = "file-item";
+        let fileName = file.originalName || file.url.split("/").pop() || "Неизвестный файл";
+        if (fileName.includes("_") && fileName.split("_")[0].startsWith("final_")) {
+          fileName = fileName.split("_").slice(2).join("_");
+        }
+        const ext = fileName.substring(fileName.lastIndexOf(".")).toLowerCase() || ".unknown";
+        const iconHTML = getIconForExtension(ext);
+        fileItem.innerHTML = `
+            <div class="file-icon">${iconHTML}</div>
+            <a href="${file.url}" target="_blank" class="file-name">${fileName}</a>
+            <i class="fas fa-times delete-file" data-file-id="${file.id}" style="cursor: pointer; color: #dc3545; position: absolute; top: 5px; right: 5px;"></i>
+        `;
+        finalFilesContainer.appendChild(fileItem);
+      });
+      document.querySelectorAll(".delete-file").forEach(icon => {
+        icon.addEventListener("click", async (e) => {
+          const fileId = e.target.getAttribute("data-file-id");
+          if (confirm("Удалить файл?")) {
+            await deleteFile(fileId);
+          }
+        });
+      });
     }
-
-    function updateFilesListWithNewFile(file) {
-      const container = file.uploadedBy?.toLowerCase() === "admin" ? 
-        document.getElementById("adminFilesContainer") : 
-        document.getElementById("userFilesContainer");
-      const fileItem = createFileItem(file);
-      container.appendChild(fileItem);
-      container.querySelector('p')?.remove();
-      const downloadAllBtn = document.getElementById("downloadAll");
-      downloadAllBtn.style.display = "block";
-      // Обновляем кэш, добавляя новый файл
-      const orderID = "{{.Order.ID}}";
-      const cachedFiles = getCachedFiles(orderID) || [];
-      cachedFiles.push(file);
-      cacheFiles(orderID, cachedFiles);
-      // Также перезагружаем файлы с сервера для синхронизации
-      loadFiles();
-    }
-
+  
     function createFileItem(file) {
       const fileItem = document.createElement("div");
       fileItem.className = "file-item";
-      let fileName = file.originalName || file.original_name || "Неизвестное имя файла";
-      const orderID = "{{.Order.ID}}";
-      if (fileName.startsWith(`${orderID}_`)) {
-        fileName = fileName.substring((`${orderID}_`).length);
+      let fileName = file.originalName || file.original_name || file.filename.split("_").slice(2).join("_") || file.url.split("/").pop() || "Неизвестный файл";
+      if (fileName.startsWith(`${currentOrderId}_`)) {
+        fileName = fileName.substring((`${currentOrderId}_`).length);
       }
-      const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase() || '.unknown';
+      if (fileName.startsWith("admin_")) {
+        fileName = fileName.split("_").slice(2).join("_");
+      }
+      if (fileName.startsWith("final_")) {
+        fileName = fileName.split("_").slice(2).join("_");
+      }
+      const ext = fileName.substring(fileName.lastIndexOf(".")).toLowerCase() || ".unknown";
       const iconHTML = getIconForExtension(ext);
       fileItem.innerHTML = `
         <div class="file-icon">${iconHTML}</div>
-        <a href="${file.url || '#'}" target="_blank" class="file-name" aria-label="Скачать файл: ${fileName}">${fileName}</a>
+        <a href="${file.url || "#"}" target="_blank" class="file-name" aria-label="Скачать файл: ${fileName}">${fileName}</a>
       `;
       return fileItem;
     }
-
+  
     function getIconForExtension(ext) {
-      const normalizedExt = ext.toLowerCase().trim() || '.unknown';
+      const normalizedExt = ext.toLowerCase().trim() || ".unknown";
       switch (normalizedExt) {
-        case ".pdf":
-          return '<i class="fa-solid fa-file-pdf" style="color: #FF0000;"></i>';
+        case ".pdf": return '<i class="fa-solid fa-file-pdf" style="color: #FF0000;"></i>';
         case ".doc":
-        case ".docx":
-          return '<i class="fa-solid fa-file-word" style="color: #1E90FF;"></i>';
+        case ".docx": return '<i class="fa-solid fa-file-word" style="color: #1E90FF;"></i>';
         case ".xls":
-        case ".xlsx":
-          return '<i class="fa-solid fa-file-excel" style="color: #00FF00;"></i>';
+        case ".xlsx": return '<i class="fa-solid fa-file-excel" style="color: #00FF00;"></i>';
         case ".png":
         case ".jpg":
         case ".jpeg":
-        case ".gif":
-          return '<i class="fa-solid fa-file-image" style="color: #800080;"></i>';
-        default:
-          return '<i class="fa-solid fa-file" style="color: #808080;"></i>';
+        case ".gif": return '<i class="fa-solid fa-file-image" style="color: #800080;"></i>';
+        default: return '<i class="fa-solid fa-file" style="color: #808080;"></i>';
       }
     }
-
-    // Кэширование файлов в localStorage
-    function cacheFiles(orderID, files) {
-      localStorage.setItem(`files_${orderID}`, JSON.stringify(files));
-    }
-
-    function getCachedFiles(orderID) {
-      const cached = localStorage.getItem(`files_${orderID}`);
-      return cached ? JSON.parse(cached) : null;
-    }
-
-    // Автоматическое обновление списка файлов через периодический опрос
-    function setupFileUpdates() {
-      const orderID = "{{.Order.ID}}";
-      setInterval(() => {
-        loadFiles(); // Загружаем актуальные данные с сервера вместо использования кэша
-      }, 5000); // Обновляем каждые 5 секунд
-    }
-
-    // Обработка загрузки файлов
-    document.getElementById("uploadForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const formData = new FormData(form);
-      try {
-        const response = await fetch(form.action, {
-          method: "POST",
-          body: formData,
-          credentials: 'include',
-        });
-        const data = await response.json();
-        if (response.ok) {
-          showToast(data.message || "Файлы успешно загружены", 'success');
-          loadFiles(); // Перезагрузка файлов с сервера
-          // Очистка кэша для данного orderID
-          localStorage.removeItem(`files_${form.querySelector("input[name='orderID']").value}`);
-        } else {
-          showToast(data.error || "Ошибка загрузки файлов", 'error');
-        }
-      } catch (err) {
-        console.error(err);
-        showToast("Ошибка соединения с сервером при загрузке файлов", 'error');
-      }
-    });
-
-    document.getElementById("downloadAll").addEventListener("click", () => {
-      const userFilesContainer = document.getElementById("userFilesContainer");
-      const adminFilesContainer = document.getElementById("adminFilesContainer");
-      const userLinks = userFilesContainer.getElementsByTagName("a");
-      const adminLinks = adminFilesContainer.getElementsByTagName("a");
-      const allLinks = [...userLinks, ...adminLinks];
-
-      if (allLinks.length > 0) {
-        const zip = new JSZip();
-        let count = 0;
-        for (let link of allLinks) {
-          fetch(link.href)
-            .then(response => response.blob())
-            .then(blob => {
-              zip.file(link.textContent, blob);
-              count++;
-              if (count === allLinks.length) {
-                zip.generateAsync({ type: "blob" })
-                  .then(content => {
-                    const url = window.URL.createObjectURL(content);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = "files.zip";
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                  });
-              }
-            })
-            .catch(err => {
-              console.error("Ошибка скачивания файла:", err);
-              showToast("Ошибка скачивания одного из файлов", 'error');
-            });
-        }
-        showToast("Скачивание всех файлов началось", 'success');
-        trackEvent('Files', 'Download All', 'All Files');
+  
+    function updateFilesListWithNewFile(file) {
+      let container;
+      if (file.uploadedBy?.toLowerCase() === "admin" && !file.url.includes("final_")) {
+        container = document.getElementById("adminFilesContainer");
+      } else if (file.uploadedBy?.toLowerCase() === "final" || (file.url && file.url.includes("final_"))) {
+        container = document.getElementById("finalFilesContainer");
+        const noFinalFileMsg = document.getElementById("noFinalFileMessage");
+        if (noFinalFileMsg) noFinalFileMsg.style.display = "none";
       } else {
-        showToast("Нет файлов для скачивания", 'error');
+        container = document.getElementById("userFilesContainer");
       }
-    });
-
-    function initRatingStars() {
-      const stars = document.querySelectorAll('.star');
-      const hiddenRating = document.getElementById('hiddenRating');
-
-      stars.forEach(star => {
-        star.addEventListener('click', () => {
-          const value = parseInt(star.getAttribute('data-value'));
-          stars.forEach(s => s.classList.remove('active'));
-          for (let i = 0; i < value; i++) {
-            stars[i].classList.add('active');
-          }
-          hiddenRating.value = value;
-          console.log(`Выбрана оценка: ${value}`);
-        });
-
-        star.addEventListener('mouseover', () => {
-          const value = parseInt(star.getAttribute('data-value'));
-          stars.forEach(s => s.classList.remove('hover'));
-          for (let i = 0; i < value; i++) {
-            stars[i].classList.add('hover');
-          }
-        });
-
-        star.addEventListener('mouseout', () => {
-          stars.forEach(s => s.classList.remove('hover'));
-          const currentRating = parseInt(hiddenRating.value) || 0;
-          stars.forEach((s, index) => {
-            if (index < currentRating) s.classList.add('active');
-            else s.classList.remove('active');
-          });
-        });
-      });
+      const fileItem = createFileItem(file);
+      container.appendChild(fileItem);
+      const p = container.querySelector("p");
+      if (p) p.remove();
+      const downloadAllBtn = document.getElementById("downloadAll");
+      downloadAllBtn.style.display = "block";
+      fileItem.style.opacity = "0";
+      fileItem.style.transform = "translateY(20px)";
+      setTimeout(() => {
+        fileItem.style.transition = "all 0.5s ease";
+        fileItem.style.opacity = "1";
+        fileItem.style.transform = "translateY(0)";
+      }, 100);
     }
-
+  
+    function loadAdminLastLogin() {
+      fetch("/api/admin/last_login", { credentials: "include" })
+        .then((res) => {
+          if (res.status === 403) {
+            document.getElementById("adminLastLoginInfo").textContent = "";
+            return null;
+          }
+          return res.json();
+        })
+        .then((data) => {
+          if (data && data.last_login) {
+            document.getElementById("adminLastLoginInfo").textContent = "Последний вход администратора: " + data.last_login;
+          } else if (data === null) {
+          } else {
+            document.getElementById("adminLastLoginInfo").textContent = "Информация о входе не найдена";
+          }
+        })
+        .catch((err) => {
+          console.error("Ошибка загрузки последнего входа администратора:", err);
+        });
+    }
+  
     async function loadReview(orderID) {
       try {
-        const response = await fetch(`/api/order/review?orderID=${orderID}`, {
-          credentials: "include",
-        });
-        console.log("Статус ответа от сервера для /api/order/review:", response.status);
-        console.log("Полные заголовки ответа:", response.headers);
+        const response = await fetch(`/api/order/review?orderID=${orderID}`, { credentials: "include" });
         const data = await response.json();
-        console.log("Данные отзыва от сервера:", JSON.stringify(data, null, 2));
         const reviewSection = document.getElementById("reviewSection");
         const reviewContent = document.getElementById("reviewContent");
-        const reviewForm = document.getElementById("reviewForm");
+        const reviewFormContainer = document.getElementById("reviewFormContainer");
         const noReviewMessage = document.getElementById("noReviewMessage");
-
         if (response.ok) {
-          const orderStatus = "{{.Order.Status}}".toLowerCase();
-          console.log("Статус заказа в шаблоне:", orderStatus);
-          if (orderStatus === "завершён") {
+          if (currentOrderStatus === "завершён") {
             reviewSection.style.display = "block";
             if (data.review) {
               reviewContent.innerHTML = `
@@ -1144,13 +1259,12 @@
                 <p><strong>Дата:</strong> ${data.review.created_at}</p>
               `;
               reviewContent.style.display = "block";
-              reviewForm.style.display = "none";
+              reviewFormContainer.style.display = "none";
               noReviewMessage.style.display = "none";
             } else {
-              reviewForm.style.display = "block";
+              reviewFormContainer.style.display = "block";
               reviewContent.style.display = "none";
               noReviewMessage.style.display = "none";
-              initRatingStars();
             }
           } else {
             reviewSection.style.display = "none";
@@ -1159,126 +1273,62 @@
           showToast(data.error || "Ошибка загрузки отзыва", "error");
         }
       } catch (err) {
-        console.error("Ошибка в loadReview:", err);
+        console.error("Ошибка загрузки отзыва:", err);
         showToast("Ошибка соединения при загрузке отзыва", "error");
       }
     }
-
-    document.getElementById("reviewForm").addEventListener("submit", async (e) => {
+  
+    document.getElementById("reviewForm").addEventListener("submit", async e => {
       e.preventDefault();
+      showLoading(true);
       const formData = new FormData(e.target);
       try {
         const response = await fetch(e.target.action, {
           method: "POST",
           body: formData,
-          credentials: "include",
+          credentials: "include"
         });
         const data = await response.json();
         if (response.ok) {
           showToast(data.message || "Отзыв успешно создан", "success");
-          loadReview("{{.Order.ID}}");
+          loadReview(currentOrderId);
         } else {
           showToast(data.error || "Ошибка создания отзыва", "error");
         }
       } catch (err) {
-        console.error("Ошибка в отправке отзыва:", err);
+        console.error("Ошибка отправки отзыва:", err);
         showToast("Ошибка соединения при отправке отзыва", "error");
+      } finally {
+        showLoading(false);
       }
     });
-
-    // Инициализация Push-уведомлений
-    function initializePushNotifications() {
-      if ('serviceWorker' in navigator && 'PushManager' in window) {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then(registration => {
-            console.log('Service Worker зарегистрирован:', registration);
-            askPermission(registration);
-          })
-          .catch(error => {
-            console.error('Ошибка регистрации Service Worker:', error);
-          });
-      }
-    }
-
-    function askPermission(registration) {
-      Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-          console.log('Разрешение на уведомления получено');
-          subscribeUser(registration);
-        } else {
-          console.log('Разрешение на уведомления не получено');
-        }
-      });
-    }
-
-    function subscribeUser(registration) {
-      registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: 'YOUR_VAPID_PUBLIC_KEY'
-      }).then(subscription => {
-        console.log('Подписка на push-уведомления:', subscription);
-        fetch('/api/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(subscription),
-          credentials: 'include'
-        });
-      }).catch(error => {
-        console.error('Ошибка подписки:', error);
-      });
-    }
-
-    window.addEventListener('load', () => {
-      initTheme();
-      const orderDetails = document.querySelector('.order-details');
-      const chatSection = document.querySelector('.chat-section');
-      const reviewSection = document.querySelector('.review-section');
-      orderDetails.classList.add('skeleton');
-      chatSection.classList.add('skeleton');
-      reviewSection.classList.add('skeleton');
-      console.log("Страница загружается, добавляем скелетон-анимацию");
+  
+    window.addEventListener("load", () => {
+      const orderDetails = document.querySelector(".order-details");
+      const chatSection = document.querySelector(".chat-section");
+      const reviewSection = document.querySelector(".review-section");
+      orderDetails.classList.add("skeleton");
+      chatSection.classList.add("skeleton");
+      reviewSection.classList.add("skeleton");
       setTimeout(() => {
-        orderDetails.classList.remove('skeleton');
-        chatSection.classList.remove('skeleton');
-        reviewSection.classList.remove('skeleton');
-        console.log("Скелетон-анимация удалена, подключаем чат и загружаем данные");
+        orderDetails.classList.remove("skeleton");
+        chatSection.classList.remove("skeleton");
+        reviewSection.classList.remove("skeleton");
         connectChat();
+        loadChatHistory(currentOrderId);
         loadFiles();
-        setupFileUpdates();
-        initializePushNotifications();
-        const orderStatus = "{{.Order.Status}}".toLowerCase();
-        console.log("Статус заказа в шаблоне:", orderStatus);
-        if (orderStatus === "завершён") {
-          loadReview("{{.Order.ID}}");
+        loadAdminLastLogin();
+        if (currentOrderStatus === "завершён") {
+          loadReview(currentOrderId);
         }
       }, 1000);
     });
-
+  
     function trackEvent(category, action, label) {
       console.log(`Event tracked: ${category}, ${action}, ${label}`);
     }
+    
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-messaging.js"></script>
-  <script>
-    // Настройка Firebase для Push-уведомлений
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const messaging = firebase.messaging();
-
-    messaging.onMessage((payload) => {
-      console.log('Получено сообщение:', payload);
-      showToast(payload.notification.body, 'success');
-    });
-  </script>
 </body>
 </html>
