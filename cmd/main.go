@@ -131,7 +131,8 @@ func main() {
 	r.GET("/ws/chat_user", middleware.AuthRequired(), websocket.WebSocketHandler(wsHub))
 
 	// Маршруты
-	r.GET("/api/admin/order/:id", middleware.AdminRequired(db), handlers.GetAdminOrder(db))
+	// Изменённый маршрут для детальной страницы заказа для администратора
+	r.GET("/admin/order/:id", middleware.AdminRequired(db), handlers.GetAdminOrder(db))
 	r.GET("/", func(c *gin.Context) {
 		session := sessions.Default(c)
 		userID := session.Get("user_id")
@@ -166,6 +167,17 @@ func main() {
 	r.GET("/about", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "about.html", gin.H{"title": "О нас"})
 	})
+
+	r.GET("/api/user/status", handlers.GetUserStatus(wsHub))
+
+	r.GET("/api/admin/last_login", middleware.AdminRequired(db), handlers.GetAdminLastLogin(db))
+
+	r.GET("/api/order/status", handlers.GetOrderStatus(wsHub))
+
+	r.POST("/api/order/delete-file", middleware.AdminRequired(db), func(c *gin.Context) {
+		handlers.DeleteFile(c, db, minioClient, bucketName)
+	})
+
 	r.GET("/reviews", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "reviews.html", gin.H{"title": "Отзывы"})
 	})
@@ -302,6 +314,7 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+	log.Printf("Запуск сервера на порту %s", port)
 	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("Не удалось запустить сервер: %v", err)
 	}
