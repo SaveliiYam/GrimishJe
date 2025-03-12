@@ -890,36 +890,59 @@
     });
   
     document.getElementById("uploadForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const input = e.target.querySelector('input[type="file"]');
-      const files = input.files;
-      if (!validateFileCount(input)) return;
-      if (!files.length) {
-        showToast("Выберите хотя бы один файл", "error");
-        return;
-      }
-      const formData = new FormData(e.target);
-      showLoading(true);
-      try {
-        const response = await fetch("/api/order/upload", {
-          method: "POST",
-          body: formData,
-          credentials: "include"
-        });
-        const data = await response.json();
-        if (response.ok) {
-          showToast(data.message || "Файлы загружены успешно", "success");
-        } else {
-          showToast(data.error || "Ошибка загрузки файлов", "error");
-        }
-      } catch (err) {
-        console.error("Ошибка загрузки файлов:", err);
-        showToast("Ошибка соединения при загрузке файлов", "error");
-      } finally {
-        showLoading(false);
-        input.value = "";
-      }
+  e.preventDefault();
+  const input = e.target.querySelector('input[type="file"]');
+  const files = input.files;
+  if (!validateFileCount(input)) return;
+  if (!files.length) {
+    showToast("Выберите хотя бы один файл", "error");
+    return;
+  }
+  const formData = new FormData(e.target);
+  showLoading(true);
+  try {
+    const response = await fetch("/api/order/upload", {
+      method: "POST",
+      body: formData,
+      credentials: "include"
     });
+    const data = await response.json();
+    if (response.ok) {
+      showToast(data.message || "Файлы загружены успешно", "success");
+      // Предполагаем, что сервер возвращает массив загруженных файлов в data.files
+      if (data.files && Array.isArray(data.files)) {
+        data.files.forEach(file => {
+          const fileObj = {
+            filename: file.filename || file.name,
+            originalName: file.originalName || file.name,
+            uploadedBy: "user",
+            url: file.url || `/uploads/${file.filename}`
+          };
+          updateFilesListWithNewFile(fileObj);
+        });
+      } else {
+        // Если сервер не вернул файлы, имитируем их добавление
+        Array.from(files).forEach(file => {
+          const fileObj = {
+            filename: file.name,
+            originalName: file.name,
+            uploadedBy: "user",
+            url: `/uploads/${currentOrderId}_user_${file.name}`
+          };
+          updateFilesListWithNewFile(fileObj);
+        });
+      }
+    } else {
+      showToast(data.error || "Ошибка загрузки файлов", "error");
+    }
+  } catch (err) {
+    console.error("Ошибка загрузки файлов:", err);
+    showToast("Ошибка соединения при загрузке файлов", "error");
+  } finally {
+    showLoading(false);
+    input.value = "";
+  }
+});
   
     document.getElementById("downloadAll").addEventListener("click", () => {
       const userFilesContainer = document.getElementById("userFilesContainer");

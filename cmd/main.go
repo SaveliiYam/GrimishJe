@@ -56,7 +56,7 @@ func initDB() *gorm.DB {
 		log.Fatalf("Не удалось подключиться к базе данных: %v", err)
 	}
 
-	if err := db.AutoMigrate(&models.User{}, &models.Order{}, &models.Review{}, &models.File{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.Order{}, &models.Review{}, &models.File{}, &models.ChatMessage{}); err != nil {
 		log.Fatalf("Ошибка миграции БД: %v", err)
 	}
 
@@ -174,7 +174,7 @@ func main() {
 
 	r.GET("/api/order/status", handlers.GetOrderStatus(wsHub))
 
-	r.POST("/api/order/delete-file", middleware.AdminRequired(db), func(c *gin.Context) {
+	r.POST("/api/order/delete-file", middleware.AuthRequired(), func(c *gin.Context) {
 		handlers.DeleteFile(c, db, minioClient, bucketName)
 	})
 
@@ -194,9 +194,7 @@ func main() {
 	r.POST("/api/order/delete", middleware.AdminRequired(db), handlers.DeleteOrder(db))
 	r.POST("/api/order/admin-edit", middleware.AdminRequired(db), handlers.AdminEditOrder(db))
 	r.POST("/api/order/review", middleware.AuthRequired(), handlers.CreateReview(db))
-	r.POST("/api/order/upload", middleware.AuthRequired(), func(c *gin.Context) {
-		handlers.UploadFiles(c, db, minioClient, bucketName)
-	})
+	r.POST("/api/order/upload", middleware.AuthRequired(), handlers.UploadFiles(db, minioClient, bucketName))
 	r.GET("/api/order/files", middleware.AuthRequired(), func(c *gin.Context) {
 		handlers.ListFiles(c, db, minioClient, bucketName)
 	})

@@ -100,199 +100,204 @@ func SetWebSocketHub(hub *websocket.Hub) {
 }
 
 // UploadFiles обрабатывает загрузку файлов в MinIO для конкретного заказа с использованием префикса роли.
-func UploadFiles(c *gin.Context, db *gorm.DB, minioClient *minio.Client, bucketName string) {
-	if minioClient == nil {
-		log.Println("MinIO клиент не инициализирован")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "MinIO клиент не инициализирован"})
-		return
-	}
+// UploadFiles обрабатывает загрузку файлов в MinIO для конкретного заказа с использованием префикса роли.
+func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		log.Println("Начало обработки загрузки файла")
+		if minioClient == nil {
+			log.Println("MinIO клиент не инициализирован")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "MinIO клиент не инициализирован"})
+			return
+		}
 
-	session := sessions.Default(c)
-	uid := session.Get("user_id")
-	if uid == nil {
-		log.Println("Неавторизованный доступ при загрузке файлов")
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходимо авторизоваться"})
-		return
-	}
+		session := sessions.Default(c)
+		uid := session.Get("user_id")
+		if uid == nil {
+			log.Println("Неавторизованный доступ при загрузке файлов")
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходимо авторизоваться"})
+			return
+		}
 
-	orderIDStr := c.PostForm("orderID")
-	if orderIDStr == "" {
-		log.Println("Отсутствует orderID в запросе на загрузке файлов")
-		c.JSON(http.StatusBadRequest, gin.H{"error": "orderID не указан"})
-		return
-	}
+		orderIDStr := c.PostForm("orderID")
+		if orderIDStr == "" {
+			log.Println("Отсутствует orderID в запросе на загрузке файлов")
+			c.JSON(http.StatusBadRequest, gin.H{"error": "orderID не указан"})
+			return
+		}
 
-	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
-	if err != nil {
-		log.Printf("Неверный формат orderID: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный orderID"})
-		return
-	}
-
-	var order models.Order
-	if err := db.First(&order, uint(orderID)).Error; err != nil {
-		log.Printf("Заказ с ID %d не найден: %v", orderID, err)
-		c.JSON(http.StatusNotFound, gin.H{"error": "Заказ не найден"})
-		return
-	}
-
-	var userID uint
-	var isAdmin bool
-	switch v := uid.(type) {
-	case uint:
-		userID = v
-	case int:
-		userID = uint(v)
-	case int64:
-		userID = uint(v)
-	case string:
-		parsed, err := strconv.ParseUint(v, 10, 32)
+		orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
 		if err != nil {
-			log.Printf("Ошибка преобразования user_id: %v", err)
+			log.Printf("Неверный формат orderID: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный orderID"})
+			return
+		}
+
+		var order models.Order
+		if err := db.First(&order, uint(orderID)).Error; err != nil {
+			log.Printf("Заказ с ID %d не найден: %v", orderID, err)
+			c.JSON(http.StatusNotFound, gin.H{"error": "Заказ не найден"})
+			return
+		}
+
+		var userID uint
+		var isAdmin bool
+		switch v := uid.(type) {
+		case uint:
+			userID = v
+		case int:
+			userID = uint(v)
+		case int64:
+			userID = uint(v)
+		case string:
+			parsed, err := strconv.ParseUint(v, 10, 32)
+			if err != nil {
+				log.Printf("Ошибка преобразования user_id: %v", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Невалидный user_id"})
+				return
+			}
+			userID = uint(parsed)
+		default:
+			log.Println("Неподдерживаемый тип user_id в сессии")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Невалидный user_id"})
 			return
 		}
-		userID = uint(parsed)
-	default:
-		log.Println("Неподдерживаемый тип user_id в сессии")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Невалидный user_id"})
-		return
-	}
 
-	var user models.User
-	if err := db.First(&user, userID).Error; err != nil {
-		log.Printf("Пользователь с ID %d не найден: %v", userID, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Пользователь не найден"})
-		return
-	}
-	isAdmin = user.IsAdmin
+		var user models.User
+		if err := db.First(&user, userID).Error; err != nil {
+			log.Printf("Пользователь с ID %d не найден: %v", userID, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Пользователь не найден"})
+			return
+		}
+		isAdmin = user.IsAdmin
 
-	if order.UserID != userID && !isAdmin {
-		log.Printf("Пользователь %d (не администратор) попытался загрузить файлы для чужого заказа %d", userID, orderID)
-		c.JSON(http.StatusForbidden, gin.H{"error": "Нет доступа к этому заказу"})
-		return
-	}
-
-	form, err := c.MultipartForm()
-	if err != nil {
-		log.Printf("Ошибка получения файлов: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка получения файлов"})
-		return
-	}
-
-	files := form.File["files"]
-	if len(files) == 0 {
-		log.Println("Нет загруженных файлов в запросе")
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Нет загруженных файлов"})
-		return
-	}
-
-	if len(files) > maxFilesPerOrder {
-		log.Printf("Превышен лимит файлов (%d) для заказа %d", len(files), orderID)
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Можно загрузить не более %d файлов за раз", maxFilesPerOrder)})
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	uploadedFiles := make([]struct {
-		URL          string `json:"url"`
-		OriginalName string `json:"originalName"`
-		UploadedBy   string `json:"uploadedBy"`
-	}, 0)
-
-	// Определяем префикс и значение для uploader (uploadedBy) вне цикла
-	var uploader string = "user"
-	prefix := fmt.Sprintf("user_%d_", orderID)
-	if isAdmin {
-		prefix = fmt.Sprintf("admin_%d_", orderID)
-		uploader = "admin"
-		log.Printf("Администратор (ID: %d) загружает файлы с префиксом '%s'", userID, prefix)
-	}
-
-	for _, file := range files {
-		if file.Size > maxFileSize {
-			log.Printf("Файл %s превышает максимальный размер (%d байт) для заказа %d", file.Filename, maxFileSize, orderID)
-			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Файл %s превышает максимальный размер (%d байт)", file.Filename, maxFileSize)})
+		if order.UserID != userID && !isAdmin {
+			log.Printf("Пользователь %d (не администратор) попытался загрузить файлы для чужого заказа %d", userID, orderID)
+			c.JSON(http.StatusForbidden, gin.H{"error": "Нет доступа к этому заказу"})
 			return
 		}
 
-		ext := strings.ToLower(filepath.Ext(file.Filename))
-		if !allowedExts[ext] {
-			log.Printf("Неподдерживаемый формат файла %s для заказа %d", file.Filename, orderID)
-			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Формат файла %s не поддерживается", ext)})
-			return
-		}
-
-		originalName := file.Filename
-		newFileName := fmt.Sprintf("%s%d_%s", prefix, time.Now().UnixNano(), originalName)
-
-		src, err := file.Open()
+		form, err := c.MultipartForm()
 		if err != nil {
-			log.Printf("Ошибка открытия файла %s: %v", file.Filename, err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка открытия файла"})
-			return
-		}
-		defer src.Close()
-
-		_, err = minioClient.PutObject(ctx, bucketName, newFileName, src, file.Size, minio.PutObjectOptions{
-			ContentType: file.Header.Get("Content-Type"),
-		})
-		if err != nil {
-			log.Printf("Ошибка загрузки файла %s в MinIO: %v", file.Filename, err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка загрузки файла"})
+			log.Printf("Ошибка получения файлов: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка получения файлов"})
 			return
 		}
 
-		// Генерация presigned URL
-		presignedURL, err := minioClient.PresignedGetObject(ctx, bucketName, newFileName, time.Hour, nil)
-		if err != nil {
-			log.Printf("Ошибка генерации URL для файла %s: %v", newFileName, err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации ссылки для скачивания"})
+		files := form.File["files"]
+		if len(files) == 0 {
+			log.Println("Нет загруженных файлов в запросе")
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Нет загруженных файлов"})
 			return
 		}
 
-		fileRecord := models.File{
-			OrderID:      uint(orderID),
-			OriginalName: originalName,
-			URL:          presignedURL.String(),
-			UploadedBy:   uploader,
-		}
-		if err := db.Create(&fileRecord).Error; err != nil {
-			log.Printf("Ошибка сохранения файла %s в базе данных: %v", newFileName, err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка сохранения метаданных файла"})
+		if len(files) > maxFilesPerOrder {
+			log.Printf("Превышен лимит файлов (%d) для заказа %d", len(files), orderID)
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Можно загрузить не более %d файлов за раз", maxFilesPerOrder)})
 			return
 		}
 
-		uploadedFiles = append(uploadedFiles, struct {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		uploadedFiles := make([]struct {
 			URL          string `json:"url"`
 			OriginalName string `json:"originalName"`
 			UploadedBy   string `json:"uploadedBy"`
-		}{
-			URL:          presignedURL.String(),
-			OriginalName: originalName,
-			UploadedBy:   uploader,
-		})
+		}, 0)
 
-		// WebSocket-уведомление
-		fileUpdate := websocket.FileUpdatePayload{
-			OrderID:      uint(orderID),
-			Filename:     newFileName,
-			OriginalName: originalName,
-			UploadedBy:   uploader,
-			URL:          presignedURL.String(),
+		var uploader string = "user"
+		prefix := fmt.Sprintf("user_%d_", orderID)
+		if isAdmin {
+			prefix = fmt.Sprintf("admin_%d_", orderID)
+			uploader = "admin"
+			log.Printf("Администратор (ID: %d) загружает файлы с префиксом '%s'", userID, prefix)
 		}
-		websocket.BroadcastMessage(wsHub, fileUpdate)
-		log.Printf("Отправлено WebSocket-уведомление о файле: %+v", fileUpdate)
-	}
 
-	log.Printf("Успешно загружено %d файлов для заказа %d пользователем %d (админ: %v, uploaded_by: %s)",
-		len(uploadedFiles), orderID, userID, isAdmin, uploader)
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Файлы успешно загружены",
-		"files":   uploadedFiles,
-	})
+		for _, file := range files {
+			if file.Size > maxFileSize {
+				log.Printf("Файл %s превышает максимальный размер (%d байт) для заказа %d", file.Filename, maxFileSize, orderID)
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Файл %s превышает максимальный размер (%d байт)", file.Filename, maxFileSize)})
+				return
+			}
+
+			ext := strings.ToLower(filepath.Ext(file.Filename))
+			if !allowedExts[ext] {
+				log.Printf("Неподдерживаемый формат файла %s для заказа %d", file.Filename, orderID)
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Формат файла %s не поддерживается", ext)})
+				return
+			}
+
+			originalName := file.Filename
+			newFileName := fmt.Sprintf("%s%d_%s", prefix, time.Now().UnixNano(), originalName)
+
+			src, err := file.Open()
+			if err != nil {
+				log.Printf("Ошибка открытия файла %s: %v", file.Filename, err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка открытия файла"})
+				return
+			}
+			defer src.Close()
+
+			log.Printf("Сохранение файла %s в MinIO", newFileName)
+			_, err = minioClient.PutObject(ctx, bucketName, newFileName, src, file.Size, minio.PutObjectOptions{
+				ContentType: file.Header.Get("Content-Type"),
+			})
+			if err != nil {
+				log.Printf("Ошибка загрузки файла %s в MinIO: %v", file.Filename, err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка загрузки файла"})
+				return
+			}
+			log.Printf("Файл %s успешно сохранён в MinIO", newFileName)
+
+			presignedURL, err := minioClient.PresignedGetObject(ctx, bucketName, newFileName, time.Hour, nil)
+			if err != nil {
+				log.Printf("Ошибка генерации URL для файла %s: %v", newFileName, err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации ссылки для скачивания"})
+				return
+			}
+			log.Printf("Создан presigned URL: %s", presignedURL.String())
+
+			fileRecord := models.File{
+				OrderID:      uint(orderID),
+				OriginalName: originalName,
+				URL:          presignedURL.String(),
+				UploadedBy:   uploader,
+			}
+			if err := db.Create(&fileRecord).Error; err != nil {
+				log.Printf("Ошибка сохранения файла %s в базе данных: %v", newFileName, err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка сохранения метаданных файла"})
+				return
+			}
+			log.Printf("Файл сохранён в базе данных: %+v", fileRecord)
+
+			uploadedFiles = append(uploadedFiles, struct {
+				URL          string `json:"url"`
+				OriginalName string `json:"originalName"`
+				UploadedBy   string `json:"uploadedBy"`
+			}{
+				URL:          presignedURL.String(),
+				OriginalName: originalName,
+				UploadedBy:   uploader,
+			})
+
+			fileUpdate := websocket.FileUpdatePayload{
+				OrderID:      uint(orderID),
+				Filename:     newFileName,
+				OriginalName: originalName,
+				UploadedBy:   uploader,
+				URL:          presignedURL.String(),
+			}
+			websocket.BroadcastMessage(wsHub, fileUpdate)
+			log.Printf("Отправлено WebSocket-уведомление о файле: %+v", fileUpdate)
+		}
+
+		log.Printf("Успешно загружено %d файлов для заказа %d пользователем %d (админ: %v, uploaded_by: %s)",
+			len(uploadedFiles), orderID, userID, isAdmin, uploader)
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Файлы успешно загружены",
+			"files":   uploadedFiles,
+		})
+	}
 }
 
 // DeleteFile удаляет файл из MinIO и базы данных.
