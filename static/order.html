@@ -718,7 +718,6 @@
         const data = await response.json();
         const chatStatusElem = document.getElementById("chatStatus");
         if (response.ok && data.status) {
-          // Обновляем статус исполнителя – только toast
           chatStatusElem.innerHTML = `<span class="${data.status.startsWith("Онлайн") ? "online-indicator" : "offline-indicator"}"></span>Статус исполнителя: ${data.status}`;
           showToast(`Статус исполнителя: ${data.status}`, "success");
         } else {
@@ -728,91 +727,6 @@
         console.error("Ошибка загрузки статуса:", err);
         document.getElementById("chatStatus").innerHTML = "Статус исполнителя: Неизвестен";
       }
-    }
-  
-    // Подключаем WebSocket – обновления через него
-    function connectChat() {
-      const currentURL = window.location.hostname;
-      const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsPort = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
-      const wsUrl = `${wsProtocol}//${currentURL}:${wsPort}/ws/chat_user?orderID=${currentOrderId}`;
-      currentChatWS = new WebSocket(wsUrl);
-      currentChatWS.onopen = () => {
-        console.log("Чат подключён через:", wsUrl);
-        retryCount = 0;
-        loadChatHistory(currentOrderId);
-        loadOrderStatus();
-      };
-      currentChatWS.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          // Если нет type, определяем его
-          if (!data.type && data.filename && data.url) {
-            data.type = "file";
-          } else if (!data.type && data.status && !data.message) {
-            data.type = "executor_status";
-          } else if (!data.type && data.message) {
-            data.type = "message";
-          }
-          switch(data.type) {
-            // Обработка статуса исполнителя
-            case "order_status":
-            case "executor_status":
-              {
-                const chatStatusElem = document.getElementById("chatStatus");
-                if (data.status.startsWith("Онлайн")) {
-                  chatStatusElem.innerHTML = `<span class="online-indicator"></span>Статус исполнителя: ${data.status}`;
-                } else {
-                  chatStatusElem.innerHTML = `<span class="offline-indicator"></span>Статус исполнителя: ${data.status}`;
-                }
-                showToast(`Статус исполнителя: ${data.status}`, "success");
-              }
-              break;
-            // Изменение статуса заказа
-            case "order_status_change":
-              {
-                const orderStatusElem = document.getElementById("orderStatus");
-                orderStatusElem.textContent = data.status;
-                currentOrderStatus = data.status.toLowerCase().trim();
-                if (currentOrderStatus === "в работе") {
-                  addChatNotification(`Администратор изменил статус заказа на: ${data.status}`);
-                } else {
-                  addChatNotification(`Статус заказа обновлён: ${data.status}`);
-                }
-                showToast(`Статус заказа обновлён: ${data.status}`, "success");
-                if (currentOrderStatus === "завершён") {
-                  loadReview(currentOrderId);
-                }
-              }
-              break;
-            case "message":
-              handleChatMessage(data);
-              break;
-            case "file":
-              handleFileMessage(data);
-              if ((data.uploadedBy || data.uploaded_by)?.toLowerCase() === "admin") {
-                addChatNotification(`Администратор загрузил файл: ${data.originalName || data.original_name || data.filename.split("_").slice(2).join("_")}`);
-              }
-              break;
-            default:
-              console.log("Неизвестный тип сообщения:", data);
-          }
-          saveChatHistory();
-        } catch(e) {
-          console.error("Ошибка парсинга сообщения:", e);
-          showToast("Ошибка обработки сообщения", "error");
-        }
-      };
-      currentChatWS.onerror = (err) => {
-        console.error("WebSocket ошибка:", err);
-        showToast("Ошибка подключения к чату", "error");
-        attemptReconnect();
-      };
-      currentChatWS.onclose = () => {
-        console.log("Чат отключён");
-        showToast("Подключение к чату потеряно", "error");
-        attemptReconnect();
-      };
     }
   
     function attemptReconnect() {
@@ -829,6 +743,7 @@
     }
   
     function handleChatMessage(data) {
+      console.log("Обработка сообщения чата:", data);
       const chatWindow = document.getElementById("chatWindow");
       const msgKey = `${data.sender || ''}-${data.type || "message"}-${data.message}-${data.created_at}`;
       if (!loadedMessages.has(msgKey) && data.message && data.message.trim() !== "") {
@@ -842,16 +757,175 @@
       }
     }
   
+    function connectChat() {
+      if (currentChatWS) {
+        currentChatWS.close();
+      }
+  
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${window.location.host}/ws/chat?orderID=${currentOrderId}`;
+      console.log("Попытка подключения WebSocket:", wsUrl);
+      currentChatWS = new WebSocket(wsUrl);
+  
+      currentChatWS.onopen = () => {
+        console.log("WebSocket успешно подключён");
+        retryCount = 0; // Сбрасываем счётчик попыток
+        // Отправляем запрос статуса
+        console.log("Отправлен запрос статуса через WebSocket");
+        currentChatWS.send(JSON.stringify({ type: "status_request" }));
+        loadChatHistory(currentOrderId);
+        loadOrderStatus();
+        loadFiles(); // Загружаем файлы при подключении
+      };
+  
+      currentChatWS.onmessage = (event) => {
+        console.log("Получено сообщение WebSocket (raw):", event.data);
+        let data;
+        try {
+          data = JSON.parse(event.data);
+          console.log("Обработанное сообщение:", data);
+        } catch (e) {
+          console.error("Ошибка парсинга WebSocket-сообщения:", e);
+          return;
+        }
+  
+        switch (data.type) {
+          case "file":
+            console.log("Обработка файла:", data);
+            handleFileMessage(data);
+            break;
+          case "file_deleted":
+            console.log("Обработка удаления файла:", data);
+            handleFileDelete(data);
+            break;
+          case "executor_status":
+            console.log("Обработка статуса исполнителя:", data);
+            updateExecutorStatus(data.status);
+            break;
+          case "order_status_change":
+            console.log("Обработка изменения статуса заказа:", data);
+            updateOrderStatus(data.status);
+            break;
+          default:
+            console.log("Обработка сообщения чата (default):", data);
+            handleChatMessage(data);
+        }
+      };
+  
+      currentChatWS.onclose = () => {
+        console.log("WebSocket соединение закрыто, пытаемся переподключиться...");
+        attemptReconnect();
+      };
+  
+      currentChatWS.onerror = (error) => {
+        console.error("WebSocket ошибка:", error);
+        currentChatWS.close();
+      };
+    }
+  
     function handleFileMessage(file) {
-      const fileKey = `${file.filename || file.fileName}-${file.uploadedBy || file.uploaded_by}-${file.url}`;
-      if (!loadedFiles.has(fileKey)) {
-        updateFilesListWithNewFile({
-          filename: file.filename || file.fileName,
-          originalName: file.originalName || file.original_name || file.filename.split("_").slice(2).join("_"),
-          uploadedBy: file.uploadedBy || file.uploaded_by,
-          url: file.url
-        });
-        loadedFiles.add(fileKey);
+      console.log("Получено WebSocket-сообщение о файле:", file);
+  
+      // Проверяем order_id
+      if (file.order_id != currentOrderId) {
+        console.log(`Сообщение для другого заказа (${file.order_id}), текущий заказ: ${currentOrderId}`);
+        return;
+      }
+  
+      let containerId;
+      const uploadedBy = (file.uploaded_by || file.uploadedBy || "").toLowerCase();
+      const isFinal = file.filename?.includes("final_");
+  
+      if (uploadedBy === "admin" && !isFinal) {
+        containerId = "adminFilesContainer";
+      } else if (uploadedBy === "final" || isFinal) {
+        containerId = "finalFilesContainer";
+      } else {
+        containerId = "userFilesContainer";
+      }
+  
+      const container = document.getElementById(containerId);
+      if (!container) {
+        console.error(`Контейнер ${containerId} не найден в DOM`);
+        return;
+      }
+  
+      // Проверяем, не добавлен ли файл уже
+      const fileKey = `${file.filename}-${uploadedBy}-${file.url}`;
+      if (loadedFiles.has(fileKey)) {
+        console.log("Файл уже отображён, пропускаем:", fileKey);
+        return;
+      }
+  
+      const fileItem = createFileItem(file);
+      container.appendChild(fileItem);
+      loadedFiles.add(fileKey);
+  
+      // Удаляем сообщение "Файлы не найдены", если оно есть
+      const placeholder = container.querySelector("p");
+      if (placeholder) placeholder.remove();
+  
+      showToast(`Новый файл: ${file.original_name || file.filename}`, "success");
+      document.getElementById("downloadAll").style.display = "block";
+    }
+  
+    function handleFileDelete(data) {
+      console.log("Удаление файла:", data);
+      const fileItems = document.querySelectorAll(".file-item");
+      fileItems.forEach(item => {
+        const link = item.querySelector("a");
+        if (link && link.href === data.url) {
+          item.remove();
+          loadedFiles.delete(`${data.filename}-${data.uploaded_by}-${data.url}`);
+          showToast("Файл удалён", "success");
+        }
+      });
+    }
+  
+    function createFileItem(file) {
+      const fileName = file.original_name || file.filename || file.url.split("/").pop();
+      const iconHTML = getIconForExtension(fileName);
+  
+      const div = document.createElement("div");
+      div.className = "file-item";
+      div.innerHTML = `
+        <div class="file-icon">${iconHTML}</div>
+        <a href="${file.url}" target="_blank" class="file-name">${fileName}</a>
+      `;
+  
+      return div;
+    }
+  
+    function getIconForExtension(filename) {
+      const ext = filename.substring(filename.lastIndexOf(".")).toLowerCase();
+      switch(ext) {
+        case ".pdf": return '<i class="fa-solid fa-file-pdf" style="color:#FF0000;"></i>';
+        case ".doc":
+        case ".docx": return '<i class="fa-solid fa-file-word" style="color:#1E90FF;"></i>';
+        case ".xls":
+        case ".xlsx": return '<i class="fa-solid fa-file-excel" style="color:#00CC66;"></i>';
+        case ".png":
+        case ".jpg":
+        case ".jpeg": return '<i class="fa-solid fa-file-image" style="color:#FFCC00;"></i>';
+        default: return '<i class="fa-solid fa-file" style="color:#808080;"></i>';
+      }
+    }
+  
+    function updateExecutorStatus(status) {
+      console.log("Обновление статуса:", status);
+      const chatStatusElem = document.getElementById("chatStatus");
+      chatStatusElem.innerHTML = `<span class="${status.startsWith("Онлайн") ? "online-indicator" : "offline-indicator"}"></span>Статус исполнителя: ${status}`;
+      showToast(`Статус исполнителя: ${status}`, "success");
+    }
+  
+    function updateOrderStatus(status) {
+      console.log("Обновление статуса заказа:", status);
+      const orderStatusElem = document.getElementById("orderStatus");
+      orderStatusElem.textContent = status;
+      currentOrderStatus = status.toLowerCase().trim();
+      showToast(`Статус заказа обновлён: ${status}`, "success");
+      if (currentOrderStatus === "завершён") {
+        loadReview(currentOrderId);
       }
     }
   
@@ -890,59 +964,48 @@
     });
   
     document.getElementById("uploadForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const input = e.target.querySelector('input[type="file"]');
-  const files = input.files;
-  if (!validateFileCount(input)) return;
-  if (!files.length) {
-    showToast("Выберите хотя бы один файл", "error");
-    return;
-  }
-  const formData = new FormData(e.target);
-  showLoading(true);
-  try {
-    const response = await fetch("/api/order/upload", {
-      method: "POST",
-      body: formData,
-      credentials: "include"
-    });
-    const data = await response.json();
-    if (response.ok) {
-      showToast(data.message || "Файлы загружены успешно", "success");
-      // Предполагаем, что сервер возвращает массив загруженных файлов в data.files
-      if (data.files && Array.isArray(data.files)) {
-        data.files.forEach(file => {
-          const fileObj = {
-            filename: file.filename || file.name,
-            originalName: file.originalName || file.name,
-            uploadedBy: "user",
-            url: file.url || `/uploads/${file.filename}`
-          };
-          updateFilesListWithNewFile(fileObj);
-        });
-      } else {
-        // Если сервер не вернул файлы, имитируем их добавление
-        Array.from(files).forEach(file => {
-          const fileObj = {
-            filename: file.name,
-            originalName: file.name,
-            uploadedBy: "user",
-            url: `/uploads/${currentOrderId}_user_${file.name}`
-          };
-          updateFilesListWithNewFile(fileObj);
-        });
+      e.preventDefault();
+      const input = e.target.querySelector('input[type="file"]');
+      const files = input.files;
+      if (!validateFileCount(input)) return;
+      if (!files.length) {
+        showToast("Выберите хотя бы один файл", "error");
+        return;
       }
-    } else {
-      showToast(data.error || "Ошибка загрузки файлов", "error");
-    }
-  } catch (err) {
-    console.error("Ошибка загрузки файлов:", err);
-    showToast("Ошибка соединения при загрузке файлов", "error");
-  } finally {
-    showLoading(false);
-    input.value = "";
-  }
-});
+      const formData = new FormData(e.target);
+      showLoading(true);
+      try {
+        const response = await fetch("/api/order/upload", {
+          method: "POST",
+          body: formData,
+          credentials: "include"
+        });
+        const data = await response.json();
+        if (response.ok) {
+          showToast(data.message || "Файлы загружены успешно", "success");
+          // Предполагаем, что сервер возвращает массив загруженных файлов в data.files
+          if (data.files && Array.isArray(data.files)) {
+            data.files.forEach(file => {
+              const fileObj = {
+                filename: file.filename || file.name,
+                original_name: file.originalName || file.name,
+                uploaded_by: "user",
+                url: file.url || `/uploads/${file.filename}`
+              };
+              updateFilesListWithNewFile(fileObj);
+            });
+          }
+        } else {
+          showToast(data.error || "Ошибка загрузки файлов", "error");
+        }
+      } catch (err) {
+        console.error("Ошибка загрузки файлов:", err);
+        showToast("Ошибка соединения при загрузке файлов", "error");
+      } finally {
+        showLoading(false);
+        input.value = "";
+      }
+    });
   
     document.getElementById("downloadAll").addEventListener("click", () => {
       const userFilesContainer = document.getElementById("userFilesContainer");
@@ -995,6 +1058,7 @@
         if (response.ok) {
           if (data.messages && Array.isArray(data.messages)) {
             chatHistory = data.messages;
+            console.log("История чата загружена:", chatHistory);
           }
         } else {
           showToast(data.error || "Ошибка загрузки истории чата", "error");
@@ -1002,6 +1066,10 @@
         const uniqueHistory = [];
         const seen = new Set();
         chatHistory.forEach(item => {
+          if (!item.sender || !item.message || !item.created_at) {
+            console.log("Некорректное сообщение в истории:", item);
+            return;
+          }
           const key = `${item.sender || ''}-${item.type || "message"}-${item.message}-${item.created_at}`;
           if (!seen.has(key)) {
             seen.add(key);
@@ -1177,49 +1245,30 @@
       });
     }
   
-    function createFileItem(file) {
-      const fileItem = document.createElement("div");
-      fileItem.className = "file-item";
-      let fileName = file.originalName || file.original_name || file.filename.split("_").slice(2).join("_") || file.url.split("/").pop() || "Неизвестный файл";
-      if (fileName.startsWith(`${currentOrderId}_`)) {
-        fileName = fileName.substring((`${currentOrderId}_`).length);
-      }
-      if (fileName.startsWith("admin_")) {
-        fileName = fileName.split("_").slice(2).join("_");
-      }
-      if (fileName.startsWith("final_")) {
-        fileName = fileName.split("_").slice(2).join("_");
-      }
-      const ext = fileName.substring(fileName.lastIndexOf(".")).toLowerCase() || ".unknown";
-      const iconHTML = getIconForExtension(ext);
-      fileItem.innerHTML = `
-        <div class="file-icon">${iconHTML}</div>
-        <a href="${file.url || "#"}" target="_blank" class="file-name" aria-label="Скачать файл: ${fileName}">${fileName}</a>
-      `;
-      return fileItem;
-    }
-  
-    function getIconForExtension(ext) {
-      const normalizedExt = ext.toLowerCase().trim() || ".unknown";
-      switch (normalizedExt) {
-        case ".pdf": return '<i class="fa-solid fa-file-pdf" style="color: #FF0000;"></i>';
-        case ".doc":
-        case ".docx": return '<i class="fa-solid fa-file-word" style="color: #1E90FF;"></i>';
-        case ".xls":
-        case ".xlsx": return '<i class="fa-solid fa-file-excel" style="color: #00FF00;"></i>';
-        case ".png":
-        case ".jpg":
-        case ".jpeg":
-        case ".gif": return '<i class="fa-solid fa-file-image" style="color: #800080;"></i>';
-        default: return '<i class="fa-solid fa-file" style="color: #808080;"></i>';
+    async function deleteFile(fileId) {
+      try {
+        const response = await fetch(`/api/order/delete_file?fileID=${fileId}`, {
+          method: "DELETE",
+          credentials: "include"
+        });
+        const data = await response.json();
+        if (response.ok) {
+          showToast(data.message || "Файл удалён", "success");
+          loadFiles();
+        } else {
+          showToast(data.error || "Ошибка удаления файла", "error");
+        }
+      } catch (err) {
+        console.error("Ошибка удаления файла:", err);
+        showToast("Ошибка соединения при удалении файла", "error");
       }
     }
   
     function updateFilesListWithNewFile(file) {
       let container;
-      if (file.uploadedBy?.toLowerCase() === "admin" && !file.url.includes("final_")) {
+      if (file.uploaded_by?.toLowerCase() === "admin" && !file.url.includes("final_")) {
         container = document.getElementById("adminFilesContainer");
-      } else if (file.uploadedBy?.toLowerCase() === "final" || (file.url && file.url.includes("final_"))) {
+      } else if (file.uploaded_by?.toLowerCase() === "final" || (file.url && file.url.includes("final_"))) {
         container = document.getElementById("finalFilesContainer");
         const noFinalFileMsg = document.getElementById("noFinalFileMessage");
         if (noFinalFileMsg) noFinalFileMsg.style.display = "none";
@@ -1350,7 +1399,6 @@
     function trackEvent(category, action, label) {
       console.log(`Event tracked: ${category}, ${action}, ${label}`);
     }
-    
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </body>

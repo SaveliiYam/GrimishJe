@@ -14,7 +14,7 @@ type Client struct {
 	OrderID    uint
 	UserID     uint
 	Conn       *websocket.Conn
-	Send       chan interface{}
+	Send       chan []byte // Убедимся, что это chan []byte
 	DB         *gorm.DB
 	IsAdmin    bool
 	UploadedBy string
@@ -23,12 +23,10 @@ type Client struct {
 func (c *Client) readPump() {
 	defer func() {
 		if c.IsAdmin {
-			// Обновляем время последнего входа (LastLogin) для администратора
 			c.DB.Model(&models.User{}).
 				Where("id = ?", c.UserID).
 				Update("last_login", time.Now())
 
-			// Отправляем уведомление о том, что админ ушёл (Оффлайн) с типом "executor_status"
 			offlinePayload := OrderStatusUpdatePayload{
 				Type:    "executor_status",
 				OrderID: c.OrderID,
@@ -38,7 +36,6 @@ func (c *Client) readPump() {
 			BroadcastMessage(GetHub(), offlinePayload)
 		}
 
-		// Удаляем клиента из хаба и закрываем соединение
 		hub.Unregister <- c
 		c.Conn.Close()
 		log.Printf("Клиент отключён от чата для OrderID: %d (админ: %v, отправитель: %s)",
@@ -65,7 +62,6 @@ func (c *Client) readPump() {
 			break
 		}
 
-		// Валидация сообщения
 		if len(msg.Message) > 1000 {
 			log.Printf("Сообщение слишком длинное для OrderID %d, пропущено (админ: %v, отправитель: %s)",
 				c.OrderID, c.IsAdmin, c.UploadedBy)
@@ -122,30 +118,18 @@ func (c *Client) writePump() {
 				c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
-			log.Printf("Отправлено сообщение/файл/статус для OrderID %d от %s (админ: %v): %+v", c.OrderID, c.UploadedBy, c.IsAdmin, message)
-			switch m := message.(type) {
-			case ChatMessagePayload:
-				if err := c.Conn.WriteJSON(m); err != nil {
-					log.Printf("Ошибка записи сообщения для OrderID %d: %v (админ: %v, отправитель: %s)", c.OrderID, err, c.IsAdmin, c.UploadedBy)
-					return
-				}
-			case FileUpdatePayload:
-				if err := c.Conn.WriteJSON(m); err != nil {
-					log.Printf("Ошибка записи уведомления о файле для OrderID %d: %v (админ: %v, отправитель: %s)", c.OrderID, err, c.IsAdmin, c.UploadedBy)
-					return
-				}
-			case OrderStatusUpdatePayload:
-				if err := c.Conn.WriteJSON(m); err != nil {
-					log.Printf("Ошибка записи уведомления о статусе для OrderID %d: %v (админ: %v, отправитель: %s)", c.OrderID, err, c.IsAdmin, c.UploadedBy)
-					return
-				}
-			default:
-				log.Printf("Неизвестный тип сообщения для OrderID %d: %v", c.OrderID, message)
+			log.Printf("Отправлено сообщение/файл/статус для OrderID %d от %s (админ: %v): %s",
+				c.OrderID, c.UploadedBy, c.IsAdmin, string(message))
+			if err := c.Conn.WriteMessage(websocket.TextMessage, message); err != nil {
+				log.Printf("Ошибка записи сообщения для OrderID %d: %v (админ: %v, отправитель: %s)",
+					c.OrderID, err, c.IsAdmin, c.UploadedBy)
+				return
 			}
 		case <-ticker.C:
 			c.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				log.Printf("Ошибка отправки ping для OrderID %d: %v (админ: %v, отправитель: %s)", c.OrderID, err, c.IsAdmin, c.UploadedBy)
+				log.Printf("Ошибка отправки ping для OrderID %d: %v (админ: %v, отправитель: %s)",
+					c.OrderID, err, c.IsAdmin, c.UploadedBy)
 				return
 			}
 			log.Printf("Отправлен ping для OrderID: %d (админ: %v, отправитель: %s)", c.OrderID, c.IsAdmin, c.UploadedBy)
@@ -153,7 +137,6 @@ func (c *Client) writePump() {
 	}
 }
 
-// isValidSender проверяет, допустим ли отправитель.
 func isValidSender(sender string) bool {
 	return regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(sender)
 }

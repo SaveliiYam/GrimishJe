@@ -1,11 +1,11 @@
 package websocket
 
 import (
+	"encoding/json"
 	"log"
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 )
 
@@ -33,9 +33,6 @@ func NewHub(db *gorm.DB) *Hub {
 }
 
 func (h *Hub) Run() {
-	ticker := time.NewTicker(30 * time.Second)
-	defer ticker.Stop()
-
 	for {
 		select {
 		case client := <-h.Register:
@@ -49,7 +46,6 @@ func (h *Hub) Run() {
 			log.Printf("Клиент зарегистрирован для OrderID %d (админ: %v, отправитель: %s), общее количество клиентов: %d",
 				client.OrderID, client.IsAdmin, client.UploadedBy, len(h.Clients[client.OrderID]))
 
-			// Если клиент админ — отправляем уведомление, что он онлайн, используя тип "executor_status"
 			if client.IsAdmin {
 				statusPayload := OrderStatusUpdatePayload{
 					Type:    "executor_status",
@@ -77,67 +73,87 @@ func (h *Hub) Run() {
 
 		case message := <-h.Broadcast:
 			h.Mutex.RLock()
+			var orderID uint
+			var msgBytes []byte
+			var err error
+
 			switch payload := message.(type) {
 			case ChatMessagePayload:
-				if clients, ok := h.Clients[payload.OrderID]; ok {
-					for client := range clients {
-						select {
-						case client.Send <- message:
-						default:
-							close(client.Send)
-							delete(clients, client)
-							log.Printf("Клиент отключён из-за переполнения канала для OrderID %d (админ: %v, отправитель: %s)",
-								client.OrderID, client.IsAdmin, client.UploadedBy)
-						}
-					}
+				orderID = payload.OrderID
+				msgBytes, err = json.Marshal(payload)
+				if err != nil {
+					log.Printf("Ошибка сериализации ChatMessagePayload: %v", err)
+					break
 				}
 			case FileUpdatePayload:
-				if clients, ok := h.Clients[payload.OrderID]; ok {
-					for client := range clients {
-						select {
-						case client.Send <- map[string]interface{}{
-							"type":          "file", // изменено с "file_update" на "file"
-							"order_id":      payload.OrderID,
-							"filename":      payload.Filename,
-							"original_name": payload.OriginalName,
-							"uploaded_by":   payload.UploadedBy,
-							"url":           payload.URL,
-						}:
-						default:
-							close(client.Send)
-							delete(clients, client)
-							log.Printf("Клиент отключён из-за переполнения канала для OrderID %d (админ: %v, отправитель: %s)",
-								client.OrderID, client.IsAdmin, client.UploadedBy)
-						}
-					}
+				orderID = payload.OrderID
+				msg := map[string]interface{}{
+					"type":          "file",
+					"order_id":      payload.OrderID,
+					"filename":      payload.Filename,
+					"original_name": payload.OriginalName,
+					"uploaded_by":   payload.UploadedBy,
+					"url":           payload.URL,
+				}
+				msgBytes, err = json.Marshal(msg)
+				if err != nil {
+					log.Printf("Ошибка сериализации FileUpdatePayload: %v", err)
+					break
+				}
+			case FileDeletePayload:
+				orderID = payload.OrderID
+				msg := map[string]interface{}{
+					"type":     "file_deleted",
+					"order_id": payload.OrderID,
+					"file_id":  payload.FileID,
+				}
+				msgBytes, err = json.Marshal(msg)
+				if err != nil {
+					log.Printf("Ошибка сериализации FileDeletePayload: %v", err)
+					break
 				}
 			case OrderStatusUpdatePayload:
-				if clients, ok := h.Clients[payload.OrderID]; ok {
-					for client := range clients {
-						select {
-						case client.Send <- message:
-						default:
-							close(client.Send)
-							delete(clients, client)
-							log.Printf("Клиент отключён из-за переполнения канала для OrderID %d (админ: %v, отправитель: %s)",
-								client.OrderID, client.IsAdmin, client.UploadedBy)
-						}
-					}
+				orderID = payload.OrderID
+				msgBytes, err = json.Marshal(payload)
+				if err != nil {
+					log.Printf("Ошибка сериализации OrderStatusUpdatePayload: %v", err)
+					break
+				}
+			case map[string]interface{}:
+				// Обработка случая, когда сообщение уже в формате map
+				if oid, ok := payload["order_id"].(float64); ok {
+					orderID = uint(oid)
+				} else if oid, ok := payload["order_id"].(uint); ok {
+					orderID = oid
+				} else {
+					log.Printf("Не удалось извлечь order_id из сообщения: %v", payload)
+					break
+				}
+				msgBytes, err = json.Marshal(payload)
+				if err != nil {
+					log.Printf("Ошибка сериализации map[string]interface{}: %v", err)
+					break
 				}
 			default:
 				log.Printf("Неизвестный тип сообщения: %v", message)
+				break
 			}
-			h.Mutex.RUnlock()
 
-		case <-ticker.C:
-			h.Mutex.RLock()
-			for orderID, clients := range h.Clients {
-				for client := range clients {
-					client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-					if err := client.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-						log.Printf("Ошибка отправки ping для OrderID %d: %v", orderID, err)
-						h.Unregister <- client
+			if msgBytes != nil {
+				if clients, ok := h.Clients[orderID]; ok {
+					log.Printf("Отправка сообщения для OrderID %d: %s", orderID, string(msgBytes))
+					for client := range clients {
+						select {
+						case client.Send <- msgBytes:
+						default:
+							close(client.Send)
+							delete(clients, client)
+							log.Printf("Клиент отключён из-за переполнения канала для OrderID %d (админ: %v, отправитель: %s)",
+								client.OrderID, client.IsAdmin, client.UploadedBy)
+						}
 					}
+				} else {
+					log.Printf("Нет клиентов для OrderID %d", orderID)
 				}
 			}
 			h.Mutex.RUnlock()
@@ -154,7 +170,7 @@ func BroadcastMessage(hub *Hub, payload interface{}) {
 	switch v := payload.(type) {
 	case FileUpdatePayload:
 		hub.Broadcast <- map[string]interface{}{
-			"type":          "file", // изменено с "file_update" на "file"
+			"type":          "file",
 			"order_id":      v.OrderID,
 			"filename":      v.Filename,
 			"original_name": v.OriginalName,
@@ -167,7 +183,12 @@ func BroadcastMessage(hub *Hub, payload interface{}) {
 			"order_id": v.OrderID,
 			"file_id":  v.FileID,
 		}
+	case OrderStatusUpdatePayload:
+		hub.Broadcast <- v
+	case ChatMessagePayload:
+		hub.Broadcast <- v
 	default:
+		log.Printf("Неизвестный тип сообщения в BroadcastMessage: %v", v)
 		hub.Broadcast <- payload
 	}
 }

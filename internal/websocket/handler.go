@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -116,12 +117,12 @@ func WebSocketHandler(hub *Hub) gin.HandlerFunc {
 			return
 		}
 
-		// Создаем клиента с дополнительным полем UserID
+		// Создаем клиента с каналом Send как chan []byte
 		client := &Client{
 			OrderID:    uint(orderID),
-			UserID:     user.ID, // Добавляем ID пользователя (админа или обычного)
+			UserID:     user.ID,
 			Conn:       ws,
-			Send:       make(chan interface{}, 100),
+			Send:       make(chan []byte, 100), // Используем chan []byte
 			DB:         db,
 			IsAdmin:    isAdmin,
 			UploadedBy: uploadedBy,
@@ -143,8 +144,13 @@ func WebSocketHandler(hub *Hub) gin.HandlerFunc {
 						UploadedBy: m.Sender,
 					}
 					log.Printf("Отправка истории для OrderID %d: %+v", client.OrderID, payload)
+					jsonData, err := json.Marshal(payload)
+					if err != nil {
+						log.Printf("Ошибка сериализации истории для OrderID %d: %v", client.OrderID, err)
+						continue
+					}
 					select {
-					case client.Send <- payload:
+					case client.Send <- jsonData:
 					default:
 						log.Printf("Переполнение канала для отправки истории OrderID %d", client.OrderID)
 					}
