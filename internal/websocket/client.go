@@ -138,5 +138,6 @@ func (c *Client) writePump() {
 }
 
 func isValidSender(sender string) bool {
-	return regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(sender)
+	// Разрешаем латиницу, кириллицу, цифры и подчёркивания
+	return regexp.MustCompile(`^[a-zA-Z0-9_\p{Cyrillic}]+$`).MatchString(sender)
 }

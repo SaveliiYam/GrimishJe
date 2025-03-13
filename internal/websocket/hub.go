@@ -143,14 +143,31 @@ func (h *Hub) Run() {
 				if clients, ok := h.Clients[orderID]; ok {
 					log.Printf("Отправка сообщения для OrderID %d: %s", orderID, string(msgBytes))
 					for client := range clients {
-						select {
-						case client.Send <- msgBytes:
-						default:
-							close(client.Send)
-							delete(clients, client)
-							log.Printf("Клиент отключён из-за переполнения канала для OrderID %d (админ: %v, отправитель: %s)",
-								client.OrderID, client.IsAdmin, client.UploadedBy)
+						// Если сообщение является FileUpdatePayload, то фильтруем по полю UploadedBy
+						// Если сообщение является FileUpdatePayload, отправляем уведомление всем, кроме отправителя
+						if filePayload, isFileUpdate := message.(FileUpdatePayload); isFileUpdate {
+							if client.UploadedBy != filePayload.UploadedBy { // исключаем отправителя
+								select {
+								case client.Send <- msgBytes:
+								default:
+									close(client.Send)
+									delete(clients, client)
+									log.Printf("Клиент отключён из-за переполнения канала для OrderID %d (админ: %v, отправитель: %s)",
+										client.OrderID, client.IsAdmin, client.UploadedBy)
+								}
+							}
+						} else {
+							// Для остальных типов сообщений отправляем всем клиентам
+							select {
+							case client.Send <- msgBytes:
+							default:
+								close(client.Send)
+								delete(clients, client)
+								log.Printf("Клиент отключён из-за переполнения канала для OrderID %d (админ: %v, отправитель: %s)",
+									client.OrderID, client.IsAdmin, client.UploadedBy)
+							}
 						}
+
 					}
 				} else {
 					log.Printf("Нет клиентов для OrderID %d", orderID)
@@ -169,14 +186,8 @@ func BroadcastMessage(hub *Hub, payload interface{}) {
 
 	switch v := payload.(type) {
 	case FileUpdatePayload:
-		hub.Broadcast <- map[string]interface{}{
-			"type":          "file",
-			"order_id":      v.OrderID,
-			"filename":      v.Filename,
-			"original_name": v.OriginalName,
-			"uploaded_by":   v.UploadedBy,
-			"url":           v.URL,
-		}
+		// Отправляем объект FileUpdatePayload напрямую
+		hub.Broadcast <- v
 	case FileDeletePayload:
 		hub.Broadcast <- map[string]interface{}{
 			"type":     "file_deleted",

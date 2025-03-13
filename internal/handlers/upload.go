@@ -213,6 +213,7 @@ func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.
 			log.Printf("Администратор (ID: %d) загружает файлы с префиксом '%s'", userID, prefix)
 		}
 
+		// Обрабатываем каждый загруженный файл
 		for _, file := range files {
 			if file.Size > maxFileSize {
 				log.Printf("Файл %s превышает максимальный размер (%d байт) для заказа %d", file.Filename, maxFileSize, orderID)
@@ -236,12 +237,15 @@ func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка открытия файла"})
 				return
 			}
-			defer src.Close()
+			// Важно: defer внутри цикла лучше заменить на явное закрытие, чтобы не накапливались открытые дескрипторы.
+			// Поэтому закроем src сразу после использования:
+			// defer src.Close()
 
 			log.Printf("Сохранение файла %s в MinIO", newFileName)
 			_, err = minioClient.PutObject(ctx, bucketName, newFileName, src, file.Size, minio.PutObjectOptions{
 				ContentType: file.Header.Get("Content-Type"),
 			})
+			src.Close() // закрываем файл сразу после загрузки
 			if err != nil {
 				log.Printf("Ошибка загрузки файла %s в MinIO: %v", file.Filename, err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка загрузки файла"})
@@ -289,7 +293,32 @@ func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.
 			}
 			websocket.BroadcastMessage(wsHub, fileUpdate)
 			log.Printf("Отправлено WebSocket-уведомление о файле: %+v", fileUpdate)
-		}
+
+			// Если файл загружен администратором, отправляем уведомление в чат
+			if uploader == "admin" {
+				notification := websocket.ChatMessagePayload{
+					OrderID:    uint(orderID),
+					Sender:     "Администратор",
+					Message:    "Администратор загрузил файл: " + originalName,
+					CreatedAt:  time.Now().Unix(),
+					UploadedBy: "admin",
+				}
+
+				// Сохраняем уведомление в истории чата
+				chatMsg := models.ChatMessage{
+					OrderID:   notification.OrderID,
+					Sender:    notification.Sender,
+					Message:   notification.Message,
+					CreatedAt: time.Unix(notification.CreatedAt, 0),
+				}
+				if err := db.Create(&chatMsg).Error; err != nil {
+					log.Printf("Ошибка сохранения уведомления чата для OrderID %d: %v", notification.OrderID, err)
+				}
+
+				// Отправляем уведомление через WebSocket
+				websocket.BroadcastMessage(wsHub, notification)
+			}
+		} // <-- закрытие цикла for
 
 		log.Printf("Успешно загружено %d файлов для заказа %d пользователем %d (админ: %v, uploaded_by: %s)",
 			len(uploadedFiles), orderID, userID, isAdmin, uploader)
@@ -664,6 +693,30 @@ func UploadFinalFile(c *gin.Context, db *gorm.DB, minioClient *minio.Client, buc
 		URL:          presignedURL.String(),
 	}
 	websocket.BroadcastMessage(wsHub, fileUpdate)
+	log.Printf("Отправлено WebSocket-уведомление о загрузке итогового файла: %+v", fileUpdate)
+
+	// Отправляем уведомление в чат о загрузке итогового файла
+	notification := websocket.ChatMessagePayload{
+		OrderID:    uint(orderID),
+		Sender:     "admin", // Используйте "admin" (латиницей) или, если разрешены кириллица, "Администратор"
+		Message:    "Администратор загрузил итоговый файл: " + file.Filename,
+		CreatedAt:  time.Now().Unix(),
+		UploadedBy: "admin",
+	}
+
+	// Сохраняем уведомление в истории чата
+	chatMsg := models.ChatMessage{
+		OrderID:   notification.OrderID,
+		Sender:    notification.Sender,
+		Message:   notification.Message,
+		CreatedAt: time.Unix(notification.CreatedAt, 0),
+	}
+	if err := db.Create(&chatMsg).Error; err != nil {
+		log.Printf("Ошибка сохранения уведомления чата для итогового файла, OrderID %d: %v", notification.OrderID, err)
+	}
+
+	// Отправляем уведомление через WebSocket
+	websocket.BroadcastMessage(wsHub, notification)
 	log.Printf("Отправлено WebSocket-уведомление о загрузке итогового файла: %+v", fileUpdate)
 
 	log.Printf("Успешно загружен итоговый файл для заказа %d пользователем %d (админ)", orderID, userID)

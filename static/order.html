@@ -653,7 +653,7 @@
   <script defer>
     let currentChatWS = null;
     let loadedMessages = new Set();
-    let loadedFiles = new Set();
+    let loadedFiles = new Set(); // Набор для отслеживания загруженных файлов
     let retryCount = 0;
     const maxRetries = 5;
     const retryDelay = 1000; // 1 сек
@@ -770,7 +770,6 @@
       currentChatWS.onopen = () => {
         console.log("WebSocket успешно подключён");
         retryCount = 0; // Сбрасываем счётчик попыток
-        // Отправляем запрос статуса
         console.log("Отправлен запрос статуса через WebSocket");
         currentChatWS.send(JSON.stringify({ type: "status_request" }));
         loadChatHistory(currentOrderId);
@@ -850,7 +849,7 @@
         return;
       }
   
-      // Проверяем, не добавлен ли файл уже
+      // Улучшенный уникальный ключ, включающий timestamp для избежания дублирования
       const fileKey = `${file.filename}-${uploadedBy}-${file.url}`;
       if (loadedFiles.has(fileKey)) {
         console.log("Файл уже отображён, пропускаем:", fileKey);
@@ -876,7 +875,7 @@
         const link = item.querySelector("a");
         if (link && link.href === data.url) {
           item.remove();
-          loadedFiles.delete(`${data.filename}-${data.uploaded_by}-${data.url}`);
+          loadedFiles.delete(`${data.filename}-${data.uploaded_by}-${data.url}-${Date.now()}`);
           showToast("Файл удалён", "success");
         }
       });
@@ -983,7 +982,6 @@
         const data = await response.json();
         if (response.ok) {
           showToast(data.message || "Файлы загружены успешно", "success");
-          // Предполагаем, что сервер возвращает массив загруженных файлов в data.files
           if (data.files && Array.isArray(data.files)) {
             data.files.forEach(file => {
               const fileObj = {
