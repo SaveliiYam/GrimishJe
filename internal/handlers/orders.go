@@ -105,7 +105,6 @@ func CreateOrder(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		// Формируем уникальный номер заказа с использованием даты и UnixNano
-		// Пример: ORD-20250307-1678195743694
 		orderNumber := fmt.Sprintf("ORD-%s-%d", time.Now().Format("20060102"), time.Now().UnixNano())
 
 		order := models.Order{
@@ -268,13 +267,32 @@ func AcceptOrder(db *gorm.DB) gin.HandlerFunc {
 
 		log.Printf("Заказ %d переведён в статус 'в работе'", orderID)
 
-		// Отправка уведомления через WebSocket
+		// Отправка уведомления через WebSocket (статус)
 		payload := websocket.OrderStatusUpdatePayload{
 			OrderID: order.ID,
 			Status:  "в работе",
 			At:      time.Now().Unix(),
 		}
 		websocket.BroadcastMessage(websocket.GetHub(), payload)
+
+		// --- Отправка уведомления в чат о смене статуса ---
+		chatNotification := websocket.ChatMessagePayload{
+			OrderID:    order.ID,
+			Sender:     "system",
+			Message:    "Статус заказа изменился на: в работе",
+			CreatedAt:  time.Now().Unix(),
+			UploadedBy: "system",
+		}
+		if err := db.Create(&models.ChatMessage{
+			OrderID:   chatNotification.OrderID,
+			Sender:    chatNotification.Sender,
+			Message:   chatNotification.Message,
+			CreatedAt: time.Unix(chatNotification.CreatedAt, 0),
+		}).Error; err != nil {
+			log.Printf("AcceptOrder: Ошибка сохранения уведомления чата для заказа %d: %v", orderID, err)
+		}
+		websocket.BroadcastMessage(websocket.GetHub(), chatNotification)
+		// --- Конец блока уведомления в чат ---
 
 		c.JSON(http.StatusOK, gin.H{"message": "Заказ принят, статус обновлён на 'в работе'"})
 	}
@@ -315,13 +333,32 @@ func CompleteOrder(db *gorm.DB) gin.HandlerFunc {
 
 		log.Printf("Заказ %d переведён в статус 'завершён'", orderID)
 
-		// Отправка уведомления через WebSocket
+		// Отправка уведомления через WebSocket (статус)
 		payload := websocket.OrderStatusUpdatePayload{
 			OrderID: order.ID,
 			Status:  "завершён",
 			At:      time.Now().Unix(),
 		}
 		websocket.BroadcastMessage(websocket.GetHub(), payload)
+
+		// --- Отправка уведомления в чат о смене статуса ---
+		chatNotification := websocket.ChatMessagePayload{
+			OrderID:    order.ID,
+			Sender:     "system",
+			Message:    "Статус заказа изменился на: завершён",
+			CreatedAt:  time.Now().Unix(),
+			UploadedBy: "system",
+		}
+		if err := db.Create(&models.ChatMessage{
+			OrderID:   chatNotification.OrderID,
+			Sender:    chatNotification.Sender,
+			Message:   chatNotification.Message,
+			CreatedAt: time.Unix(chatNotification.CreatedAt, 0),
+		}).Error; err != nil {
+			log.Printf("CompleteOrder: Ошибка сохранения уведомления чата для заказа %d: %v", orderID, err)
+		}
+		websocket.BroadcastMessage(websocket.GetHub(), chatNotification)
+		// --- Конец блока уведомления в чат ---
 
 		c.JSON(http.StatusOK, gin.H{"message": "Заказ завершён"})
 	}
@@ -362,13 +399,32 @@ func CancelOrder(db *gorm.DB) gin.HandlerFunc {
 
 		log.Printf("Заказ %d переведён в статус 'отменён'", orderID)
 
-		// Отправка уведомления через WebSocket
+		// Отправка уведомления через WebSocket (статус)
 		payload := websocket.OrderStatusUpdatePayload{
 			OrderID: order.ID,
 			Status:  "отменён",
 			At:      time.Now().Unix(),
 		}
 		websocket.BroadcastMessage(websocket.GetHub(), payload)
+
+		// --- Отправка уведомления в чат о смене статуса ---
+		chatNotification := websocket.ChatMessagePayload{
+			OrderID:    order.ID,
+			Sender:     "system",
+			Message:    "Статус заказа изменился на: отменён",
+			CreatedAt:  time.Now().Unix(),
+			UploadedBy: "system",
+		}
+		if err := db.Create(&models.ChatMessage{
+			OrderID:   chatNotification.OrderID,
+			Sender:    chatNotification.Sender,
+			Message:   chatNotification.Message,
+			CreatedAt: time.Unix(chatNotification.CreatedAt, 0),
+		}).Error; err != nil {
+			log.Printf("CancelOrder: Ошибка сохранения уведомления чата для заказа %d: %v", orderID, err)
+		}
+		websocket.BroadcastMessage(websocket.GetHub(), chatNotification)
+		// --- Конец блока уведомления в чат ---
 
 		c.JSON(http.StatusOK, gin.H{"message": "Заказ отменён"})
 	}
@@ -546,7 +602,6 @@ func ChatHistory(db *gorm.DB) gin.HandlerFunc {
 }
 
 // GetOrderFiles возвращает список файлов для заказа.
-// GetOrderFiles возвращает список файлов для заказа.
 func GetOrderFiles(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		orderIDStr := c.Query("orderID")
@@ -573,7 +628,7 @@ func GetOrderFiles(db *gorm.DB) gin.HandlerFunc {
 		responseFiles := make([]gin.H, len(files))
 		for i, file := range files {
 			responseFiles[i] = gin.H{
-				"filename":     file.OriginalName, // Используем OriginalName вместо Filename
+				"filename":     file.OriginalName,
 				"originalName": file.OriginalName,
 				"uploadedBy":   file.UploadedBy,
 				"url":          file.URL,
@@ -710,7 +765,7 @@ func CreateReview(db *gorm.DB) gin.HandlerFunc {
 		review := models.Review{
 			OrderID: input.OrderID,
 			UserID:  userID,
-			Rating:  input.Rating, // Используем uint напрямую
+			Rating:  input.Rating,
 			Comment: input.Comment,
 		}
 
