@@ -413,8 +413,8 @@
   <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
   <div class="container">
     <header>
-      <h1>Админ — заказ #{{.Order.OrderNumber}}: {{.Order.Topic}}</h1>
-      <a href="/admin_stats" class="stats-link">Перейти к статистике</a>
+      <h1>{{.Order.Topic}}</h1>
+            <a href="/admin_stats" class="stats-link">Перейти к статистике</a>
       <a href="/admin_dashboard" class="back-to-orders">Вернуться к заказам</a>
     </header>
     <div class="main-grid">
@@ -729,72 +729,52 @@ function connectChat() {
   };
 
   currentChatWS.onmessage = (event) => {
-    console.log("Получено сообщение WebSocket (raw):", event.data);
-    try {
-      const data = JSON.parse(event.data);
-      if (!data.type) {
-        if (data.message) data.type = "message";
-        else if (data.filename || data.url || data.original_name) data.type = "file";
-        else if (data.status) data.type = "status_update";
-        else {
-          console.warn("Сообщение без определенного типа:", data);
-          return;
-        }
+  console.log("Получено сообщение WebSocket (raw):", event.data);
+  try {
+    const data = JSON.parse(event.data);
+    if (!data.type) {
+      if (data.message) data.type = "message";
+      else if (data.filename || data.url || data.original_name) data.type = "file";
+      else if (data.status) data.type = "status_update";
+      else {
+        console.warn("Сообщение без определенного типа:", data);
+        return;
       }
-      console.log("Обработанное сообщение:", data);
-      switch (data.type) {
-        case "status_update":
-          updateChatStatus(data.status, true);
-          break;
-        case "message":
-          const msgKey = `${data.sender || "unknown"}-${data.message}-${data.created_at || Date.now()}`;
-          if (!loadedMessages.has(msgKey) && data.message && data.message.trim() !== "") {
-            appendChatMessage(data);
-            loadedMessages.add(msgKey);
-            showToast(`Новое сообщение от ${data.sender === "admin" ? "админа" : "пользователя"}`, "success");
-          }
-          break;
-        case "file":
-          console.log("Получено уведомление о файле:", data);
-          const fileData = {
-            order_id: data.order_id || currentOrderId,
-            filename: data.filename || data.name || data.url?.split("/").pop() || "unknown_file",
-            original_name: data.original_name || data.filename?.split("_").slice(2).join("_") || data.name || "unknown_file",
-            uploaded_by: data.uploaded_by || (data.url?.includes("user_") ? "user" : data.url?.includes("final_") ? "final" : "admin"),
-            url: data.url || `/uploads/${data.filename}`
-          };
-          const fileKey = `${fileData.filename}-${fileData.uploaded_by}-${fileData.url}`;
-          if (!loadedFiles.has(fileKey)) {
-            if (fileData.uploaded_by === "user" || fileData.url.includes("user_")) {
-              userFiles.push(fileData);
-              console.log("Добавлен файл пользователя:", fileData);
-              updateFilesListWithNewFile(fileData, "userFilesContainer");
-              showToast(`Новый файл от пользователя: ${fileData.original_name}`, "success");
-            } else if (fileData.uploaded_by === "final" || fileData.url.includes("final_")) {
-              finalFiles.push(fileData);
-              console.log("Добавлен итоговый файл:", fileData);
-              updateFilesListWithNewFile(fileData, "finalFilesContainer");
-              showToast(`Новый итоговый файл: ${fileData.original_name}`, "success");
-            } else if (fileData.uploaded_by === "admin" && !fileData.url.includes("final_")) {
-              adminFiles.push(fileData);
-              console.log("Добавлен файл администратора:", fileData);
-              updateFilesListWithNewFile(fileData, "adminFilesContainer");
-              showToast(`Новый файл от админа: ${fileData.original_name}`, "success");
-            }
-            loadedFiles.add(fileKey);
-          } else {
-            console.log("Файл уже загружен, пропускаем:", fileKey);
-          }
-          break;
-        default:
-          console.warn("Неизвестный тип сообщения:", data);
-          break;
-      }
-    } catch (e) {
-      console.error("Ошибка парсинга сообщения WebSocket:", e, "Raw data:", event.data);
-      showToast("Ошибка обработки сообщения", "error");
     }
-  };
+    console.log("Обработанное сообщение:", data);
+    switch (data.type) {
+      case "user_status": // Обрабатываем статус пользователя
+        console.log("Обновление статуса пользователя:", data.status);
+        updateChatStatus(data.status, true);
+        break;
+      case "status_update": // Оставляем для обратной совместимости, если потребуется
+        updateChatStatus(data.status, true);
+        break;
+      case "message":
+        const msgKey = `${data.sender || "unknown"}-${data.message}-${data.created_at || Date.now()}`;
+        if (!loadedMessages.has(msgKey) && data.message && data.message.trim() !== "") {
+          appendChatMessage(data);
+          loadedMessages.add(msgKey);
+          showToast(`Новое сообщение от ${data.sender === "admin" ? "админа" : "пользователя"}`, "success");
+        }
+        break;
+      case "file":
+        const fileKey = `${data.url || data.filename}-${data.created_at || Date.now()}`;
+        if (!loadedMessages.has(fileKey)) {
+          appendChatFile(data);
+          loadedMessages.add(fileKey);
+          showToast(`Новый файл от ${data.uploaded_by === "admin" ? "админа" : "пользователя"}`, "success");
+        }
+        break;
+      default:
+        console.warn("Неизвестный тип сообщения:", data);
+        break;
+    }
+  } catch (e) {
+    console.error("Ошибка парсинга сообщения WebSocket:", e, "Raw data:", event.data);
+    showToast("Ошибка обработки сообщения", "error");
+  }
+};
 
   currentChatWS.onerror = (err) => {
     console.error("Ошибка WebSocket:", err);

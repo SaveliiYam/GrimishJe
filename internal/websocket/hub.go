@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/MoshKillaPit/GrimishJe/internal/models"
 	"gorm.io/gorm"
 )
 
@@ -46,6 +47,7 @@ func (h *Hub) Run() {
 			log.Printf("Клиент зарегистрирован для OrderID %d (админ: %v, отправитель: %s), общее количество клиентов: %d",
 				client.OrderID, client.IsAdmin, client.UploadedBy, len(h.Clients[client.OrderID]))
 
+			// Отправляем статус администратора, если подключается администратор
 			if client.IsAdmin {
 				statusPayload := OrderStatusUpdatePayload{
 					Type:    "executor_status",
@@ -54,6 +56,46 @@ func (h *Hub) Run() {
 					At:      time.Now().Unix(),
 				}
 				h.Broadcast <- statusPayload
+			}
+
+			// Отправляем статус пользователя, если подключается пользователь
+			if !client.IsAdmin {
+				statusPayload := OrderStatusUpdatePayload{
+					Type:    "user_status",
+					OrderID: client.OrderID,
+					Status:  "Онлайн",
+					At:      time.Now().Unix(),
+				}
+				h.Broadcast <- statusPayload
+			}
+
+			// Отправляем статус пользователя администратору при подключении
+			if client.IsAdmin {
+				var order models.Order
+				if err := h.DB.First(&order, client.OrderID).Error; err != nil {
+					log.Printf("Не удалось найти заказ с ID %d: %v", client.OrderID, err)
+					continue
+				}
+				var user models.User
+				if err := h.DB.First(&user, order.UserID).Error; err != nil {
+					log.Printf("Не удалось найти пользователя с ID %d: %v", order.UserID, err)
+					continue
+				}
+				// Проверяем, онлайн ли пользователь
+				status := "Оффлайн (был в сети: " + user.LastLogin.Format("02.01.2006 15:04") + ")"
+				for cl := range h.Clients[client.OrderID] { // Исправлено: итерация по ключам
+					if !cl.IsAdmin && cl.UserID == user.ID {
+						status = "Онлайн"
+						break
+					}
+				}
+				userStatusPayload := OrderStatusUpdatePayload{
+					Type:    "user_status",
+					OrderID: client.OrderID,
+					Status:  status,
+					At:      time.Now().Unix(),
+				}
+				h.Broadcast <- userStatusPayload
 			}
 
 		case client := <-h.Unregister:
@@ -120,7 +162,6 @@ func (h *Hub) Run() {
 					break
 				}
 			case map[string]interface{}:
-				// Обработка случая, когда сообщение уже в формате map
 				if oid, ok := payload["order_id"].(float64); ok {
 					orderID = uint(oid)
 				} else if oid, ok := payload["order_id"].(uint); ok {
@@ -143,10 +184,8 @@ func (h *Hub) Run() {
 				if clients, ok := h.Clients[orderID]; ok {
 					log.Printf("Отправка сообщения для OrderID %d: %s", orderID, string(msgBytes))
 					for client := range clients {
-						// Если сообщение является FileUpdatePayload, то фильтруем по полю UploadedBy
-						// Если сообщение является FileUpdatePayload, отправляем уведомление всем, кроме отправителя
 						if filePayload, isFileUpdate := message.(FileUpdatePayload); isFileUpdate {
-							if client.UploadedBy != filePayload.UploadedBy { // исключаем отправителя
+							if client.UploadedBy != filePayload.UploadedBy {
 								select {
 								case client.Send <- msgBytes:
 								default:
@@ -157,7 +196,6 @@ func (h *Hub) Run() {
 								}
 							}
 						} else {
-							// Для остальных типов сообщений отправляем всем клиентам
 							select {
 							case client.Send <- msgBytes:
 							default:
@@ -167,7 +205,6 @@ func (h *Hub) Run() {
 									client.OrderID, client.IsAdmin, client.UploadedBy)
 							}
 						}
-
 					}
 				} else {
 					log.Printf("Нет клиентов для OrderID %d", orderID)

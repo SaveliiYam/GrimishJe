@@ -34,6 +34,15 @@ func (c *Client) readPump() {
 				At:      time.Now().Unix(),
 			}
 			BroadcastMessage(GetHub(), offlinePayload)
+		} else {
+			// Отправляем статус пользователя при отключении
+			offlinePayload := OrderStatusUpdatePayload{
+				Type:    "user_status",
+				OrderID: c.OrderID,
+				Status:  "Оффлайн (был в сети: " + time.Now().Format("02.01.2006 15:04") + ")",
+				At:      time.Now().Unix(),
+			}
+			BroadcastMessage(GetHub(), offlinePayload)
 		}
 
 		hub.Unregister <- c
@@ -101,7 +110,6 @@ func (c *Client) readPump() {
 		BroadcastMessage(hub, msg)
 	}
 }
-
 func (c *Client) writePump() {
 	ticker := time.NewTicker(54 * time.Second)
 	defer func() {
