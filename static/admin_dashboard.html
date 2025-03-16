@@ -13,7 +13,6 @@
     referrerpolicy="no-referrer"
   />
   <style>
-    /* Стили из исходного admin_dashboard, без модального окна и детальной логики */
     :root {
       --primary-color: #1e90ff;
       --secondary-color: #007bff;
@@ -41,7 +40,9 @@
       --warning-color: #ecc94b;
       --neutral-color: #a0aec0;
     }
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
       padding: 20px;
@@ -84,7 +85,11 @@
       box-shadow: var(--shadow-md);
       position: relative;
     }
-    header h1 { margin: 0; font-size: 2.5em; font-weight: 700; }
+    header h1 {
+      margin: 0;
+      font-size: 2.5em;
+      font-weight: 700;
+    }
     .stats-link {
       position: absolute;
       top: 25px;
@@ -109,8 +114,16 @@
       margin-bottom: 20px;
       gap: 15px;
     }
-    .order-stats { text-align: center; flex: 1; min-width: 200px; }
-    .order-stats h2 { margin-bottom: 10px; font-size: 1.5em; color: var(--secondary-color); }
+    .order-stats {
+      text-align: center;
+      flex: 1;
+      min-width: 200px;
+    }
+    .order-stats h2 {
+      margin-bottom: 10px;
+      font-size: 1.5em;
+      color: var(--secondary-color);
+    }
     .stats-container {
       display: flex;
       justify-content: center;
@@ -125,8 +138,14 @@
       box-shadow: var(--shadow-sm);
       transition: transform 0.3s ease;
     }
-    .stat-item:hover { transform: translateY(-2px); }
-    .order-search { text-align: center; flex: 1; min-width: 200px; }
+    .stat-item:hover {
+      transform: translateY(-2px);
+    }
+    .order-search {
+      text-align: center;
+      flex: 1;
+      min-width: 200px;
+    }
     .order-search input {
       padding: 10px 15px;
       width: 100%;
@@ -141,7 +160,11 @@
       box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
       outline: none;
     }
-    .sort-container { text-align: center; flex: 1; min-width: 200px; }
+    .sort-container {
+      text-align: center;
+      flex: 1;
+      min-width: 200px;
+    }
     .sort-container select {
       padding: 10px 15px;
       font-size: 1em;
@@ -211,11 +234,24 @@
       transform: translateY(-5px);
       box-shadow: var(--shadow-md);
     }
-    .order-card h3 { margin-top: 0; font-size: 1.4em; color: var(--secondary-color); margin-bottom: 10px; }
-    .order-card.new { border-left: 5px solid var(--success-color); }
-    .order-card.in-progress { border-left: 5px solid var(--primary-color); }
-    .order-card.completed { border-left: 5px solid #9e9e9e; }
-    .order-card.cancelled { border-left: 5px solid var(--error-color); }
+    .order-card h3 {
+      margin-top: 0;
+      font-size: 1.4em;
+      color: var(--secondary-color);
+      margin-bottom: 10px;
+    }
+    .order-card.new {
+      border-left: 5px solid var(--success-color);
+    }
+    .order-card.in-progress {
+      border-left: 5px solid var(--primary-color);
+    }
+    .order-card.completed {
+      border-left: 5px solid #9e9e9e;
+    }
+    .order-card.cancelled {
+      border-left: 5px solid var(--error-color);
+    }
     .new-indicator {
       display: none;
       position: absolute;
@@ -228,8 +264,13 @@
       animation: blink 1s infinite;
     }
     @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
+      0%,
+      100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0;
+      }
     }
     .admin-actions {
       margin-top: 15px;
@@ -248,10 +289,17 @@
       text-decoration: none;
       display: inline-block;
     }
-    .btn-view { background: var(--neutral-color); }
-    .btn-delete { background: var(--error-color); }
+    .btn-view {
+      background: var(--neutral-color);
+    }
+    .btn-delete {
+      background: var(--error-color);
+    }
     .admin-actions a:hover,
-    .admin-actions button:hover { transform: translateY(-2px); opacity: 0.9; }
+    .admin-actions button:hover {
+      transform: translateY(-2px);
+      opacity: 0.9;
+    }
     .fab-refresh {
       position: fixed;
       bottom: 30px;
@@ -272,7 +320,10 @@
       background: var(--secondary-color);
       transform: translateY(-2px);
     }
-    .fab-refresh i { margin-right: 8px; font-size: 20px; }
+    .fab-refresh i {
+      margin-right: 8px;
+      font-size: 20px;
+    }
     .loading-overlay {
       display: none;
       position: fixed;
@@ -293,7 +344,14 @@
       height: 50px;
       animation: spin 1s linear infinite;
     }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
   </style>
 </head>
 <body>
@@ -375,6 +433,9 @@
     <div class="loading-spinner"></div>
   </div>
   <script defer>
+    /* Глобальный массив для всех заказов */
+    let fetchedOrders = [];
+
     /* Инициализация темы */
     function initTheme() {
       const savedTheme = localStorage.getItem("theme") || "light";
@@ -430,14 +491,15 @@
         }
         const data = await response.json();
         if (data.orders && Array.isArray(data.orders)) {
+          fetchedOrders = data.orders; // Запоминаем все заказы
           const ordersGrid = document.getElementById("ordersGrid");
           ordersGrid.innerHTML = "";
-          data.orders.forEach((order) => {
+          fetchedOrders.forEach((order) => {
             const card = createOrderCard(order);
             ordersGrid.appendChild(card);
           });
-          updateStats();
-          applyCurrentFilters();
+          updateStats();       // Считаем статистику по всем заказам
+          applyCurrentFilters(); // Применяем текущий выбранный фильтр (кнопка)
           showToast("Заказы обновлены", "success");
         } else {
           throw new Error("Неверный формат данных: массив заказов отсутствует");
@@ -451,7 +513,12 @@
     }
 
     function createOrderCard(order) {
-      const statusMapping = { "новый": "new", "в работе": "in-progress", "завершён": "completed", "отменён": "cancelled" };
+      const statusMapping = {
+        "новый": "new",
+        "в работе": "in-progress",
+        "завершён": "completed",
+        "отменён": "cancelled"
+      };
       const rusStatus = order.Status || "новый";
       const engStatus = statusMapping[rusStatus.toLowerCase()] || "new";
       const user = order.User || {};
@@ -472,6 +539,7 @@
         ? `Да (${order.PlagiarismPercent || 0}%)`
         : "Нет";
       card.dataset.notes = order.Notes || "";
+
       card.innerHTML = `
         <h3>${order.Topic || ""}</h3>
         <p><strong>Номер:</strong> ${order.OrderNumber || ""}</p>
@@ -479,7 +547,11 @@
         <p><strong>Статус:</strong> ${rusStatus}</p>
         <p><strong>Срок:</strong> ${order.Deadline || ""}</p>
         <p><strong>Бюджет:</strong> ${order.Budget || 0} ₽</p>
-        ${rusStatus.toLowerCase() === "новый" ? '<span class="new-indicator"></span>' : ""}
+        ${
+          rusStatus.toLowerCase() === "новый"
+            ? '<span class="new-indicator"></span>'
+            : ""
+        }
         <div class="admin-actions">
           <a class="btn-view" href="/admin/order/${order.ID || 0}">Просмотреть</a>
           <button class="btn-delete" onclick="deleteOrder(${order.ID || 0})">Удалить</button>
@@ -498,7 +570,10 @@
       const cards = document.querySelectorAll(".order-card");
       cards.forEach((card) => {
         const cardStatus = (card.dataset.status || "new").toLowerCase();
-        card.style.display = (filterValue === "all" || cardStatus === filterValue) ? "block" : "none";
+        card.style.display =
+          filterValue === "all" || cardStatus === filterValue
+            ? "block"
+            : "none";
       });
     }
 
@@ -509,23 +584,33 @@
       }
     }
 
+    /**
+     * Теперь updateStats() считает по всему массиву fetchedOrders,
+     * а не по видимым карточкам. Статистика не зависит от фильтра.
+     */
     function updateStats() {
-      let countAll = 0, countNew = 0, countInProgress = 0, countCompleted = 0, countCancelled = 0;
-      const cards = document.querySelectorAll(".order-card");
-      cards.forEach((card) => {
-        if (card.style.display === "none") return;
-        const status = (card.dataset.status || "new").toLowerCase();
-        countAll++;
-        if (status === "new") countNew++;
-        if (status === "in-progress") countInProgress++;
-        if (status === "completed") countCompleted++;
-        if (status === "cancelled") countCancelled++;
+      // Считаем общее кол-во заказов по статусам во всех fetchedOrders
+      let countAll = fetchedOrders.length;
+      let countNew = 0;
+      let countInProgress = 0;
+      let countCompleted = 0;
+      let countCancelled = 0;
+
+      fetchedOrders.forEach((order) => {
+        const st = (order.Status || "").toLowerCase();
+        if (st === "новый") countNew++;
+        else if (st === "в работе") countInProgress++;
+        else if (st === "завершён") countCompleted++;
+        else if (st === "отменён") countCancelled++;
       });
+
       document.getElementById("count-all").textContent = countAll;
       document.getElementById("count-new").textContent = countNew;
       document.getElementById("count-inprogress").textContent = countInProgress;
       document.getElementById("count-completed").textContent = countCompleted;
       document.getElementById("count-cancelled").textContent = countCancelled;
+
+      // Обновляем «Новые» + badge
       const newBtn = document.querySelector('.filter-btn[data-filter="new"]');
       if (countNew > 0) {
         newBtn.innerHTML = `Новые <span class="badge">${countNew}</span>`;
@@ -545,9 +630,14 @@
           const title = (card.dataset.title || "").toLowerCase();
           const orderNumber = (card.dataset.orderNumber || "").toLowerCase();
           const customer = (card.dataset.customer || "").toLowerCase();
-          card.style.display = (title.includes(query) || orderNumber.includes(query) || customer.includes(query)) ? "block" : "none";
+          card.style.display =
+            title.includes(query) ||
+            orderNumber.includes(query) ||
+            customer.includes(query)
+              ? "block"
+              : "none";
         });
-        updateStats();
+        // Статистика не меняется — мы показываем общую статистику
       }, 300);
     });
 
@@ -562,7 +652,7 @@
       });
       const ordersGrid = document.getElementById("ordersGrid");
       cards.forEach((card) => ordersGrid.appendChild(card));
-      updateStats();
+      // Статистика не меняется
     });
 
     function deleteOrder(orderID) {
@@ -570,19 +660,29 @@
       showLoading(true);
       const formData = new FormData();
       formData.append("orderID", orderID);
-      fetch("/api/order/delete", { method: "POST", body: formData, credentials: "include" })
-        .then(response => response.json())
-        .then(data => {
+      fetch("/api/order/delete", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      })
+        .then((response) => response.json())
+        .then((data) => {
           if (data.message) {
             showToast(data.message, "success");
-            const card = document.querySelector(`.order-card[data-order-id="${orderID}"]`);
+            // Удаляем заказ из fetchedOrders
+            fetchedOrders = fetchedOrders.filter((o) => o.ID !== orderID);
+            // Удаляем карточку из DOM
+            const card = document.querySelector(
+              `.order-card[data-order-id="${orderID}"]`
+            );
             if (card) card.remove();
+            // Обновляем общую статистику
             updateStats();
           } else {
             showToast(data.error || "Ошибка удаления", "error");
           }
         })
-        .catch(err => {
+        .catch((err) => {
           console.error("Ошибка в deleteOrder:", err);
           showToast("Ошибка соединения", "error");
         })
@@ -596,7 +696,22 @@
     window.addEventListener("load", () => {
       initTheme();
       refreshOrders();
+
+      // Изначально считаем статистику, даже если orders пусты
       updateStats();
+
+      // Настраиваем обработчики клика на кнопки фильтров
+      document.querySelectorAll(".filter-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          // Снимаем active со всех кнопок
+          document.querySelectorAll(".filter-btn").forEach((b) => b.classList.remove("active"));
+          // Ставим active на нажатую
+          btn.classList.add("active");
+          // Применяем фильтр
+          applyFilter(btn.dataset.filter);
+          // ВАЖНО: Статистика не меняется, т.к. считаем по всем заказам
+        });
+      });
     });
   </script>
 </body>
