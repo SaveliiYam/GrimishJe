@@ -7,8 +7,7 @@
   <meta name="keywords" content="Громыш, помощь студентам, рефераты, курсовые, дипломы, учеба">
   <meta name="author" content="Громыш">
   <title>Громыш | Помощь студентам</title>
-  <!-- Подключаем CSS через относительный путь -->
-  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="stylesheet" href="/static/styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -20,54 +19,26 @@
       color: #333;
     }
 
-    nav {
-      padding: 1em;
-      background: #007acc;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-    nav ul {
-      list-style-type: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      gap: 2em;
-    }
-    nav ul li {
-      margin: 0;
-    }
-    nav ul li a {
-      color: #fff;
-      text-decoration: none;
-      font-weight: bold;
-      font-size: 1.1em;
-      transition: color 0.3s ease;
-    }
-    nav ul li a:hover, nav ul li a:focus {
-      color: #ff6347;
-      outline: none;
-    }
-
     .hero {
       height: 100vh;
-      background: url('/images/hero-background.jpg') no-repeat center center/cover;
+      background: url('/static/images/hero-image.jpg') no-repeat center center/cover; /* Исправленный путь */
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
       position: relative;
     }
-    .hero::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 122, 204, 0.3);
+
+    .hero::before {
+      content: none !important;
+      background: transparent !important;
     }
+
+    .hero::after {
+      content: none !important;
+      background: none !important;
+    }
+
     .hero-content {
       max-width: 700px;
       color: #fff;
@@ -75,16 +46,25 @@
       z-index: 1;
       padding: 2em;
       animation: fadeIn 1.5s ease-in-out;
+      transition: opacity 0.3s ease;
+      opacity: 1;
+      visibility: visible;
     }
+
+    .hero-content.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
     .hero-content h1 {
       font-size: clamp(2.5em, 8vw, 3.5em);
       margin-bottom: 0.5em;
-      text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.3);
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
     }
     .hero-content p {
       font-size: clamp(1.2em, 4vw, 1.6em);
       margin-bottom: 1.5em;
-      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
     }
     .order-button {
       padding: 1em 2.5em;
@@ -114,14 +94,20 @@
       top: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.6);
+      background: transparent !important;
       align-items: center;
       justify-content: center;
       opacity: 0;
       transition: opacity 0.3s ease;
     }
+    .modal::before,
+    .modal::after {
+      content: none !important;
+      background: none !important;
+    }
     .modal.show {
       opacity: 1;
+      background: transparent !important;
     }
     .modal-content {
       background: #fff;
@@ -226,15 +212,23 @@
       font-style: italic;
     }
 
-    footer {
-      text-align: center;
-      padding: 1em;
-      background: #fafafa;
-      color: #888;
-      font-size: clamp(0.8em, 2vw, 0.9em);
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 10px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 2000;
+    }
+    .toast.show {
+      opacity: 1;
     }
 
-    /* Анимации */
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
@@ -258,37 +252,25 @@
       }
     }
 
-    /* Адаптивность для мобильных устройств */
     @media (max-width: 768px) {
-      nav ul {
-        flex-direction: column;
-        align-items: center;
-        gap: 1em;
-      }
-
       .hero {
         height: 80vh;
       }
-
       .hero-content h1 {
         font-size: clamp(1.5em, 6vw, 2.5em);
       }
-
       .hero-content p {
         font-size: clamp(0.9em, 3vw, 1.2em);
       }
-
       .order-button {
         padding: 0.8em 2em;
         font-size: clamp(0.9em, 3vw, 1.1em);
       }
-
       .modal-content {
         width: 85%;
         max-width: 400px;
         padding: 1.5em;
       }
-
       .modal-content h2 {
         font-size: clamp(1.1em, 4vw, 1.5em);
       }
@@ -296,24 +278,7 @@
   </style>
 </head>
 <body>
-  <!-- Навигация с динамическим отображением (если пользователь авторизован) -->
-  <nav>
-    <ul>
-      <!-- Используем относительные ссылки для маршрутов -->
-      <li><a href="/" class="circle-link">Главная</a></li>
-      <li><a href="/about" class="circle-link">О нас</a></li>
-      <li><a href="/services" class="circle-link">Виды работ</a></li>
-      <li><a href="/reviews" class="circle-link">Отзывы</a></li>
-      <!-- Динамическая часть: отображается, если пользователь авторизован -->
-      {{ if .User }}
-      <li><a href="/dashboard" class="circle-link">Личный кабинет</a></li>
-      <li><a href="/logout" class="circle-link">Выйти</a></li>
-      {{ else }}
-      <li><a href="/login" class="circle-link">Войти</a></li>
-      <li><a href="/register" class="circle-link">Регистрация</a></li>
-      {{ end }}
-    </ul>
-  </nav>
+  {{ template "nav.html" . }}
 
   <section class="hero">
     <div class="hero-content">
@@ -355,14 +320,32 @@
     </div>
   </div>
 
-  <footer>
-    <p>© {{ .Year }} Громыш | Помощь студентам и школьникам</p>
-  </footer>
+  {{ template "footer.html" . }}
 
   <div class="toast" id="toast"></div>
 
   <script>
     document.documentElement.style.scrollBehavior = 'smooth';
+
+    // Проверка авторизации при загрузке страницы (временно отключена)
+    /*
+    (async () => {
+      try {
+        const response = await fetch('/check-auth', {
+          method: 'GET',
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.isAuthenticated) {
+            window.location.href = '/dashboard';
+          }
+        }
+      } catch (err) {
+        console.error('Ошибка проверки авторизации:', err);
+      }
+    })();
+    */
 
     const modal = document.getElementById('authModal');
     const modalButtons = document.getElementById('modalButtons');
@@ -377,8 +360,8 @@
     const loginGeneralError = document.getElementById('loginGeneralError');
     const registerGeneralError = document.getElementById('registerGeneralError');
     const registerPassword = document.getElementById('registerPassword');
+    const heroContent = document.querySelector('.hero-content');
 
-    // Форматирование номера телефона
     function formatPhone(value) {
       const digits = value.replace(/\D/g, '');
       const part1 = digits.substring(0, 1);
@@ -402,7 +385,6 @@
       this.value = formatPhone(this.value);
     });
 
-    // Сброс состояния модального окна при открытии
     function resetModal() {
       modalButtons.style.display = 'flex';
       modalButtons.style.opacity = '1';
@@ -417,20 +399,27 @@
 
     openModal.addEventListener('click', (e) => {
       e.preventDefault();
-      resetModal(); // Сбрасываем состояние
+      resetModal();
+      heroContent.classList.add('hidden');
       modal.style.display = 'flex';
       setTimeout(() => modal.classList.add('show'), 10);
     });
 
     closeModal.addEventListener('click', () => {
       modal.classList.remove('show');
-      setTimeout(() => modal.style.display = 'none', 300);
+      setTimeout(() => {
+        modal.style.display = 'none';
+        heroContent.classList.remove('hidden');
+      }, 300);
     });
 
     window.addEventListener('click', (e) => {
       if (e.target === modal) {
         modal.classList.remove('show');
-        setTimeout(() => modal.style.display = 'none', 300);
+        setTimeout(() => {
+          modal.style.display = 'none';
+          heroContent.classList.remove('hidden');
+        }, 300);
       }
     });
 
@@ -462,7 +451,7 @@
         const response = await fetch('/login', {
           method: 'POST',
           body: formData,
-          credentials: 'include', // Убедимся, что куки передаются
+          credentials: 'include',
         });
         if (!response.ok) {
           const data = await response.json();
@@ -474,9 +463,9 @@
           modal.classList.remove('show');
           setTimeout(() => {
             modal.style.display = 'none';
+            heroContent.classList.remove('hidden');
             window.location.href = data.redirect || '/dashboard';
           }, 300);
-          showToast('Успешный вход!');
         }
       } catch (err) {
         loginGeneralError.textContent = 'Ошибка соединения с сервером';
@@ -493,7 +482,7 @@
         const response = await fetch('/register', {
           method: 'POST',
           body: formData,
-          credentials: 'include', // Убедимся, что куки передаются
+          credentials: 'include',
         });
         if (!response.ok) {
           const data = await response.json();
@@ -505,6 +494,7 @@
           modal.classList.remove('show');
           setTimeout(() => {
             modal.style.display = 'none';
+            heroContent.classList.remove('hidden');
             window.location.href = data.redirect || '/dashboard';
           }, 300);
           showToast('Успешная регистрация!');
@@ -523,37 +513,6 @@
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    // Проверка статуса авторизации через AJAX
-    function checkAuthStatus() {
-      fetch('/api/auth/status', {
-        method: 'GET',
-        credentials: 'include', // Убедимся, что куки отправляются
-      })
-      .then(response => response.json())
-      .then(data => {
-        const navUl = document.querySelector('nav ul');
-        if (data.user) {
-          navUl.innerHTML += `
-            <li><a href="/dashboard" class="circle-link">Личный кабинет</a></li>
-            <li><a href="/logout" class="circle-link">Выйти</a></li>
-          `;
-        } else {
-          navUl.innerHTML += `
-            <li><a href="/login" class="circle-link">Войти</a></li>
-            <li><a href="/register" class="circle-link">Регистрация</a></li>
-          `;
-        }
-      })
-      .catch(error => {
-        console.error('Ошибка проверки авторизации:', error);
-        showToast('Ошибка проверки авторизации');
-      });
-    }
-
-    // Выполняем проверку при загрузке страницы
-    window.addEventListener('load', checkAuthStatus);
-
-    // Реальное время проверки сложности пароля
     const passwordHint = document.querySelector('.password-hint');
     registerPassword.addEventListener('input', function() {
       const password = this.value;

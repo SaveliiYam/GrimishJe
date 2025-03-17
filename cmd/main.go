@@ -307,6 +307,8 @@ func main() {
 		handlers.UploadFinalFile(c, db, minioClient, bucketName)
 	})
 
+	r.GET("/api/reviews", handlers.GetReviews(db))
+
 	// Запуск сервера
 	port := os.Getenv("PORT")
 	if port == "" {

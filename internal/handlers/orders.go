@@ -779,3 +779,44 @@ func CreateReview(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusCreated, gin.H{"message": "Отзыв успешно создан", "reviewID": review.ID})
 	}
 }
+
+// GetReviews возвращает список всех отзывов.
+func GetReviews(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var reviews []models.Review
+		if err := db.Preload("User").Preload("Order").Find(&reviews).Error; err != nil {
+			log.Printf("GetReviews: Ошибка загрузки отзывов: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось загрузить отзывы"})
+			return
+		}
+
+		type ReviewResponse struct {
+			ID        uint   `json:"id"`
+			Comment   string `json:"comment"`
+			Rating    uint   `json:"rating"`
+			Author    string `json:"author"`
+			CreatedAt string `json:"created_at"`
+			WorkType  string `json:"work_type"`
+		}
+
+		var response []ReviewResponse
+		for _, review := range reviews {
+			workType := review.Order.WorkType // Просто берём WorkType из заказа
+			if review.Order.ID == 0 {
+				log.Printf("Review ID: %d has no associated Order", review.ID)
+				workType = "" // Оставляем пустым, фронт сам обработает
+			}
+
+			response = append(response, ReviewResponse{
+				ID:        review.ID,
+				Comment:   review.Comment,
+				Rating:    review.Rating,
+				Author:    review.User.Name,
+				CreatedAt: review.CreatedAt.Format("02.01.2006 15:04"),
+				WorkType:  workType,
+			})
+		}
+
+		c.JSON(http.StatusOK, response)
+	}
+}
