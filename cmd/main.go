@@ -107,6 +107,9 @@ func main() {
 			}
 			return t.Format("02.01.2006")
 		},
+		"sub": func(a, b float64) float64 {
+			return a - b
+		},
 	})
 
 	// Настройка сессий
@@ -308,6 +311,7 @@ func main() {
 	})
 
 	r.GET("/api/reviews", handlers.GetReviews(db))
+	r.POST("/api/order/update-payment", middleware.AdminRequired(db), handlers.UpdatePaymentStatus(db))
 
 	// Запуск сервера
 	port := os.Getenv("PORT")

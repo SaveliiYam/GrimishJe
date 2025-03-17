@@ -32,3 +32,11 @@ type FileDeletePayload struct {
 	FileID  uint   `json:"file_id"`
 	Type    string `json:"type"`
 }
+
+// PaymentUpdatePayload представляет уведомление об обновлении оплаты заказа.
+type PaymentUpdatePayload struct {
+	Type         string  `json:"type"` // Добавили поле для типа
+	OrderID      uint    `json:"order_id"`
+	IsPaid       bool    `json:"is_paid"`
+	ExtraPayment float64 `json:"extra_payment"`
+}

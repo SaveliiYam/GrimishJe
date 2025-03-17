@@ -820,3 +820,70 @@ func GetReviews(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, response)
 	}
 }
+
+func UpdatePaymentStatus(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var input struct {
+			OrderID     string  `form:"orderID" binding:"required"`
+			Amount      float64 `form:"amount"`      // Сумма, введённая админом
+			PaymentType string  `form:"paymentType"` // "initial" или "additional"
+		}
+
+		if err := c.ShouldBind(&input); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные: " + err.Error()})
+			return
+		}
+
+		orderID, err := strconv.ParseUint(input.OrderID, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный orderID"})
+			return
+		}
+
+		var order models.Order
+		if err := db.First(&order, uint(orderID)).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Заказ не найден"})
+			return
+		}
+
+		switch input.PaymentType {
+		case "initial":
+			order.ExtraPayment = input.Amount
+		case "additional":
+			order.ExtraPayment += input.Amount
+		default:
+			// Если не указано, пусть будет «additional» или вернём ошибку
+			order.ExtraPayment += input.Amount
+		}
+
+		// При необходимости отмечаем флаг «IsPaid», если оплачено >= бюджета
+		if order.ExtraPayment >= order.Budget {
+			order.IsPaid = true
+		} else {
+			order.IsPaid = false
+		}
+
+		if err := db.Save(&order).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось обновить заказ"})
+			return
+		}
+
+		// Можно отослать уведомление по вебсокету (необязательно)
+		payload := websocket.PaymentUpdatePayload{
+			Type:         "payment_update", // вот эта строка важна!
+			OrderID:      order.ID,
+			IsPaid:       order.IsPaid,
+			ExtraPayment: order.ExtraPayment,
+		}
+		websocket.BroadcastMessage(websocket.GetHub(), payload)
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Оплата обновлена",
+			"order": gin.H{
+				"id":          order.ID,
+				"paid_amount": order.ExtraPayment,
+				"budget":      order.Budget,
+			},
+		})
+	}
+}

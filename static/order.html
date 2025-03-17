@@ -591,6 +591,31 @@
         <p><strong>Заметки:</strong> {{.Order.Notes}}</p>
       {{end}}
     </section>
+    <!-- Новая секция: Информация об оплате -->
+<section class="payment-info">
+  <h3>Информация об оплате</h3>
+  <p>
+    <strong>Заплатил:</strong>
+    <span id="paidAmountText">{{printf "%.2f" .Order.ExtraPayment}}</span> ₽
+  </p>
+  <p>
+    <strong>Осталось:</strong>
+    <span id="remainingAmountText">{{printf "%.2f" (sub .Order.Budget .Order.ExtraPayment)}}</span> ₽
+  </p>
+  <p>
+    <strong>Статус оплаты:</strong>
+    <span id="paymentStatusText">
+      {{if .Order.IsPaid}}
+        Полностью оплачено
+      {{else if gt .Order.ExtraPayment 0.0}}
+        Частично оплачено
+      {{else}}
+        Не оплачен
+      {{end}}
+    </span>
+  </p>
+</section>
+
     <section class="order-files">
       <h3>Файлы заказа</h3>
       <div class="file-section">

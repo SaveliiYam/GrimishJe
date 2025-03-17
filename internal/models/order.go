@@ -10,23 +10,29 @@ import (
 // Order представляет заказ в системе.
 type Order struct {
 	gorm.Model
-	OrderNumber        string    `gorm:"type:varchar(100);unique;not null" json:"order_number"`      // Уникальный номер заказа
-	UserID             uint      `gorm:"index;not null" json:"user_id"`                              // Связь с пользователем, индекс для быстрого поиска
-	Topic              string    `gorm:"type:varchar(255);not null" json:"topic"`                    // Тема заказа (максимум 255 символов)
-	Description        string    `gorm:"type:text" json:"description"`                               // Описание заказа (текстовое поле)
-	Deadline           string    `gorm:"type:date;not null" json:"deadline"`                         // Срок выполнения (в формате строки YYYY-MM-DD)
-	PlagiarismRequired bool      `gorm:"default:false" json:"plagiarism_required"`                   // Требуется ли проверка на плагиат
-	PlagiarismPercent  uint      `gorm:"check:plagiarism_percent <= 100" json:"plagiarism_percent"`  // Процент плагиата (0-100)
-	Budget             float64   `gorm:"type:decimal(10,2);not null;check:budget > 0" json:"budget"` // Бюджет заказа (два знака после запятой, больше 0)
-	Status             string    `gorm:"type:varchar(50);default:'новый';not null" json:"status"`    // Статус заказа (например, новый, в работе, завершён, отменён)
-	WorkType           string    `gorm:"type:varchar(100);not null" json:"work_type"`                // Тип работы (максимум 100 символов)
-	Notes              string    `gorm:"type:text" json:"notes"`                                     // Заметки (текстовое поле)
-	CreatedAt          time.Time `gorm:"autoCreateTime;not null" json:"created_at"`                  // Время создания заказа
-	UpdatedAt          time.Time `gorm:"autoUpdateTime" json:"updated_at"`                           // Время последнего обновления
-	CompletedAt        time.Time `gorm:"type:timestamp" json:"completed_at"`                         // Время завершения заказа (опционально)
-	FinalFileURL       string    `gorm:"type:text" json:"final_file_url" db:"final_file_url"`        // Добавленное поле для итогового файла
-	User               User      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`              // Связь с пользователем, каскадное удаление
-	Reviews            []Review  `gorm:"foreignKey:OrderID" json:"reviews"`
+	OrderNumber        string    `gorm:"type:varchar(100);unique;not null" json:"order_number"`
+	UserID             uint      `gorm:"index;not null" json:"user_id"`
+	Topic              string    `gorm:"type:varchar(255);not null" json:"topic"`
+	Description        string    `gorm:"type:text" json:"description"`
+	Deadline           string    `gorm:"type:date;not null" json:"deadline"`
+	PlagiarismRequired bool      `gorm:"default:false" json:"plagiarism_required"`
+	PlagiarismPercent  uint      `gorm:"check:plagiarism_percent <= 100" json:"plagiarism_percent"`
+	Budget             float64   `gorm:"type:decimal(10,2);not null;check:budget > 0" json:"budget"`
+	Status             string    `gorm:"type:varchar(50);default:'новый';not null" json:"status"`
+	WorkType           string    `gorm:"type:varchar(100);not null" json:"work_type"`
+	Notes              string    `gorm:"type:text" json:"notes"`
+	CreatedAt          time.Time `gorm:"autoCreateTime;not null" json:"created_at"`
+	UpdatedAt          time.Time `gorm:"autoUpdateTime" json:"updated_at"`
+	CompletedAt        time.Time `gorm:"type:timestamp" json:"completed_at"`
+	FinalFileURL       string    `gorm:"type:text" json:"final_file_url" db:"final_file_url"`
+
+	// Новые поля для оплаты:
+	IsPaid       bool    `gorm:"default:false" json:"is_paid"`
+	ExtraPayment float64 `gorm:"type:decimal(10,2);default:0" json:"extra_payment"`
+
+	// Ассоциации (определяем их один раз):
+	User    User     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	Reviews []Review `gorm:"foreignKey:OrderID" json:"reviews"`
 }
 
 // ValidStatuses список допустимых статусов заказа.

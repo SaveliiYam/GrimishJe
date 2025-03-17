@@ -475,6 +475,50 @@
           </p>
         </div>
 
+        <div class="payment-section" style="margin-top: 20px;">
+          <h3>Оплата</h3>
+          <p>
+            <strong>Статус оплаты:</strong>
+            <span id="paymentStatusText">
+              {{if .Order.IsPaid}}
+                Полностью оплачено
+                {{else if gt .Order.ExtraPayment 0.0}}
+                Частично оплачено
+              {{else}}
+                Не оплачен
+              {{end}}
+            </span>
+          </p>
+          <p>
+            <strong>Заплатил:</strong>
+            <span id="paidAmountText">{{printf "%.2f" .Order.ExtraPayment}}</span> ₽
+          </p>
+          <p>
+            <strong>Осталось:</strong>
+            <span id="remainingAmountText">{{printf "%.2f" (sub .Order.Budget .Order.ExtraPayment)}}</span> ₽
+          </p>
+        
+          <div style="margin: 10px 0;">
+            <!-- Поле ввода суммы -->
+            <input
+              type="number"
+              id="paymentInput"
+              placeholder="Сумма"
+              step="0.01"
+              min="0"
+              style="padding: 8px; border-radius: 4px; border: 1px solid var(--text-light);"
+            />
+          </div>
+        
+          <!-- Кнопки оплаты -->
+          <button class="modal-actions-btn btn-accept" onclick="makeInitialPayment({{.Order.ID}})">
+            Первоначальная оплата
+          </button>
+          <button class="modal-actions-btn btn-accept" onclick="makeAdditionalPayment({{.Order.ID}})">
+            Дополнительная оплата
+          </button>
+        </div>
+
         <div id="reviewSection" style="display: none;">
           <h3>Отзыв</h3>
           <div id="reviewContent" class="review-content"></div>
@@ -522,6 +566,12 @@
             <input type="file" name="finalFile" required />
             <button type="submit" class="modal-actions-btn btn-upload">Загрузить итоговый файл</button>
           </form>
+        </div>
+
+        <div id="paymentSection" style="margin-top: 20px; text-align: center;">
+          <h3>Обновление оплаты</h3>
+          <input type="number" id="extraPaymentInput" placeholder="Дополнительная оплата" step="0.01" min="0" value="{{.Order.ExtraPayment}}" style="padding: 8px; border-radius: 4px; border: 1px solid var(--text-light); margin-right: 10px;">
+          <button class="modal-actions-btn btn-accept" onclick="updatePayment({{.Order.ID}})">Обновить оплату</button>
         </div>
 
         <div class="modal-actions" id="modalActions">
@@ -769,6 +819,23 @@ function connectChat() {
       default:
         console.warn("Неизвестный тип сообщения:", data);
         break;
+        switch (data.type) {
+
+  case "payment_update":
+    console.log("Получен payment_update:", data);
+    // Обновляем цифры на странице:
+    document.getElementById("paidAmountText").textContent = data.extra_payment;
+    if (data.is_paid) {
+      document.getElementById("paymentStatusText").textContent = "Полностью оплачено";
+    } else {
+      document.getElementById("paymentStatusText").textContent = "Частично оплачено";
+    }
+    break;
+
+  default:
+    console.warn("Неизвестный тип сообщения:", data);
+}
+
     }
   } catch (e) {
     console.error("Ошибка парсинга сообщения WebSocket:", e, "Raw data:", event.data);
@@ -1293,6 +1360,72 @@ window.addEventListener("load", async () => {
 
 function trackEvent(category, action, label) {
   console.log(`Event tracked: ${category}, ${action}, ${label}`);
+}
+
+// Функция, вызываемая при нажатии кнопки "Первоначальная оплата"
+async function makeInitialPayment(orderID) {
+  // Берём сумму из поля с id="paymentInput"
+  const amount = parseFloat(document.getElementById("paymentInput").value) || 0;
+  updatePayment(orderID, amount, "initial");
+}
+
+// Функция, вызываемая при нажатии кнопки "Дополнительная оплата"
+async function makeAdditionalPayment(orderID) {
+  // Берём сумму из того же поля
+  const amount = parseFloat(document.getElementById("paymentInput").value) || 0;
+  updatePayment(orderID, amount, "additional");
+}
+
+// Универсальная функция обновления оплаты
+async function updatePayment(orderID, amount, paymentType) {
+  showLoading(true); // Показываем прелоадер, если у вас реализована эта функция
+  try {
+    const formData = new FormData();
+    formData.append("orderID", orderID);
+    formData.append("amount", amount);
+    formData.append("paymentType", paymentType);
+
+    const response = await fetch("/api/order/update-payment", {
+      method: "POST",
+      body: formData,
+      credentials: "include"
+    });
+    const data = await response.json();
+
+    if (response.ok) {
+      // Если сервер вернул order с полями paid_amount и budget, обновляем UI
+      if (
+        data.order &&
+        typeof data.order.paid_amount !== "undefined" &&
+        typeof data.order.budget !== "undefined"
+      ) {
+        const paid = parseFloat(data.order.paid_amount);
+        const budget = parseFloat(data.order.budget);
+        // Обновляем отображение суммы, которую заплатили
+        document.getElementById("paidAmountText").textContent = paid.toFixed(2);
+        // Вычисляем оставшуюся сумму
+        const remaining = budget - paid;
+        document.getElementById("remainingAmountText").textContent = remaining.toFixed(2);
+        // Обновляем статус оплаты
+        if (paid >= budget) {
+          document.getElementById("paymentStatusText").textContent = "Полностью оплачено";
+        } else if (paid > 0) {
+          document.getElementById("paymentStatusText").textContent =
+            `Частично оплачено: ${paid.toFixed(2)} / ${budget.toFixed(2)}`;
+        } else {
+          document.getElementById("paymentStatusText").textContent = "Не оплачен";
+        }
+      }
+      showToast(data.message || "Оплата обновлена", "success");
+    } else {
+      showToast(data.error || "Ошибка обновления оплаты", "error");
+    }
+  } catch (err) {
+    console.error("Ошибка при обновлении оплаты:", err);
+    showToast("Ошибка соединения", "error");
+  } finally {
+    showLoading(false);
+  }
 }
 
   </script>
