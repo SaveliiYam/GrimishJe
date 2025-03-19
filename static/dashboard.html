@@ -7,554 +7,10 @@
   <meta name="keywords" content="Громыш, личный кабинет, заказы, студенческие работы, управление проектами">
   <meta name="author" content="Громыш">
   <title>Личный кабинет | {{.User.Name}}</title>
-  <!-- Подключаем CSS через относительный путь -->
-  <link rel="stylesheet" href="/static/styles.css">
+  <!-- Подключаем шрифты -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary-color: #1e90ff;
-      --secondary-color: #007bff;
-      --success-color: #28a745;
-      --warning-color: #ffc107;
-      --error-color: #dc3545;
-      --background-light: #f5f7fa;
-      --card-bg: #ffffff;
-      --text-color: #2d3748;
-      --text-light: #718096;
-      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
-      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Тёмная тема */
-    [data-theme="dark"] {
-      --background-light: #1a202c;
-      --card-bg: #2d3748;
-      --text-color: #e2e8f0;
-      --text-light: #a0aec0;
-      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
-      --primary-color: #66b3ff;
-      --secondary-color: #3399ff;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      padding: 20px;
-      background: var(--background-light);
-      font-family: 'Inter', sans-serif;
-      color: var(--text-color);
-      line-height: 1.6;
-      transition: background 0.3s ease, color 0.3s ease;
-    }
-
-    .container {
-      width: 90%;
-      max-width: 1280px;
-      margin: 0 auto;
-    }
-
-    /* Переключатель темы */
-    .theme-toggle {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 8px 12px;
-      background: var(--primary-color);
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 1.2em;
-      z-index: 1100;
-    }
-
-    .theme-toggle:hover {
-      transform: scale(1.1);
-      background: var(--secondary-color);
-    }
-
-    [data-theme="dark"] .theme-toggle {
-      background: var(--secondary-color);
-    }
-
-    /* Хедер */
-    header {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: #fff;
-      padding: 25px;
-      border-radius: 12px;
-      text-align: center;
-      margin-bottom: 30px;
-      box-shadow: var(--shadow-md);
-      position: relative;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: clamp(1.8em, 5vw, 2.2em);
-      font-weight: 700;
-    }
-
-    /* Приветственное сообщение */
-    .welcome {
-      text-align: center;
-      margin: 60px auto;
-      padding: 40px;
-      background: var(--card-bg);
-      border-radius: 12px;
-      box-shadow: var(--shadow-md);
-      max-width: 600px;
-    }
-
-    .welcome h1 {
-      font-size: clamp(1.5em, 4vw, 2em);
-      margin-bottom: 15px;
-      color: var(--primary-color);
-    }
-
-    .welcome p {
-      font-size: clamp(1em, 3vw, 1.1em);
-      color: var(--text-light);
-    }
-
-    /* Кнопки */
-    .new-order-btn {
-      padding: 12px 32px;
-      font-size: clamp(1em, 3vw, 1.1em);
-      font-weight: 600;
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: #fff;
-      border: none;
-      border-radius: 50px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .new-order-btn:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-md);
-      background: var(--secondary-color);
-    }
-
-    /* Сводка заказов */
-    .order-stats {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .order-stats h2 {
-      font-size: clamp(1.5em, 4vw, 1.8em);
-      color: var(--primary-color);
-      margin-bottom: 20px;
-    }
-
-    .stats-container {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
-    .stat-item {
-      background: var(--card-bg);
-      padding: 12px 20px;
-      border-radius: 10px;
-      font-size: clamp(0.9em, 2vw, 1em);
-      color: var(--text-light);
-      box-shadow: var(--shadow-sm);
-      transition: transform 0.3s ease;
-    }
-
-    .stat-item i {
-      margin-right: 5px;
-    }
-
-    .stat-item:hover {
-      transform: translateY(-3px);
-    }
-
-    /* Поиск */
-    .order-search {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-
-    .order-search input {
-      padding: 12px 16px;
-      width: 100%;
-      max-width: 400px;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: clamp(0.9em, 2vw, 1em);
-      transition: all 0.3s ease;
-    }
-
-    [data-theme="dark"] .order-search input {
-      border-color: #4a5568;
-      background: #2d3748;
-      color: var(--text-color);
-    }
-
-    .order-search input:focus {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
-      outline: none;
-    }
-
-    /* Фильтры */
-    .order-filter {
-      margin-bottom: 30px;
-      text-align: center;
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .order-filter button {
-      padding: 10px 20px;
-      border: none;
-      background: #e2e8f0;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
-    }
-
-    [data-theme="dark"] .order-filter button {
-      background: #4a5568;
-      color: var(--text-color);
-    }
-
-    .order-filter button.active {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: #fff;
-    }
-
-    .order-filter button:hover {
-      background: var(--primary-color);
-      color: #fff;
-      transform: translateY(-2px);
-    }
-
-    .order-filter .badge {
-      background: var(--error-color);
-      color: #fff;
-      border-radius: 50%;
-      padding: 4px 8px;
-      font-size: clamp(0.7em, 1.5vw, 0.8em);
-      position: absolute;
-      top: -8px;
-      right: -8px;
-    }
-
-    /* Сортировка */
-    .order-sort {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .order-sort select {
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: 1px solid #e2e8f0;
-      font-size: clamp(0.9em, 2vw, 1em);
-    }
-
-    [data-theme="dark"] .order-sort select {
-      border-color: #4a5568;
-      background: #2d3748;
-      color: var(--text-color);
-    }
-
-    /* Сетка заказов */
-    .orders-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 25px;
-      margin-bottom: 40px;
-    }
-
-    .order-card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: var(--shadow-sm);
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .order-card.skeleton {
-      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-
-    [data-theme="dark"] .order-card.skeleton {
-      background: linear-gradient(90deg, #2d3748 25%, #4a5568 50%, #2d3748 75%);
-    }
-
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-
-    .order-card:hover {
-      transform: translateY(-5px);
-      box-shadow: var(--shadow-md);
-    }
-
-    .order-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 6px;
-      height: 100%;
-      background: #ddd;
-    }
-
-    .order-card.new::before { background: var(--success-color); }
-    .order-card.in-progress::before { background: var(--secondary-color); }
-    .order-card.completed::before { background: #a0aec0; }
-    .order-card.cancelled::before { background: var(--error-color); }
-
-    .order-card h3 {
-      margin: 0 0 10px;
-      font-size: clamp(1.2em, 3vw, 1.4em);
-      font-weight: 600;
-      color: var(--secondary-color);
-    }
-
-    .order-card p {
-      margin: 8px 0;
-      font-size: clamp(0.9em, 2vw, 1em);
-      color: var(--text-light);
-    }
-
-    .order-card a {
-      display: inline-block;
-      margin-top: 10px;
-      padding: 8px 16px;
-      background: var(--primary-color);
-      color: #fff;
-      text-decoration: none;
-      border-radius: 8px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-    }
-
-    .order-card a:hover {
-      background: var(--secondary-color);
-      transform: translateY(-2px);
-    }
-
-    .new-indicator {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      width: 12px;
-      height: 12px;
-      background: var(--error-color);
-      border-radius: 50%;
-      animation: blink 1.5s infinite;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
-
-    /* Модальное окно */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      justify-content: center;
-      align-items: center;
-      animation: fadeIn 0.3s ease;
-    }
-
-    [data-theme="dark"] .modal {
-      background: rgba(0, 0, 0, 0.7);
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    .modal-content {
-      background: var(--card-bg);
-      padding: 30px;
-      border-radius: 12px;
-      width: 100%;
-      max-width: 450px;
-      box-shadow: var(--shadow-md);
-      position: relative;
-      animation: slideIn 0.3s ease;
-    }
-
-    @keyframes slideIn {
-      from { transform: translateY(-20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-
-    .close-button {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      font-size: 28px;
-      color: var(--text-light);
-      cursor: pointer;
-      transition: color 0.3s ease;
-    }
-
-    .close-button:hover {
-      color: var(--text-color);
-    }
-
-    .modal-content h2 {
-      font-size: clamp(1.5em, 4vw, 1.8em);
-      margin-bottom: 20px;
-      color: var(--primary-color);
-      text-align: center;
-    }
-
-    .modal-content label {
-      display: block;
-      margin: 15px 0 5px;
-      font-weight: 600;
-      color: var(--text-color);
-    }
-
-    .modal-content input,
-    .modal-content textarea,
-    .modal-content select {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: clamp(0.9em, 2vw, 1em);
-      transition: all 0.3s ease;
-    }
-
-    [data-theme="dark"] .modal-content input,
-    [data-theme="dark"] .modal-content textarea,
-    [data-theme="dark"] .modal-content select {
-      border-color: #4a5568;
-      background: #2d3748;
-      color: var(--text-color);
-    }
-
-    .modal-content input:focus,
-    .modal-content textarea:focus,
-    .modal-content select:focus {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
-      outline: none;
-    }
-
-    .modal-content textarea {
-      resize: vertical;
-      min-height: 100px;
-    }
-
-    .modal-content button {
-      width: 100%;
-      padding: 12px;
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: clamp(1em, 3vw, 1.1em);
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .modal-content button:hover {
-      background: var(--secondary-color);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-    }
-
-    .checkbox-container {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    /* Toast уведомления */
-    .toast {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      padding: 10px 20px;
-      color: #fff;
-      border-radius: 8px;
-      animation: slideInToast 0.5s ease forwards;
-      z-index: 2000;
-    }
-
-    .toast.success { background: var(--success-color); }
-    .toast.error { background: var(--error-color); }
-
-    @keyframes slideInToast {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-
-    /* Адаптивность для мобильных устройств */
-    @media (max-width: 768px) {
-      .container {
-        width: 95%;
-      }
-
-      .theme-toggle {
-        top: 10px;
-        right: 10px;
-      }
-
-      .order-filter {
-        overflow-x: auto;
-        justify-content: flex-start;
-      }
-
-      .order-card {
-        padding: 15px;
-      }
-
-      .new-order-btn {
-        padding: 10px 20px;
-        font-size: clamp(0.9em, 3vw, 1em);
-      }
-
-      .stats-container {
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .modal-content {
-        width: 85%;
-        max-width: 400px;
-        padding: 20px;
-      }
-    }
-  </style>
+  <!-- Подключаем оптимизированный CSS -->
+  <link rel="stylesheet" href="/static/optimized_styles.css">
 </head>
 <body>
   <!-- Переключатель темы -->
@@ -585,26 +41,17 @@
 
       <div class="order-filter" role="group" aria-label="Фильтры заказов">
         <button class="filter-btn active" data-filter="all" aria-pressed="true">Все</button>
-        <button class="filter-btn" data-filter="новый">Новые</button>
-        <button class="filter-btn" data-filter="в работе">В работе</button>
-        <button class="filter-btn" data-filter="завершён">Завершенные</button>
-        <button class="filter-btn" data-filter="отменён">Отмененные</button>
-      </div>
-
-      <div class="order-sort" role="group" aria-label="Сортировка заказов">
-        <select id="sortSelect" aria-label="Сортировка заказов">
-          <option value="default">Сортировка по умолчанию</option>
-          <option value="budget-asc">Бюджет: по возрастанию</option>
-          <option value="budget-desc">Бюджет: по убыванию</option>
-        </select>
+        <button class="filter-btn" data-filter="new">Новые</button>
+        <button class="filter-btn" data-filter="in-progress">В работе</button>
+        <button class="filter-btn" data-filter="completed">Завершенные</button>
+        <button class="filter-btn" data-filter="cancelled">Отмененные</button>
       </div>
 
       <div class="orders-grid" id="ordersGrid" role="list">
         {{range .Orders}}
           <div class="order-card {{if eq .Status "новый"}}new{{else if eq .Status "в работе"}}in-progress{{else if eq .Status "завершён"}}completed{{else if eq .Status "отменён"}}cancelled{{end}}" 
-               data-status="{{.Status}}" 
+               data-status="{{if eq .Status "новый"}}new{{else if eq .Status "в работе"}}in-progress{{else if eq .Status "завершён"}}completed{{else if eq .Status "отменён"}}cancelled{{end}}" 
                data-title="{{.Topic}}" 
-               data-budget="{{.Budget}}" 
                role="listitem">
             <h3>{{.Topic}}</h3>
             <p><strong>Номер заказа:</strong> {{.OrderNumber}}</p>
@@ -612,7 +59,7 @@
             <p><strong>Статус:</strong> {{.Status}}</p>
             <p><strong>Срок:</strong> {{.Deadline}}</p>
             <p><strong>Бюджет:</strong> {{.Budget}} ₽</p>
-            <a href="/order?id={{.ID}}" aria-label="Подробнее о заказе {{.Topic}}">Подробнее</a>
+            <a href="/order?id={{.ID}}" class="btn" aria-label="Подробнее о заказе {{.Topic}}">Подробнее</a>
           </div>
         {{end}}
       </div>
@@ -677,7 +124,7 @@
     // Тёмная тема
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
-
+  
     // Проверяем сохранённую тему или системную настройку
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -688,7 +135,7 @@
       body.dataset.theme = '';
       themeToggle.innerHTML = '<span class="theme-icon">🌙</span>';
     }
-
+  
     themeToggle.addEventListener('click', () => {
       if (body.dataset.theme === 'dark') {
         body.dataset.theme = '';
@@ -700,7 +147,7 @@
         localStorage.setItem('theme', 'dark');
       }
     });
-
+  
     // Модальное окно
     const orderModal = document.getElementById('orderModal');
     const openOrderModal = document.getElementById('openOrderModal');
@@ -710,11 +157,11 @@
     const orderForm = document.getElementById('orderForm');
     const orderFormError = document.getElementById('orderFormError');
     const orderDeadline = document.getElementById('orderDeadline');
-
+  
     // Устанавливаем минимальную дату как сегодня
     const today = new Date().toISOString().split('T')[0];
     orderDeadline.min = today;
-
+  
     // Проверка даты при изменении
     orderDeadline.addEventListener('change', (e) => {
       const selectedDate = new Date(e.target.value);
@@ -724,54 +171,124 @@
         showToast('Нельзя выбрать дату раньше сегодняшнего дня', 'error');
       }
     });
-
+  
     openOrderModal.addEventListener('click', (e) => {
       e.preventDefault();
       orderModal.style.display = 'flex';
       orderModal.setAttribute('aria-hidden', 'false');
       orderFormError.style.display = 'none';
     });
-
+  
     closeOrderModal.addEventListener('click', () => {
       orderModal.style.display = 'none';
       orderModal.setAttribute('aria-hidden', 'true');
     });
-
+  
     window.addEventListener('click', (e) => {
       if (e.target === orderModal) {
         orderModal.style.display = 'none';
         orderModal.setAttribute('aria-hidden', 'true');
       }
     });
-
+  
     plagiarismCheck.addEventListener('change', () => {
       plagiarismContainer.style.display = plagiarismCheck.checked ? 'block' : 'none';
     });
-
+  
+    // Валидация формы на стороне клиента
+    function validateForm(formData) {
+      const errors = [];
+      const topic = formData.get('topic')?.trim();
+      const workType = formData.get('workType')?.trim();
+      const description = formData.get('description')?.trim();
+      const deadline = formData.get('deadline');
+      const budget = formData.get('budget');
+      const plagiarismPercent = formData.get('plagiarismPercent');
+  
+      if (!topic || topic.length < 5) {
+        errors.push('Тема работы должна содержать минимум 5 символов.');
+      }
+      if (!workType) {
+        errors.push('Выберите тип работы.');
+      }
+      if (!description || description.length < 10) {
+        errors.push('Описание должно содержать минимум 10 символов.');
+      }
+      if (!deadline) {
+        errors.push('Укажите срок выполнения.');
+      }
+      if (!budget || budget <= 0) {
+        errors.push('Бюджет должен быть больше 0.');
+      }
+      if (plagiarismCheck.checked && (!plagiarismPercent || plagiarismPercent < 0 || plagiarismPercent > 100)) {
+        errors.push('Процент оригинальности должен быть от 0 до 100.');
+      }
+  
+      return errors;
+    }
+  
+    // Проверка лимита на создание заказа (1 заказ в 30 минут)
+    function checkOrderLimit() {
+      const lastOrderTime = localStorage.getItem('lastOrderTime');
+      if (!lastOrderTime) return true; // Если заказов ещё не было, разрешаем
+  
+      const now = Date.now();
+      const lastTime = parseInt(lastOrderTime, 10);
+      const timeDiff = (now - lastTime) / 1000 / 60; // Разница в минутах
+  
+      if (timeDiff < 30) {
+        const remainingMinutes = Math.ceil(30 - timeDiff);
+        return `Вы можете создать новый заказ только через ${remainingMinutes} минут.`;
+      }
+      return true;
+    }
+  
     // Обработка формы создания заказа
     orderForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData(orderForm);
+  
+      // Проверка лимита на создание заказа
+      const limitCheck = checkOrderLimit();
+      if (limitCheck !== true) {
+        orderFormError.textContent = limitCheck;
+        orderFormError.style.display = 'block';
+        return;
+      }
+  
+      // Валидация на стороне клиента
+      const clientErrors = validateForm(formData);
+      if (clientErrors.length > 0) {
+        orderFormError.innerHTML = clientErrors.join('<br>');
+        orderFormError.style.display = 'block';
+        return;
+      }
+  
       try {
         const response = await fetch(orderForm.action, {
           method: 'POST',
           body: formData,
-          credentials: 'include', // Убедимся, что куки передаются
+          credentials: 'include',
         });
         const data = await response.json();
         if (response.ok) {
+          // Сохраняем время создания заказа
+          localStorage.setItem('lastOrderTime', Date.now().toString());
           showToast('Заказ успешно создан!', 'success');
           setTimeout(() => {
             window.location.href = `/order?id=${data.orderId}`;
           }, 1000);
         } else {
-          showToast(data.error || 'Произошла ошибка при создании заказа', 'error');
+          const serverError = data.error || 'Произошла ошибка при создании заказа.';
+          orderFormError.textContent = serverError;
+          orderFormError.style.display = 'block';
         }
       } catch (err) {
-        showToast('Ошибка соединения с сервером', 'error');
+        orderFormError.textContent = 'Ошибка соединения с сервером. Проверьте подключение к интернету.';
+        orderFormError.style.display = 'block';
       }
     });
-
+  
     // Toast уведомления
     function showToast(message, type = 'success') {
       const toast = document.createElement('div');
@@ -785,94 +302,91 @@
         setTimeout(() => toast.remove(), 500);
       }, 3000);
     }
-
-    // Фильтрация и сортировка
+  
+    // Фильтрация
     const filterButtons = document.querySelectorAll('.filter-btn');
     const orderCards = document.querySelectorAll('.order-card');
     const ordersGrid = document.getElementById('ordersGrid');
-    const sortSelect = document.getElementById('sortSelect');
     const searchInput = document.getElementById('searchInput');
-
+  
     filterButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         filterButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         btn.setAttribute('aria-pressed', 'true');
-        applyFiltersAndSort();
+        applyFilters();
       });
     });
-
+  
     searchInput.addEventListener('input', () => {
-      applyFiltersAndSort();
+      applyFilters();
     });
-
-    sortSelect.addEventListener('change', () => {
-      applyFiltersAndSort();
-    });
-
-    function applyFiltersAndSort() {
+  
+    function applyFilters() {
       const filterValue = document.querySelector('.filter-btn.active').getAttribute('data-filter');
       const query = searchInput.value.trim().toLowerCase();
-      const sortValue = sortSelect.value;
-
+  
       let visibleCards = Array.from(orderCards).filter(card => {
         const status = card.getAttribute('data-status').toLowerCase();
         const title = card.getAttribute('data-title').toLowerCase();
         return (filterValue === 'all' || status === filterValue) && title.includes(query);
       });
-
-      if (sortValue !== 'default') {
-        visibleCards.sort((a, b) => {
-          const budgetA = parseFloat(a.getAttribute('data-budget'));
-          const budgetB = parseFloat(b.getAttribute('data-budget'));
-          return sortValue === 'budget-asc' ? budgetA - budgetB : budgetB - budgetA;
-        });
-      }
-
+  
       ordersGrid.innerHTML = '';
       if (visibleCards.length === 0) {
         ordersGrid.innerHTML = '<p style="text-align: center; color: var(--text-light);" role="alert">Заказы не найдены</p>';
       } else {
         visibleCards.forEach(card => ordersGrid.appendChild(card));
       }
-
+  
       updateStats();
     }
-
+  
     // Обновление статистики
     function updateStats() {
       let countAll = 0, countNew = 0, countInProgress = 0, countCompleted = 0, countCancelled = 0;
+  
+      // Считаем общее количество карточек, независимо от того, видны они или нет
       orderCards.forEach(card => {
-        if (card.parentElement !== ordersGrid) return;
         countAll++;
         const status = card.getAttribute('data-status').toLowerCase();
-        if (status === 'новый') countNew++;
-        else if (status === 'в работе') countInProgress++;
-        else if (status === 'завершён') countCompleted++;
-        else if (status === 'отменён') countCancelled++;
+        if (status === 'new') countNew++;
+        else if (status === 'in-progress') countInProgress++;
+        else if (status === 'completed') countCompleted++;
+        else if (status === 'cancelled') countCancelled++;
       });
+  
+      // Обновляем значения статистики
       document.getElementById('count-all').textContent = countAll;
       document.getElementById('count-new').textContent = countNew;
       document.getElementById('count-inprogress').textContent = countInProgress;
       document.getElementById('count-completed').textContent = countCompleted;
       document.getElementById('count-cancelled').textContent = countCancelled;
-
-      const newBtn = document.querySelector('.filter-btn[data-filter="новый"]');
+  
+      // Обновляем бейдж для кнопки "Новые"
+      const newBtn = document.querySelector('.filter-btn[data-filter="new"]');
       if (countNew > 0) {
         newBtn.innerHTML = `Новые <span class="badge">${countNew}</span>`;
       } else {
         newBtn.textContent = 'Новые';
       }
     }
-
+  
+    // Вызываем applyFilters сразу после загрузки страницы
+    document.addEventListener('DOMContentLoaded', () => {
+      applyFilters();
+      updateStats();
+    });
+  
     // Скелетон при загрузке
     window.addEventListener('load', () => {
       orderCards.forEach(card => card.classList.add('skeleton'));
       setTimeout(() => {
         orderCards.forEach(card => card.classList.remove('skeleton'));
-        applyFiltersAndSort();
+        applyFilters();
       }, 1000); // Имитация загрузки
     });
   </script>
+  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'922f8ace7a8b1766',t:'MTc0MjQxNDI4Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
