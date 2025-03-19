@@ -1,8 +1,43 @@
+<!-- navigation.html -->
 <nav>
-  <ul>
-    <li><a href="/" class="circle-link">Главная</a></li>
-    <li><a href="/about" class="circle-link">О нас</a></li>
-    <li><a href="/services" class="circle-link">Виды работ</a></li>
-    <li><a href="/reviews" class="circle-link">Отзывы</a></li>
-  </ul>
+  <div class="nav-header">
+    <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+    <span>Навигация</span>
+  </div>
+  <div class="nav-menu">
+    <ul>
+      <li><a href="/">Главная</a></li>
+      <li><a href="/about">О нас</a></li>
+      <li><a href="/services">Виды работ</a></li>
+      <li><a href="/reviews">Отзывы</a></li>
+    </ul>
+  </div>
+  <div class="nav-overlay"></div>
 </nav>
+
+<!-- JavaScript для управления меню -->
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+    const navToggle = document.querySelector('.nav-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    const navOverlay = document.querySelector('.nav-overlay');
+
+    // Убедимся, что меню скрыто при загрузке
+    navMenu.classList.remove('active');
+    navOverlay.classList.remove('active');
+    navToggle.classList.remove('active');
+
+    navToggle.addEventListener('click', function(){
+      navMenu.classList.toggle('active');
+      navOverlay.classList.toggle('active');
+      navToggle.classList.toggle('active');
+    });
+
+    navOverlay.addEventListener('click', function(){
+      navMenu.classList.remove('active');
+      navOverlay.classList.remove('active');
+      navToggle.classList.remove('active');
+    });
+  });
+</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'922ddc76782e8bbb',t:'MTc0MjM5NjY1NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>

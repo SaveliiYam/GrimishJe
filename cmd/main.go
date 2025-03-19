@@ -310,6 +310,14 @@ func main() {
 		handlers.UploadFinalFile(c, db, minioClient, bucketName)
 	})
 
+	r.GET("/favicon.ico", func(c *gin.Context) {
+		c.Status(http.StatusNoContent)
+	})
+
+	r.GET("/cdn-cgi/challenge-platform/scripts/jsd/main.js", func(c *gin.Context) {
+		c.Status(http.StatusNoContent)
+	})
+
 	r.GET("/api/reviews", handlers.GetReviews(db))
 	r.POST("/api/order/update-payment", middleware.AdminRequired(db), handlers.UpdatePaymentStatus(db))
 
