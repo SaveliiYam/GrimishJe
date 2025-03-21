@@ -321,6 +321,10 @@ func main() {
 	r.GET("/api/reviews", handlers.GetReviews(db))
 	r.POST("/api/order/update-payment", middleware.AdminRequired(db), handlers.UpdatePaymentStatus(db))
 
+	r.GET("/order-policy", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "order-policy.html", gin.H{"title": "Политика заказов"})
+	})
+
 	// Запуск сервера
 	port := os.Getenv("PORT")
 	if port == "" {
