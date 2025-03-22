@@ -125,7 +125,6 @@ func (h *Hub) Run() {
 				msgBytes, err = json.Marshal(payload)
 				if err != nil {
 					log.Printf("Ошибка сериализации ChatMessagePayload: %v", err)
-					break
 				}
 			case FileUpdatePayload:
 				orderID = payload.OrderID
@@ -140,7 +139,6 @@ func (h *Hub) Run() {
 				msgBytes, err = json.Marshal(msg)
 				if err != nil {
 					log.Printf("Ошибка сериализации FileUpdatePayload: %v", err)
-					break
 				}
 			case FileDeletePayload:
 				orderID = payload.OrderID
@@ -152,7 +150,6 @@ func (h *Hub) Run() {
 				msgBytes, err = json.Marshal(msg)
 				if err != nil {
 					log.Printf("Ошибка сериализации FileDeletePayload: %v", err)
-					break
 				}
 			case OrderStatusUpdatePayload:
 				orderID = payload.OrderID
@@ -177,7 +174,6 @@ func (h *Hub) Run() {
 				}
 			default:
 				log.Printf("Неизвестный тип сообщения: %v", message)
-				break
 			}
 
 			if msgBytes != nil {

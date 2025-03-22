@@ -35,7 +35,6 @@ func (c *Client) readPump() {
 			}
 			BroadcastMessage(GetHub(), offlinePayload)
 		} else {
-			// Отправляем статус пользователя при отключении
 			offlinePayload := OrderStatusUpdatePayload{
 				Type:    "user_status",
 				OrderID: c.OrderID,
@@ -52,9 +51,17 @@ func (c *Client) readPump() {
 	}()
 
 	c.Conn.SetReadLimit(512 * 1024)
-	c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	if err := c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second)); err != nil {
+		log.Printf("Ошибка установки read deadline для OrderID %d: %v (админ: %v, отправитель: %s)",
+			c.OrderID, err, c.IsAdmin, c.UploadedBy)
+		return
+	}
 	c.Conn.SetPongHandler(func(string) error {
-		c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		if err := c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second)); err != nil {
+			log.Printf("Ошибка обновления read deadline в pong для OrderID %d: %v (админ: %v, отправитель: %s)",
+				c.OrderID, err, c.IsAdmin, c.UploadedBy)
+			return err
+		}
 		log.Printf("Получен pong для OrderID: %d (админ: %v, отправитель: %s)",
 			c.OrderID, c.IsAdmin, c.UploadedBy)
 		return nil
@@ -110,6 +117,7 @@ func (c *Client) readPump() {
 		BroadcastMessage(hub, msg)
 	}
 }
+
 func (c *Client) writePump() {
 	ticker := time.NewTicker(54 * time.Second)
 	defer func() {
@@ -121,9 +129,16 @@ func (c *Client) writePump() {
 	for {
 		select {
 		case message, ok := <-c.Send:
-			c.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if err := c.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+				log.Printf("Ошибка установки write deadline для OrderID %d: %v (админ: %v, отправитель: %s)",
+					c.OrderID, err, c.IsAdmin, c.UploadedBy)
+				return
+			}
 			if !ok {
-				c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
+				if err := c.Conn.WriteMessage(websocket.CloseMessage, []byte{}); err != nil {
+					log.Printf("Ошибка отправки close message для OrderID %d: %v (админ: %v, отправитель: %s)",
+						c.OrderID, err, c.IsAdmin, c.UploadedBy)
+				}
 				return
 			}
 			log.Printf("Отправлено сообщение/файл/статус для OrderID %d от %s (админ: %v): %s",
@@ -134,7 +149,11 @@ func (c *Client) writePump() {
 				return
 			}
 		case <-ticker.C:
-			c.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if err := c.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+				log.Printf("Ошибка установки write deadline для ping для OrderID %d: %v (админ: %v, отправитель: %s)",
+					c.OrderID, err, c.IsAdmin, c.UploadedBy)
+				return
+			}
 			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				log.Printf("Ошибка отправки ping для OrderID %d: %v (админ: %v, отправитель: %s)",
 					c.OrderID, err, c.IsAdmin, c.UploadedBy)
