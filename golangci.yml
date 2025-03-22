@@ -1,0 +1,92 @@
+# golangci-lint run  -v --config .golangci.yml
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - typecheck
+    - unused
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - containedctx
+    - decorder
+    - errname
+    - errorlint
+    - exhaustive
+    - forcetypeassert
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - godot
+    - goimports
+    - lll
+    - makezero
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnil
+    - nlreturn
+    - nolintlint
+    - nosprintfhostport
+    - paralleltest
+    - prealloc
+    - promlinter
+    - reassign
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - unconvert
+    - unparam
+    - whitespace
+    - wsl
+    # - wastedassign - запрещает делать short declare
+    # - gosec
+    # - funlen
+    # - gochecknoglobals
+    # - depguard
+    # - dupl
+    # - exhaustruct
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  nakedret:
+    block-size: 4
+  nlreturn:
+    block-size: 4
+  govet:
+    check-shadowing: false
+  nolintlint:
+    require-explanation: true
+    require-specific: true
+  wsl:
+    allow-cuddle-declarations: true
+    force-err-cuddling: true
+    allow-assign-and-anything: true
+  exhaustive:
+    default-signifies-exhaustive: true
+  gocognit:
+    min-complexity: 160
+  nestif:
+    min-complexity: 10
+
+issues:
+  exclude-rules:
+    - linters:
+        - lll
+      source: "^// "
+    - linters:
+        - godot
+      source: "^// @Router"
+
+run:
+  timeout: 5m
