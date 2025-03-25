@@ -1,0 +1,67 @@
+services:
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_USER: postgres
+      DB_PASSWORD: secret123
+      DB_NAME: mydb
+      DB_PORT: "5432"
+      DB_SSLMODE: disable
+      DB_TIMEZONE: Europe/Moscow
+      SESSION_SECRET: your-very-secure-secret-key-here
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioaccesskey
+      MINIO_SECRET_KEY: miniosecretkey
+      MINIO_BUCKET: orders
+      MINIO_USE_SSL: "false"
+      PORT: "8080"
+      MAX_FILE_SIZE: "10485760"
+      MAX_FILES_PER_REQUEST: "5"
+      BCRYPT_COST: "12"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./static:/app/static:ro
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret123
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioaccesskey
+      MINIO_ROOT_PASSWORD: miniosecretkey
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+  miniodata:

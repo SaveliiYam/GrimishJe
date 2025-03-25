@@ -20,7 +20,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// Глобальная переменная для WebSocket-хаба
 var wsHub *websocket.Hub
 
 var (
@@ -36,7 +35,6 @@ var (
 	}
 )
 
-// Config хранит конфигурацию MinIO.
 type Config struct {
 	MinioEndpoint  string
 	MinioAccessKey string
@@ -44,7 +42,6 @@ type Config struct {
 	MinioBucket    string
 }
 
-// InitMinio инициализирует подключение к MinIO и создаёт bucket, если он не существует.
 func InitMinio(db *gorm.DB, cfg *Config) (*minio.Client, string, error) {
 	if cfg.MinioEndpoint == "" {
 		cfg.MinioEndpoint = os.Getenv("MINIO_ENDPOINT")
@@ -64,12 +61,17 @@ func InitMinio(db *gorm.DB, cfg *Config) (*minio.Client, string, error) {
 
 	bucketName := cfg.MinioBucket
 
+	useSecure := false
+	if os.Getenv("MINIO_USE_SSL") == "true" {
+		useSecure = true
+	}
+
 	minioClient, err := minio.New(cfg.MinioEndpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.MinioAccessKey, cfg.MinioSecretKey, ""),
-		Secure: cfg.MinioEndpoint != "localhost:9000", // HTTPS для не локальных эндпоинтов
+		Secure: useSecure,
 	})
 	if err != nil {
-		log.Fatalf("Ошибка подключения к MinIO: %v", err)
+		log.Printf("Ошибка подключения к MinIO: %v", err)
 		return nil, "", err
 	}
 
@@ -78,13 +80,13 @@ func InitMinio(db *gorm.DB, cfg *Config) (*minio.Client, string, error) {
 
 	exists, err := minioClient.BucketExists(ctx, bucketName)
 	if err != nil {
-		log.Fatalf("Ошибка проверки bucket %s: %v", bucketName, err)
+		log.Printf("Ошибка проверки bucket %s: %v", bucketName, err)
 		return nil, "", err
 	}
 	if !exists {
 		err = minioClient.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{})
 		if err != nil {
-			log.Fatalf("Ошибка создания bucket %s: %v", bucketName, err)
+			log.Printf("Ошибка создания bucket %s: %v", bucketName, err)
 			return nil, "", err
 		}
 		log.Printf("Bucket %s успешно создан", bucketName)
@@ -94,13 +96,10 @@ func InitMinio(db *gorm.DB, cfg *Config) (*minio.Client, string, error) {
 	return minioClient, bucketName, nil
 }
 
-// SetWebSocketHub устанавливает глобальную переменную wsHub
 func SetWebSocketHub(hub *websocket.Hub) {
 	wsHub = hub
 }
 
-// UploadFiles обрабатывает загрузку файлов в MinIO для конкретного заказа с использованием префикса роли.
-// UploadFiles обрабатывает загрузку файлов в MinIO для конкретного заказа с использованием префикса роли.
 func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		log.Println("Начало обработки загрузки файла")
@@ -213,7 +212,6 @@ func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.
 			log.Printf("Администратор (ID: %d) загружает файлы с префиксом '%s'", userID, prefix)
 		}
 
-		// Обрабатываем каждый загруженный файл
 		for _, file := range files {
 			if file.Size > maxFileSize {
 				log.Printf("Файл %s превышает максимальный размер (%d байт) для заказа %d", file.Filename, maxFileSize, orderID)
@@ -237,15 +235,12 @@ func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка открытия файла"})
 				return
 			}
-			// Важно: defer внутри цикла лучше заменить на явное закрытие, чтобы не накапливались открытые дескрипторы.
-			// Поэтому закроем src сразу после использования:
-			// defer src.Close()
 
 			log.Printf("Сохранение файла %s в MinIO", newFileName)
 			_, err = minioClient.PutObject(ctx, bucketName, newFileName, src, file.Size, minio.PutObjectOptions{
 				ContentType: file.Header.Get("Content-Type"),
 			})
-			src.Close() // закрываем файл сразу после загрузки
+			src.Close()
 			if err != nil {
 				log.Printf("Ошибка загрузки файла %s в MinIO: %v", file.Filename, err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка загрузки файла"})
@@ -264,7 +259,7 @@ func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.
 			fileRecord := models.File{
 				OrderID:      uint(orderID),
 				OriginalName: originalName,
-				URL:          presignedURL.String(),
+				URL:          newFileName,
 				UploadedBy:   uploader,
 			}
 			if err := db.Create(&fileRecord).Error; err != nil {
@@ -294,7 +289,6 @@ func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.
 			websocket.BroadcastMessage(wsHub, fileUpdate)
 			log.Printf("Отправлено WebSocket-уведомление о файле: %+v", fileUpdate)
 
-			// Если файл загружен администратором, отправляем уведомление в чат
 			if uploader == "admin" {
 				notification := websocket.ChatMessagePayload{
 					OrderID:    uint(orderID),
@@ -304,7 +298,6 @@ func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.
 					UploadedBy: "admin",
 				}
 
-				// Сохраняем уведомление в истории чата
 				chatMsg := models.ChatMessage{
 					OrderID:   notification.OrderID,
 					Sender:    notification.Sender,
@@ -315,10 +308,9 @@ func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.
 					log.Printf("Ошибка сохранения уведомления чата для OrderID %d: %v", notification.OrderID, err)
 				}
 
-				// Отправляем уведомление через WebSocket
 				websocket.BroadcastMessage(wsHub, notification)
 			}
-		} // <-- закрытие цикла for
+		}
 
 		log.Printf("Успешно загружено %d файлов для заказа %d пользователем %d (админ: %v, uploaded_by: %s)",
 			len(uploadedFiles), orderID, userID, isAdmin, uploader)
@@ -329,7 +321,6 @@ func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.
 	}
 }
 
-// DeleteFile удаляет файл из MinIO и базы данных.
 func DeleteFile(c *gin.Context, db *gorm.DB, minioClient *minio.Client, bucketName string) {
 	session := sessions.Default(c)
 	uid := session.Get("user_id")
@@ -412,23 +403,19 @@ func DeleteFile(c *gin.Context, db *gorm.DB, minioClient *minio.Client, bucketNa
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Удаление из MinIO
-	fileName := file.URL // Предполагаем, что URL содержит имя файла в MinIO
-	err = minioClient.RemoveObject(ctx, bucketName, fileName, minio.RemoveObjectOptions{})
+	err = minioClient.RemoveObject(ctx, bucketName, file.URL, minio.RemoveObjectOptions{})
 	if err != nil {
-		log.Printf("Ошибка удаления файла %s из MinIO: %v", fileName, err)
+		log.Printf("Ошибка удаления файла %s из MinIO: %v", file.URL, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка удаления файла из хранилища"})
 		return
 	}
 
-	// Удаление из базы данных
 	if err := db.Delete(&file).Error; err != nil {
 		log.Printf("Ошибка удаления файла %d из базы данных: %v", fileID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка удаления метаданных файла"})
 		return
 	}
 
-	// Отправка WebSocket-уведомления
 	fileDeletePayload := websocket.FileDeletePayload{
 		OrderID: uint(orderID),
 		FileID:  uint(fileID),
@@ -439,7 +426,6 @@ func DeleteFile(c *gin.Context, db *gorm.DB, minioClient *minio.Client, bucketNa
 	c.JSON(http.StatusOK, gin.H{"message": "Файл успешно удалён"})
 }
 
-// ListFiles возвращает список файлов, связанных с заказом, из базы данных.
 func ListFiles(c *gin.Context, db *gorm.DB, minioClient *minio.Client, bucketName string) {
 	if minioClient == nil {
 		log.Println("MinIO клиент не инициализирован")
@@ -529,7 +515,6 @@ func ListFiles(c *gin.Context, db *gorm.DB, minioClient *minio.Client, bucketNam
 	defer cancel()
 
 	for i, file := range files {
-		// Генерируем новый pre-signed URL для каждого файла
 		presignedURL, err := minioClient.PresignedGetObject(ctx, bucketName, file.URL, 24*time.Hour, nil)
 		if err != nil {
 			log.Printf("Ошибка генерации URL для файла %s: %v", file.URL, err)
@@ -548,8 +533,6 @@ func ListFiles(c *gin.Context, db *gorm.DB, minioClient *minio.Client, bucketNam
 	c.JSON(http.StatusOK, gin.H{"files": fileResponses})
 }
 
-// UploadFinalFile обрабатывает загрузку итогового файла администратором.
-// UploadFinalFile обрабатывает загрузку итогового файла администратором.
 func UploadFinalFile(c *gin.Context, db *gorm.DB, minioClient *minio.Client, bucketName string) {
 	if minioClient == nil {
 		log.Println("MinIO клиент не инициализирован")
@@ -663,11 +646,10 @@ func UploadFinalFile(c *gin.Context, db *gorm.DB, minioClient *minio.Client, buc
 		return
 	}
 
-	// Сохраняем только имя файла, а не pre-signed URL
 	fileRecord := models.File{
 		OrderID:      uint(orderID),
 		OriginalName: file.Filename,
-		URL:          newFileName, // Сохраняем имя файла в MinIO
+		URL:          newFileName,
 		UploadedBy:   "admin",
 	}
 	if err := db.Create(&fileRecord).Error; err != nil {
@@ -676,7 +658,6 @@ func UploadFinalFile(c *gin.Context, db *gorm.DB, minioClient *minio.Client, buc
 		return
 	}
 
-	// Генерируем pre-signed URL для ответа, но не сохраняем его
 	presignedURL, err := minioClient.PresignedGetObject(ctx, bucketName, newFileName, 24*time.Hour, nil)
 	if err != nil {
 		log.Printf("Ошибка генерации URL для итогового файла %s: %v", newFileName, err)
@@ -684,7 +665,6 @@ func UploadFinalFile(c *gin.Context, db *gorm.DB, minioClient *minio.Client, buc
 		return
 	}
 
-	// Отправка WebSocket-уведомления
 	fileUpdate := websocket.FileUpdatePayload{
 		OrderID:      uint(orderID),
 		Filename:     newFileName,
@@ -695,16 +675,14 @@ func UploadFinalFile(c *gin.Context, db *gorm.DB, minioClient *minio.Client, buc
 	websocket.BroadcastMessage(wsHub, fileUpdate)
 	log.Printf("Отправлено WebSocket-уведомление о загрузке итогового файла: %+v", fileUpdate)
 
-	// Отправляем уведомление в чат о загрузке итогового файла
 	notification := websocket.ChatMessagePayload{
 		OrderID:    uint(orderID),
-		Sender:     "admin", // Используйте "admin" (латиницей) или, если разрешены кириллица, "Администратор"
+		Sender:     "admin",
 		Message:    "Администратор загрузил итоговый файл: " + file.Filename,
 		CreatedAt:  time.Now().Unix(),
 		UploadedBy: "admin",
 	}
 
-	// Сохраняем уведомление в истории чата
 	chatMsg := models.ChatMessage{
 		OrderID:   notification.OrderID,
 		Sender:    notification.Sender,
@@ -715,13 +693,12 @@ func UploadFinalFile(c *gin.Context, db *gorm.DB, minioClient *minio.Client, buc
 		log.Printf("Ошибка сохранения уведомления чата для итогового файла, OrderID %d: %v", notification.OrderID, err)
 	}
 
-	// Отправляем уведомление через WebSocket
 	websocket.BroadcastMessage(wsHub, notification)
 	log.Printf("Отправлено WebSocket-уведомление о загрузке итогового файла: %+v", fileUpdate)
 
 	log.Printf("Успешно загружен итоговый файл для заказа %d пользователем %d (админ)", orderID, userID)
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "Итоговый файл успешно загружен",
-		"finalFileURL": presignedURL.String(), // Возвращаем URL только в ответе
+		"finalFileURL": presignedURL.String(),
 	})
 }

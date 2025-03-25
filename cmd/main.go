@@ -68,22 +68,18 @@ func main() {
 	cfg, sessionSecret := loadConfig()
 	db := initDB()
 
-	// Инициализация MinIO
 	minioClient, bucketName, err := handlers.InitMinio(db, cfg)
 	if err != nil {
 		log.Fatalf("Ошибка инициализации MinIO: %v", err)
 	}
 
-	// Инициализация Gin
 	r := gin.Default()
 
-	// Мидлвара для передачи db в контекст
 	r.Use(func(c *gin.Context) {
 		c.Set("db", db)
 		c.Next()
 	})
 
-	// Настройка шаблонизатора
 	r.SetFuncMap(template.FuncMap{
 		"formatDate": func(t time.Time) string {
 			return t.Format("2006-01-02")
@@ -112,29 +108,23 @@ func main() {
 		},
 	})
 
-	// Настройка сессий
 	if sessionSecret == "" {
 		log.Fatal("SESSION_SECRET не задана в окружении")
 	}
 	store := cookie.NewStore([]byte(sessionSecret))
 	r.Use(sessions.Sessions("mysession", store))
 
-	// Статические файлы и шаблоны
 	r.Static("/static", "../static")
 	r.Static("/images", "../static/images")
 	r.LoadHTMLGlob("../static/*.html")
 
-	// Инициализация и запуск WebSocket-хаба
 	wsHub := websocket.NewHub(db)
 	go wsHub.Run()
 	handlers.SetWebSocketHub(wsHub)
 
-	// Маршруты для WebSocket
 	r.GET("/ws/chat", middleware.AuthRequired(), websocket.WebSocketHandler(wsHub))
 	r.GET("/ws/chat_user", middleware.AuthRequired(), websocket.WebSocketHandler(wsHub))
 
-	// Маршруты
-	// Изменённый маршрут для детальной страницы заказа для администратора
 	r.GET("/admin/order/:id", middleware.AdminRequired(db), handlers.GetAdminOrder(db))
 	r.GET("/", func(c *gin.Context) {
 		session := sessions.Default(c)
@@ -325,7 +315,6 @@ func main() {
 		c.HTML(http.StatusOK, "order-policy.html", gin.H{"title": "Политика заказов"})
 	})
 
-	// Запуск сервера
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

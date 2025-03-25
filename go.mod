@@ -1,6 +1,6 @@
 module github.com/MoshKillaPit/GrimishJe
 
-go 1.22.7
+go 1.22
 
 require (
 	github.com/gin-gonic/gin v1.10.0
@@ -26,7 +26,6 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/minio/crc64nvme v1.0.0 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
-	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/rs/xid v1.6.0 // indirect
 	golang.org/x/sync v0.11.0 // indirect
 )
@@ -46,12 +45,10 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/jmoiron/sqlx v1.4.0
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
