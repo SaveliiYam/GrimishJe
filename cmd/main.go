@@ -164,9 +164,8 @@ func main() {
 	r.GET("/api/user/status", handlers.GetUserStatus(wsHub))
 
 	r.GET("/api/admin/last_login", middleware.AdminRequired(db), handlers.GetAdminLastLogin(db))
-
 	r.GET("/api/order/status", handlers.GetOrderStatus(wsHub))
-
+	r.GET("/api/admin/stats/today-earnings", middleware.AdminRequired(db), handlers.GetTodayEarnings(db))
 	r.POST("/api/order/delete-file", middleware.AuthRequired(), func(c *gin.Context) {
 		handlers.DeleteFile(c, db, minioClient, bucketName)
 	})

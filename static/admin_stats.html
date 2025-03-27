@@ -7,16 +7,17 @@
   <style>
     body {
       margin: 0;
-      font-family: 'Arial', sans-serif;
-      background: #f4f7fa;
-      color: #2c3e50;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f7fa;
+      color: #1a202c;
+      line-height: 1.6;
     }
 
     header {
-      background: #3498db;
+      background: linear-gradient(90deg, #4a90e2, #63b3ed);
       color: #fff;
       padding: 20px 40px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       position: sticky;
       top: 0;
       z-index: 10;
@@ -34,15 +35,17 @@
       right: 40px;
       padding: 10px 20px;
       background: #fff;
-      color: #3498db;
-      border-radius: 6px;
+      color: #4a90e2;
+      border-radius: 8px;
       text-decoration: none;
       font-weight: 600;
       transition: all 0.3s ease;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }
     .back-link:hover {
-      background: #ecf0f1;
-      transform: scale(1.05);
+      background: #f1f5f9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     }
 
     main {
@@ -54,37 +57,50 @@
     .filters {
       background: #fff;
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
       margin-bottom: 30px;
       display: flex;
       gap: 20px;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     .filters label {
       font-weight: 600;
+      color: #4a5568;
     }
 
     .filters select,
     .filters input[type="date"] {
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
+      padding: 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
       font-size: 14px;
+      background: #f7fafc;
+      transition: all 0.3s ease;
+    }
+    .filters select:focus,
+    .filters input[type="date"]:focus {
+      outline: none;
+      border-color: #4a90e2;
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
     }
 
     .filters button {
-      padding: 10px 20px;
-      background: #3498db;
+      padding: 10px 24px;
+      background: #4a90e2;
       color: #fff;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
-      transition: background 0.3s ease;
+      font-weight: 600;
+      transition: all 0.3s ease;
     }
     .filters button:hover {
-      background: #2980b9;
+      background: #3b82f6;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     }
 
     .chart-container {
@@ -92,23 +108,49 @@
       max-width: 900px;
       margin: 40px auto;
       background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      padding: 24px;
+      transition: all 0.3s ease;
+    }
+    .chart-container:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .today-earnings-container {
+      width: 100%;
+      max-width: 400px;
+      margin: 40px auto;
+      background: linear-gradient(135deg, #48bb78, #68d391);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 24px;
+      text-align: center;
+      color: #fff;
+    }
+    .today-earnings-container h2 {
+      margin: 0 0 20px;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .today-earnings-container canvas {
+      max-width: 200px;
+      margin: 0 auto;
     }
 
     h2.chart-title {
       margin: 0 0 20px;
       text-align: center;
       font-size: 22px;
-      font-weight: 600;
-      color: #34495e;
+      font-weight: 700;
+      color: #2d3748;
     }
 
     .loading-text {
       text-align: center;
       font-size: 18px;
-      color: #7f8c8d;
+      color: #718096;
       margin: 30px 0;
       display: none;
     }
@@ -118,16 +160,17 @@
       padding: 12px;
       margin: 20px auto;
       max-width: 800px;
-      border-radius: 6px;
+      border-radius: 8px;
       display: none;
+      font-weight: 500;
     }
     .message.success {
-      background: #d4edda;
-      color: #155724;
+      background: #e6fffa;
+      color: #2b6cb0;
     }
     .message.error {
-      background: #f8d7da;
-      color: #721c24;
+      background: #fff5f5;
+      color: #c53030;
     }
   </style>
 </head>
@@ -155,6 +198,11 @@
 
     <div id="loadingText" class="loading-text">Загрузка статистики...</div>
 
+    <div class="today-earnings-container">
+      <h2>Заработано сегодня</h2>
+      <canvas id="todayEarningsChart"></canvas>
+    </div>
+
     <div class="chart-container">
       <h2 class="chart-title">Распределение заказов по статусам</h2>
       <canvas id="statusChart"></canvas>
@@ -172,11 +220,26 @@
   </main>
 
   <script>
-    let statusChart, budgetChart, newOrdersChart;
+    console.log("JavaScript загружен");
 
-    window.addEventListener('load', loadStats);
+    let statusChart, budgetChart, newOrdersChart, todayEarningsChart;
+    let chartData = null; // Храним данные для обновления графика бюджета
+
+    window.addEventListener('load', () => {
+      console.log("Событие load сработало");
+      loadStats();
+      loadTodayEarnings();
+    });
+
+    // Обработчик изменения типа графика
+    document.getElementById('budgetChartType').addEventListener('change', () => {
+      if (chartData) {
+        renderCharts(chartData);
+      }
+    });
 
     function loadStats() {
+      console.log("Функция loadStats вызвана");
       const msgBox = document.getElementById('msgBox');
       const loadingText = document.getElementById('loadingText');
       const startDate = document.getElementById('startDate').value;
@@ -189,24 +252,46 @@
       if (startDate || endDate) {
         url += `?${startDate ? `start_date=${startDate}` : ''}${endDate ? `&end_date=${endDate}` : ''}`;
       }
+      console.log("Запрос к URL:", url);
 
       fetch(url, { credentials: 'include' })
         .then(resp => {
+          console.log("Ответ сервера:", resp);
           if (!resp.ok) throw new Error('Ошибка: ' + resp.status);
           return resp.json();
         })
         .then(data => {
+          console.log('Данные с сервера:', data);
+          chartData = data; // Сохраняем данные
           loadingText.style.display = 'none';
           renderCharts(data);
           showMessage('Статистика обновлена!', 'success');
         })
         .catch(err => {
+          console.error('Ошибка запроса:', err);
           loadingText.style.display = 'none';
           showMessage('Ошибка загрузки: ' + err.message, 'error');
         });
     }
 
+    function loadTodayEarnings() {
+      fetch('/api/admin/stats/today-earnings', { credentials: 'include' })
+        .then(resp => {
+          if (!resp.ok) throw new Error('Ошибка: ' + resp.status);
+          return resp.json();
+        })
+        .then(data => {
+          console.log('Заработано сегодня:', data);
+          renderTodayEarnings(data);
+        })
+        .catch(err => {
+          console.error('Ошибка загрузки заработка за сегодня:', err);
+          showMessage('Ошибка загрузки заработка за сегодня: ' + err.message, 'error');
+        });
+    }
+
     function showMessage(msg, type) {
+      console.log("Показ сообщения:", msg, type);
       const msgBox = document.getElementById('msgBox');
       msgBox.textContent = msg;
       msgBox.className = `message ${type}`;
@@ -215,68 +300,226 @@
     }
 
     function renderCharts(data) {
-      // Статусы
+      console.log("Рендеринг графиков с данными:", data);
+
+      // График статусов
       if (statusChart) statusChart.destroy();
       const statusCtx = document.getElementById('statusChart').getContext('2d');
+      const statusGradient = statusCtx.createLinearGradient(0, 0, 0, 400);
+      statusGradient.addColorStop(0, '#4a90e2');
+      statusGradient.addColorStop(1, '#63b3ed');
+
       statusChart = new Chart(statusCtx, {
-        type: 'pie',
+        type: 'bar',
         data: {
           labels: Object.keys(data.statusStats),
           datasets: [{
+            label: 'Количество заказов',
             data: Object.values(data.statusStats),
-            backgroundColor: ['#3498db', '#e74c3c', '#2ecc71', '#f1c40f'],
-            hoverOffset: 8
+            backgroundColor: statusGradient,
+            borderColor: '#4a90e2',
+            borderWidth: 1,
+            borderRadius: 8,
+            barThickness: 40,
           }]
         },
         options: {
           responsive: true,
-          plugins: { legend: { position: 'bottom' } }
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: '#e2e8f0' },
+              ticks: { color: '#4a5568', font: { size: 14 } }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#4a5568', font: { size: 14 } }
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#2d3748',
+              titleFont: { size: 14 },
+              bodyFont: { size: 12 },
+              padding: 10,
+              cornerRadius: 8
+            }
+          },
+          animation: {
+            duration: 1500,
+            easing: 'easeOutQuart'
+          }
         }
       });
 
-      // Бюджет
+      // График бюджета
       if (budgetChart) budgetChart.destroy();
       const budgetCtx = document.getElementById('budgetChart').getContext('2d');
       const budgetType = document.getElementById('budgetChartType').value;
-      budgetChart = new Chart(budgetCtx, {
-        type: budgetType,
-        data: {
-          labels: data.budgetStats.map(item => item.date),
-          datasets: [{
-            label: 'Суммарный бюджет',
-            data: data.budgetStats.map(item => item.totalBudget),
-            borderColor: '#3498db',
-            backgroundColor: budgetType === 'line' ? 'rgba(52,152,219,0.2)' : '#3498db',
-            fill: budgetType === 'line',
-            tension: 0.3
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: { y: { beginAtZero: true } },
-          plugins: { legend: { position: 'top' } }
-        }
-      });
+      const budgetGradient = budgetCtx.createLinearGradient(0, 0, 0, 400);
+      budgetGradient.addColorStop(0, '#4a90e2');
+      budgetGradient.addColorStop(1, '#63b3ed');
 
-      // Новые заказы
+      if (!data.budgetStats || data.budgetStats.length === 0) {
+        console.warn('budgetStats пустой или отсутствует');
+        budgetCtx.canvas.parentNode.innerHTML += '<p style="text-align: center; color: #c53030;">Нет данных о бюджете за выбранный период</p>';
+      } else {
+        budgetChart = new Chart(budgetCtx, {
+          type: budgetType,
+          data: {
+            labels: data.budgetStats.map(item => {
+              // Форматируем дату для отображения
+              const date = new Date(item.date);
+              return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }),
+            datasets: [{
+              label: 'Суммарный бюджет',
+              data: data.budgetStats.map(item => item.totalBudget),
+              borderColor: '#4a90e2',
+              backgroundColor: budgetType === 'line' ? 'rgba(74, 144, 226, 0.2)' : budgetGradient,
+              fill: budgetType === 'line',
+              tension: 0.4,
+              pointBackgroundColor: '#fff',
+              pointBorderColor: '#4a90e2',
+              pointBorderWidth: 2,
+              pointRadius: 5,
+              pointHoverRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: { color: '#e2e8f0' },
+                ticks: { color: '#4a5568', font: { size: 14 } }
+              },
+              x: {
+                grid: { display: false },
+                ticks: { color: '#4a5568', font: { size: 14 } }
+              }
+            },
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: { color: '#4a5568', font: { size: 14 } }
+              },
+              tooltip: {
+                backgroundColor: '#2d3748',
+                titleFont: { size: 14 },
+                bodyFont: { size: 12 },
+                padding: 10,
+                cornerRadius: 8
+              }
+            },
+            animation: {
+              duration: 1500,
+              easing: 'easeOutQuart'
+            }
+          }
+        });
+      }
+
+      // График новых заказов
       if (newOrdersChart) newOrdersChart.destroy();
       const newOrdersCtx = document.getElementById('newOrdersChart').getContext('2d');
-      newOrdersChart = new Chart(newOrdersCtx, {
-        type: 'bar',
+      const newOrdersGradient = newOrdersCtx.createLinearGradient(0, 0, 0, 400);
+      newOrdersGradient.addColorStop(0, '#48bb78');
+      newOrdersGradient.addColorStop(1, '#68d391');
+
+      if (!data.newOrdersStats || data.newOrdersStats.length === 0) {
+        console.warn('newOrdersStats пустой или отсутствует');
+        newOrdersCtx.canvas.parentNode.innerHTML += '<p style="text-align: center; color: #c53030;">Нет данных о новых заказах за выбранный период</p>';
+      } else {
+        newOrdersChart = new Chart(newOrdersCtx, {
+          type: 'bar',
+          data: {
+            labels: data.newOrdersStats.map(item => {
+              const date = new Date(item.date);
+              return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }),
+            datasets: [{
+              label: 'Новые заказы',
+              data: data.newOrdersStats.map(item => item.count),
+              backgroundColor: newOrdersGradient,
+              borderColor: '#48bb78',
+              borderWidth: 1,
+              borderRadius: 8,
+              barThickness: 30
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: { color: '#e2e8f0' },
+                ticks: { color: '#4a5568', font: { size: 14 } }
+              },
+              x: {
+                grid: { display: false },
+                ticks: { color: '#4a5568', font: { size: 14 } }
+              }
+            },
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: { color: '#4a5568', font: { size: 14 } }
+              },
+              tooltip: {
+                backgroundColor: '#2d3748',
+                titleFont: { size: 14 },
+                bodyFont: { size: 12 },
+                padding: 10,
+                cornerRadius: 8
+              }
+            },
+            animation: {
+              duration: 1500,
+              easing: 'easeOutQuart'
+            }
+          }
+        });
+      }
+    }
+
+    function renderTodayEarnings(data) {
+      if (todayEarningsChart) todayEarningsChart.destroy();
+      const todayEarningsCtx = document.getElementById('todayEarningsChart').getContext('2d');
+
+      const totalEarned = data.totalBudget || 0;
+      const maxGoal = 10000; // Цель для мотивации (можно настроить)
+      const percentage = Math.min((totalEarned / maxGoal) * 100, 100);
+
+      todayEarningsChart = new Chart(todayEarningsCtx, {
+        type: 'doughnut',
         data: {
-          labels: data.newOrdersStats.map(item => item.date),
+          labels: ['Заработано', 'Осталось до цели'],
           datasets: [{
-            label: 'Новые заказы',
-            data: data.newOrdersStats.map(item => item.count),
-            backgroundColor: '#2ecc71',
-            borderColor: '#27ae60',
-            borderWidth: 1
+            data: [percentage, 100 - percentage],
+            backgroundColor: ['#fff', 'rgba(255, 255, 255, 0.2)'],
+            borderWidth: 0
           }]
         },
         options: {
           responsive: true,
-          scales: { y: { beginAtZero: true } },
-          plugins: { legend: { position: 'top' } }
+          cutout: '80%',
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false },
+            title: {
+              display: true,
+              text: `${totalEarned} ₽`,
+              color: '#fff',
+              font: { size: 24, weight: 'bold' },
+              position: 'center'
+            }
+          },
+          animation: {
+            duration: 2000,
+            easing: 'easeOutQuart'
+          }
         }
       });
     }

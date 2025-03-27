@@ -568,12 +568,6 @@
           </form>
         </div>
 
-        <div id="paymentSection" style="margin-top: 20px; text-align: center;">
-          <h3>Обновление оплаты</h3>
-          <input type="number" id="extraPaymentInput" placeholder="Дополнительная оплата" step="0.01" min="0" value="{{.Order.ExtraPayment}}" style="padding: 8px; border-radius: 4px; border: 1px solid var(--text-light); margin-right: 10px;">
-          <button class="modal-actions-btn btn-accept" onclick="updatePayment({{.Order.ID}})">Обновить оплату</button>
-        </div>
-
         <div class="modal-actions" id="modalActions">
           <!-- Кнопки управления статусом заказа -->
         </div>
