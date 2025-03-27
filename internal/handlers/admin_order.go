@@ -43,6 +43,7 @@ func GetAdminOrder(db *gorm.DB) gin.HandlerFunc {
 		// Рендерим шаблон детальной страницы заказа для админа (admin_order.html)
 		c.HTML(http.StatusOK, "admin_order.html", gin.H{
 			"Order": order,
+			"User":  order.User,
 			"Files": files,
 		})
 	}
