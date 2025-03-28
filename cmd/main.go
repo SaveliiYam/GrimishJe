@@ -282,7 +282,8 @@ func main() {
 		c.HTML(http.StatusOK, "order.html", gin.H{"Order": order})
 	})
 	r.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:8080")
+		// Используйте ваш реальный домен. Здесь указан "https://gromish.ru"
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "https://gromish.ru")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
@@ -292,6 +293,7 @@ func main() {
 		}
 		c.Next()
 	})
+
 	r.GET("/admin_stats", middleware.AdminRequired(db), handlers.AdminStatsPage(db))
 	r.GET("/api/admin/stats/all", middleware.AdminRequired(db), handlers.AdminStatsAll(db))
 	r.GET("/api/admin/stats/budget", middleware.AdminRequired(db), handlers.GetBudgetStats(db))
