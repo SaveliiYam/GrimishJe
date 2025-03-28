@@ -249,6 +249,9 @@ func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.
 			log.Printf("Сохранение файла %s в MinIO", newFileName)
 			_, err = minioClient.PutObject(ctx, bucketName, newFileName, src, file.Size, minio.PutObjectOptions{
 				ContentType: file.Header.Get("Content-Type"),
+				UserMetadata: map[string]string{
+					"x-amz-acl": "public-read",
+				},
 			})
 			src.Close()
 			if err != nil {
