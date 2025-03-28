@@ -13,6 +13,7 @@ import (
 
 	"github.com/MoshKillaPit/GrimishJe/internal/models"
 	"github.com/MoshKillaPit/GrimishJe/internal/websocket"
+	"github.com/MoshKillaPit/GrimishJe/pkg/utils"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
@@ -523,6 +524,14 @@ func ListFiles(c *gin.Context, db *gorm.DB, minioClient *minio.Client, bucketNam
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	externalIP, err := utils.GetExternalIP()
+	if err != nil {
+		log.Printf("Ошибка получения внешнего IP-адреса: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения ip адреса"})
+	}
+
+	externalDomain := fmt.Sprintf("http://%s:9000", externalIP)
+
 	for i, file := range files {
 		presignedURL, err := minioClient.PresignedGetObject(ctx, bucketName, file.URL, 24*time.Hour, nil)
 		if err != nil {
@@ -532,7 +541,7 @@ func ListFiles(c *gin.Context, db *gorm.DB, minioClient *minio.Client, bucketNam
 		}
 
 		fileResponses[i] = gin.H{
-			"url":          presignedURL.String(),
+			"url":          strings.Replace(presignedURL.String(), "http://minio:9000", externalDomain, 1),
 			"originalName": file.OriginalName,
 			"uploadedBy":   file.UploadedBy,
 		}
