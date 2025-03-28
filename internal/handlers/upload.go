@@ -26,12 +26,21 @@ var (
 	maxFilesPerOrder = 10
 	maxFileSize      = int64(10 * 1024 * 1024)
 	allowedExts      = map[string]bool{
-		".pdf":  true,
-		".doc":  true,
-		".docx": true,
+		// Изображения
 		".jpg":  true,
 		".jpeg": true,
 		".png":  true,
+		".gif":  true,
+		// Документы
+		".pdf":  true,
+		".doc":  true,
+		".docx": true,
+		// Презентации
+		".ppt":  true,
+		".pptx": true,
+		// Excel
+		".xls":  true,
+		".xlsx": true,
 	}
 )
 
@@ -204,12 +213,12 @@ func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.
 			UploadedBy   string `json:"uploadedBy"`
 		}, 0)
 
+		uploadedByForm := c.PostForm("uploaded_by")
 		var uploader string = "user"
 		prefix := fmt.Sprintf("user_%d_", orderID)
-		if isAdmin {
+		if uploadedByForm == "admin" || user.IsAdmin {
 			prefix = fmt.Sprintf("admin_%d_", orderID)
 			uploader = "admin"
-			log.Printf("Администратор (ID: %d) загружает файлы с префиксом '%s'", userID, prefix)
 		}
 
 		for _, file := range files {

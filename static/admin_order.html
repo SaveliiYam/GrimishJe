@@ -767,7 +767,6 @@ function connectChat() {
   currentChatWS.onopen = () => {
     console.log("WebSocket успешно подключён");
     retryCount = 0;
-    loadChatHistory(currentOrderId);
     currentChatWS.send(JSON.stringify({ type: "status_request", order_id: currentOrderId }));
     console.log("Отправлен запрос статуса через WebSocket");
   };
@@ -787,13 +786,14 @@ function connectChat() {
     }
     console.log("Обработанное сообщение:", data);
     switch (data.type) {
-      case "user_status": // Обрабатываем статус пользователя
-        console.log("Обновление статуса пользователя:", data.status);
-        updateChatStatus(data.status, true);
-        break;
-      case "status_update": // Оставляем для обратной совместимости, если потребуется
-        updateChatStatus(data.status, true);
-        break;
+      case "user_status":
+  case "executor_status": // Добавленная ветка – обновляем статус независимо от типа
+    console.log("Обновление статуса:", data.status);
+    updateChatStatus(data.status, true);
+    break;
+  case "status_update":
+    updateChatStatus(data.status, true);
+    break;
       case "message":
         const msgKey = `${data.sender || "unknown"}-${data.message}-${data.created_at || Date.now()}`;
         if (!loadedMessages.has(msgKey) && data.message && data.message.trim() !== "") {
