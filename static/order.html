@@ -566,7 +566,7 @@
   </button>
   <div class="container">
     <a href="/dashboard" class="back-to-orders" aria-label="Вернуться к списку заказов">Вернуться к заказам</a>
-    <p id="adminLastLoginInfo"></p>
+    <p id="adminLastLoginInfo">Последний заход: {{.User.LastLogin}}</p>
     <header>
       <h1>{{.Order.Topic}}</h1>
     </header>
