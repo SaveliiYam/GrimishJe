@@ -15,7 +15,7 @@ services:
       DB_SSLMODE: disable
       DB_TIMEZONE: Europe/Moscow
       SESSION_SECRET: your-very-secure-secret-key-here
-      MINIO_ENDPOINT: minio:9000
+      MINIO_ENDPOINT: 87.251.78.190:9000
       MINIO_ACCESS_KEY: minioaccesskey
       MINIO_SECRET_KEY: miniosecretkey
       MINIO_BUCKET: orders
@@ -61,6 +61,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - minio
 
 volumes:
   pgdata:
