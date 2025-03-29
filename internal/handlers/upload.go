@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -26,19 +27,15 @@ var (
 	maxFilesPerOrder = 10
 	maxFileSize      = int64(10 * 1024 * 1024)
 	allowedExts      = map[string]bool{
-		// Изображения
 		".jpg":  true,
 		".jpeg": true,
 		".png":  true,
 		".gif":  true,
-		// Документы
 		".pdf":  true,
 		".doc":  true,
 		".docx": true,
-		// Презентации
 		".ppt":  true,
 		".pptx": true,
-		// Excel
 		".xls":  true,
 		".xlsx": true,
 	}
@@ -75,9 +72,25 @@ func InitMinio(db *gorm.DB, cfg *Config) (*minio.Client, string, error) {
 		useSecure = true
 	}
 
+	// Кастомный http.Transport, перенаправляющий minio:9000 на внешний адрес
+	customTransport := &http.Transport{
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			// Если адрес содержит "minio:9000", заменяем на внешний IP и порт
+			if strings.Contains(addr, "minio:9000") {
+				addr = "87.251.78.190:9000" // Замените на нужный внешний адрес
+			}
+			dialer := &net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}
+			return dialer.DialContext(ctx, network, addr)
+		},
+	}
+
 	minioClient, err := minio.New(cfg.MinioEndpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(cfg.MinioAccessKey, cfg.MinioSecretKey, ""),
-		Secure: useSecure,
+		Creds:     credentials.NewStaticV4(cfg.MinioAccessKey, cfg.MinioSecretKey, ""),
+		Secure:    useSecure,
+		Transport: customTransport,
 	})
 	if err != nil {
 		log.Printf("Ошибка подключения к MinIO: %v", err)
@@ -268,7 +281,7 @@ func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.
 			}
 			log.Printf("Создан presigned URL: %s", presignedURL.String())
 
-			// Используем URL без изменения хоста
+			// Используем сгенерированный URL без изменения хоста
 			finalURL := presignedURL.String()
 
 			fileRecord := models.File{
@@ -680,7 +693,7 @@ func UploadFinalFile(c *gin.Context, db *gorm.DB, minioClient *minio.Client, buc
 		return
 	}
 
-	// Используем URL без изменения хоста
+	// Используем сгенерированный URL без изменения хоста
 	finalURL := presignedURL.String()
 
 	fileUpdate := websocket.FileUpdatePayload{
