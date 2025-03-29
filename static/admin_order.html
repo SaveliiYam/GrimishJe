@@ -1271,12 +1271,9 @@ function sendChatMessage() {
     console.log("Отправка сообщения:", msgObj);
     currentChatWS.send(JSON.stringify(msgObj));
     input.value = "";
-    const msgKey = `${msgObj.sender}-${msgObj.message}-${msgObj.created_at}`;
-    if (!loadedMessages.has(msgKey)) {
-      appendChatMessage(msgObj);
-      loadedMessages.add(msgKey);
-    }
     showToast("Сообщение отправлено", "success");
+    // Удаляем локальное добавление сообщения
+    // Сообщение будет добавлено через onmessage, когда сервер его вернёт
   } else {
     console.error("WebSocket не подключён при попытке отправки сообщения");
     showToast("Чат не подключён", "error");
