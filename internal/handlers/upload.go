@@ -208,6 +208,15 @@ func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
+		externalIP, err := utils.GetExternalIP()
+		if err != nil {
+			log.Printf("Ошибка получения внешнего IP-адреса: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения ip адреса"})
+			return
+		}
+
+		externalDomain := fmt.Sprintf("http://%s:9000", externalIP)
+
 		uploadedFiles := make([]struct {
 			URL          string `json:"url"`
 			OriginalName string `json:"originalName"`
@@ -269,6 +278,9 @@ func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.
 			}
 			log.Printf("Создан presigned URL: %s", presignedURL.String())
 
+			// Заменяем хост в URL
+			finalURL := strings.Replace(presignedURL.String(), "http://minio:9000", externalDomain, 1)
+
 			fileRecord := models.File{
 				OrderID:      uint(orderID),
 				OriginalName: originalName,
@@ -287,7 +299,7 @@ func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.
 				OriginalName string `json:"originalName"`
 				UploadedBy   string `json:"uploadedBy"`
 			}{
-				URL:          presignedURL.String(),
+				URL:          finalURL,
 				OriginalName: originalName,
 				UploadedBy:   uploader,
 			})
@@ -297,7 +309,7 @@ func UploadFiles(db *gorm.DB, minioClient *minio.Client, bucketName string) gin.
 				Filename:     newFileName,
 				OriginalName: originalName,
 				UploadedBy:   uploader,
-				URL:          presignedURL.String(),
+				URL:          finalURL,
 			}
 			websocket.BroadcastMessage(wsHub, fileUpdate)
 			log.Printf("Отправлено WebSocket-уведомление о файле: %+v", fileUpdate)
@@ -658,6 +670,15 @@ func UploadFinalFile(c *gin.Context, db *gorm.DB, minioClient *minio.Client, buc
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
+	externalIP, err := utils.GetExternalIP()
+	if err != nil {
+		log.Printf("Ошибка получения внешнего IP-адреса: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения ip адреса"})
+		return
+	}
+
+	externalDomain := fmt.Sprintf("http://%s:9000", externalIP)
+
 	_, err = minioClient.PutObject(ctx, bucketName, newFileName, src, file.Size, minio.PutObjectOptions{
 		ContentType: file.Header.Get("Content-Type"),
 	})
@@ -686,12 +707,15 @@ func UploadFinalFile(c *gin.Context, db *gorm.DB, minioClient *minio.Client, buc
 		return
 	}
 
+	// Заменяем хост в URL
+	finalURL := strings.Replace(presignedURL.String(), "http://minio:9000", externalDomain, 1)
+
 	fileUpdate := websocket.FileUpdatePayload{
 		OrderID:      uint(orderID),
 		Filename:     newFileName,
 		OriginalName: file.Filename,
 		UploadedBy:   "admin",
-		URL:          presignedURL.String(),
+		URL:          finalURL,
 	}
 	websocket.BroadcastMessage(wsHub, fileUpdate)
 	log.Printf("Отправлено WebSocket-уведомление о загрузке итогового файла: %+v", fileUpdate)
@@ -720,6 +744,6 @@ func UploadFinalFile(c *gin.Context, db *gorm.DB, minioClient *minio.Client, buc
 	log.Printf("Успешно загружен итоговый файл для заказа %d пользователем %d (админ)", orderID, userID)
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "Итоговый файл успешно загружен",
-		"finalFileURL": presignedURL.String(),
+		"finalFileURL": finalURL,
 	})
 }
