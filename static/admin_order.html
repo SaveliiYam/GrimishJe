@@ -850,8 +850,9 @@ function connectChat() {
   updateChatStatus(`Оффлайн (был в сети: ${new Date().toLocaleString("ru-RU")})`, false);
   
   const data = new FormData();
-  data.append("orderID", currentOrderId);
-  data.append("lastOnline", lastOnline);
+  data.append("userID", customerId);
+data.append("lastOnline", lastOnline);
+
   
   if (navigator.sendBeacon) {
     navigator.sendBeacon("/api/update-last-online", data);
