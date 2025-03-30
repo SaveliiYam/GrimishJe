@@ -731,25 +731,24 @@ function updateChatStatus(status, showNotification = true) {
 }
 
 /* Запасной вариант загрузки статуса через API */
-async function loadUserStatusFallback() {
-  console.log("Попытка загрузки статуса через API...");
+async function loadCustomerStatus() {
+  console.log("Попытка загрузки статуса заказчика через API...");
   try {
-    const response = await fetch(`/api/order/status?orderID=${currentOrderId}`, { credentials: "include" });
+    const response = await fetch(`/api/user/status?userID=${customerId}`, { credentials: "include" });
     const data = await response.json();
-    console.log("Ответ API:", data);
+    console.log("Ответ API (статус заказчика):", data);
+    const chatStatusElem = document.getElementById("chatStatus");
     if (response.ok && data.status) {
-      updateChatStatus(data.status, false);
+      chatStatusElem.innerHTML = `<span class="${data.status.startsWith("Онлайн") ? "online-indicator" : "offline-indicator"}"></span>Статус пользователя: ${data.status}`;
     } else {
-      console.error("Ошибка API:", data.error || "Нет статуса");
-      updateChatStatus("Неизвестен", false);
-      showToast("Не удалось загрузить статус", "error");
+      chatStatusElem.innerHTML = "Статус пользователя: Неизвестен";
     }
   } catch (err) {
-    console.error("Ошибка загрузки статуса через API:", err);
-    updateChatStatus("Оффлайн", false);
-    showToast("Ошибка соединения при загрузке статуса", "error");
+    console.error("Ошибка загрузки статуса заказчика:", err);
+    document.getElementById("chatStatus").innerHTML = "Статус пользователя: Неизвестен";
   }
 }
+
 
 /* WebSocket для чата и статуса */
 function connectChat() {
@@ -1356,11 +1355,12 @@ window.addEventListener("load", async () => {
   await loadChatHistory(currentOrderId); // Сначала загружаем историю
   connectChat(); // Потом подключаем WebSocket
   setTimeout(() => {
-    if (document.getElementById("chatStatus").textContent.includes("Загрузка")) {
-      console.log("WebSocket не ответил вовремя, используем API");
-      loadUserStatusFallback();
-    }
-  }, 5000);
+  if (document.getElementById("chatStatus").textContent.includes("Загрузка")) {
+    console.log("WebSocket не ответил вовремя, используем API");
+    loadCustomerStatus();
+  }
+}, 5000);
+
 });
 
 function trackEvent(category, action, label) {

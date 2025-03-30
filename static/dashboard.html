@@ -81,9 +81,12 @@
       <h2 id="orderModalTitle">Создать заказ</h2>
       <form id="orderForm" action="/api/order" method="POST" role="form">
         <div id="orderFormError" class="error-message" style="display: none;" aria-live="polite"></div>
+        
+        <!-- Поле "Тема работы" без атрибута maxlength, с динамическим предупреждением -->
         <label for="orderTopic">Тема работы:</label>
         <input type="text" id="orderTopic" name="topic" required aria-required="true">
-
+        <span id="topicError" style="color: red; display: none;">Максимум 100 символов</span>
+        
         <label for="orderType">Тип работы:</label>
         <select id="orderType" name="workType" required aria-required="true">
           <option value="" disabled selected>Выберите тип работы</option>
@@ -97,8 +100,10 @@
           <option value="Доклад (Презентация+Речь)">Доклад (Презентация+Речь)</option>
         </select>
 
+        <!-- Поле "Описание" без атрибута maxlength, с динамическим предупреждением -->
         <label for="orderDescription">Описание:</label>
         <textarea id="orderDescription" name="description" rows="4" required aria-required="true"></textarea>
+        <span id="descriptionError" style="color: red; display: none;">Максимум 500 символов</span>
 
         <label for="orderDeadline">Срок выполнения:</label>
         <input type="date" id="orderDeadline" name="deadline" required aria-required="true" min="{{.Today}}">
@@ -124,8 +129,6 @@
     // Тёмная тема
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
-  
-    // Проверяем сохранённую тему или системную настройку
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
@@ -135,7 +138,6 @@
       body.dataset.theme = '';
       themeToggle.innerHTML = '<span class="theme-icon">🌙</span>';
     }
-  
     themeToggle.addEventListener('click', () => {
       if (body.dataset.theme === 'dark') {
         body.dataset.theme = '';
@@ -386,7 +388,29 @@
         applyFilters();
       }, 1000); // Имитация загрузки
     });
+  
+    // Добавляем проверку для поля "Тема работы"
+    document.getElementById('orderTopic').addEventListener('input', function() {
+      const maxLength = 100;
+      const errorSpan = document.getElementById('topicError');
+      if (this.value.length > maxLength) {
+        errorSpan.style.display = 'inline';
+      } else {
+        errorSpan.style.display = 'none';
+      }
+    });
+  
+    // Добавляем проверку для поля "Описание"
+    document.getElementById('orderDescription').addEventListener('input', function() {
+      const maxLength = 500;
+      const errorSpan = document.getElementById('descriptionError');
+      if (this.value.length > maxLength) {
+        errorSpan.style.display = 'inline';
+      } else {
+        errorSpan.style.display = 'none';
+      }
+    });
   </script>
-  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'922f8ace7a8b1766',t:'MTc0MjQxNDI4Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'922f8ace7a8b1766',t:'MTc0MjQxNDI4Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d);}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
