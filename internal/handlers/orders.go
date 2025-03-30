@@ -888,6 +888,7 @@ func UpdatePaymentStatus(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
+// UpdateLastOnline обновляет время последнего входа администратора.
 func UpdateLastOnline(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		orderIDStr := c.PostForm("orderID")
@@ -896,7 +897,8 @@ func UpdateLastOnline(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "orderID и lastOnline обязательны"})
 			return
 		}
-		orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
+		// orderID здесь используется для идентификации, но в данном примере мы обновляем первого администратора
+		_, err := strconv.ParseUint(orderIDStr, 10, 64)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный orderID"})
 			return
@@ -906,18 +908,18 @@ func UpdateLastOnline(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат времени"})
 			return
 		}
-		// Получаем заказ с предварительной загрузкой пользователя
-		var order models.Order
-		if err := db.Preload("User").First(&order, uint(orderID)).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Заказ не найден"})
+
+		// Обновляем администратора – здесь выбираем первого admin, у которого поле LastLogin обновляем
+		var admin models.User
+		if err := db.Where("is_admin = ?", true).First(&admin).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Администратор не найден"})
 			return
 		}
-		// Обновляем поле LastLogin у пользователя
-		order.User.LastLogin = lastOnline
-		if err := db.Save(&order.User).Error; err != nil {
+		admin.LastLogin = lastOnline
+		if err := db.Save(&admin).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления статуса"})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"message": "Статус обновлён", "lastOnline": order.User.LastLogin})
+		c.JSON(http.StatusOK, gin.H{"message": "Статус обновлён", "lastOnline": admin.LastLogin.Format("02.01.2006 15:04")})
 	}
 }

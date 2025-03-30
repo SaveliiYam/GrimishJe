@@ -40,7 +40,8 @@ func GetOrderStatus(hub *websocket.Hub) gin.HandlerFunc {
 		// Если статус офлайн, добавляем время последнего входа администратора
 		if status == "Оффлайн" {
 			var admin models.User
-			if err := hub.DB.Where("is_admin = ?", true).First(&admin).Error; err == nil {
+			// Выбираем админа, у которого поле last_login НЕ равно нулевому значению
+			if err := hub.DB.Where("is_admin = ? AND last_login != ?", true, "0001-01-01 00:00:00").Order("last_login desc").First(&admin).Error; err == nil {
 				lastLogin := admin.LastLogin.Format("02.01.2006 15:04")
 				status = "Оффлайн (был в сети: " + lastLogin + ")"
 			}
