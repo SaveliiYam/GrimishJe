@@ -96,15 +96,16 @@ func GetUserStatus(hub *websocket.Hub) gin.HandlerFunc {
 			// Если нет активного WebSocket-соединения, берем время последнего входа из БД
 			var user models.User
 			if err := hub.DB.First(&user, uint(userID)).Error; err == nil {
-				if user.LastLogin.IsZero() {
+				formatted := user.LastLogin.Format("02.01.2006 15:04")
+				if user.LastLogin.IsZero() || formatted == "01.01.0001 00:00" {
 					status = "Оффлайн (был в сети: неизвестно)"
 				} else {
-					lastLogin := user.LastLogin.Format("02.01.2006 15:04")
-					status = "Оффлайн (был в сети: " + lastLogin + ")"
+					status = "Оффлайн (был в сети: " + formatted + ")"
 				}
 			} else {
 				status = "Оффлайн"
 			}
+
 		}
 		c.JSON(http.StatusOK, gin.H{"status": status})
 	}
