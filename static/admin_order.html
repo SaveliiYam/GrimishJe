@@ -846,10 +846,24 @@ function connectChat() {
 
   currentChatWS.onclose = (event) => {
   console.log("WebSocket закрыт:", event.code, event.reason);
-  const lastOnline = new Date().toLocaleString("ru-RU");
-  updateChatStatus(`Оффлайн (был в сети: ${lastOnline})`, false);
+  const lastOnline = new Date().toISOString(); // ISO-формат для сервера
+  updateChatStatus(`Оффлайн (был в сети: ${new Date().toLocaleString("ru-RU")})`, false);
+  
+  // Отправляем время последней активности на сервер
+  const data = new FormData();
+  data.append("orderID", currentOrderId);
+  data.append("lastOnline", lastOnline);
+  
+  // Можно использовать fetch или navigator.sendBeacon, чтобы отправить данные до выгрузки страницы
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon("/api/update-last-online", data);
+  } else {
+    fetch("/api/update-last-online", { method: "POST", body: data, credentials: "include" });
+  }
+  
   attemptReconnect();
 };
+
 }
 
 function attemptReconnect() {

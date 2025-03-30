@@ -836,10 +836,21 @@
         }
       };
   
-      currentChatWS.onclose = () => {
-  console.log("WebSocket соединение закрыто, пытаемся переподключиться...");
-  const lastOnline = new Date().toLocaleString("ru-RU");
-  updateExecutorStatus(`Оффлайн (был в сети: ${lastOnline})`);
+      currentChatWS.onclose = (event) => {
+  console.log("WebSocket соединение закрыто:", event.code, event.reason);
+  const lastOnline = new Date().toISOString();
+  updateExecutorStatus(`Оффлайн (был в сети: ${new Date().toLocaleString("ru-RU")})`);
+  
+  const data = new FormData();
+  data.append("orderID", currentOrderId);
+  data.append("lastOnline", lastOnline);
+  
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon("/api/update-last-online", data);
+  } else {
+    fetch("/api/update-last-online", { method: "POST", body: data, credentials: "include" });
+  }
+  
   attemptReconnect();
 };
 

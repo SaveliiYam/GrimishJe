@@ -31,8 +31,10 @@
       </div>
       <div class="sort-container">
         <select id="sortSelect">
-          <option value="desc">Новые сверху</option>
-          <option value="asc">Старые сверху</option>
+          <option value="created_desc">Новые сверху</option>
+          <option value="created_asc">Старые сверху</option>
+          <option value="deadline_asc">Ближайшие дедлайны</option>
+          <option value="deadline_desc">Далекие дедлайны</option>
         </select>
       </div>
       <div class="order-filter">
@@ -230,11 +232,31 @@
     return matchesFilter && matchesSearch;
   });
 
-      filteredCards.sort((a, b) => {
-        const aDate = new Date(a.dataset.created || "1970-01-01");
-        const bDate = new Date(b.dataset.created || "1970-01-01");
-        return sortOrder === "desc" ? bDate - aDate : aDate - bDate;
-      });
+  filteredCards.sort((a, b) => {
+  const sortOption = document.getElementById("sortSelect").value;
+  let aDate, bDate;
+  switch (sortOption) {
+    case "created_desc":
+      aDate = new Date(a.dataset.created || "1970-01-01");
+      bDate = new Date(b.dataset.created || "1970-01-01");
+      return bDate - aDate;
+    case "created_asc":
+      aDate = new Date(a.dataset.created || "1970-01-01");
+      bDate = new Date(b.dataset.created || "1970-01-01");
+      return aDate - bDate;
+    case "deadline_asc":
+      aDate = new Date(a.dataset.deadline || "2100-01-01");
+      bDate = new Date(b.dataset.deadline || "2100-01-01");
+      return aDate - bDate;
+    case "deadline_desc":
+      aDate = new Date(a.dataset.deadline || "2100-01-01");
+      bDate = new Date(b.dataset.deadline || "2100-01-01");
+      return bDate - aDate;
+    default:
+      return 0;
+  }
+});
+
 
       const ordersGrid = document.getElementById("ordersGrid");
       ordersGrid.innerHTML = "";
