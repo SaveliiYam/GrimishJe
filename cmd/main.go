@@ -238,7 +238,7 @@ func main() {
 		})
 	})
 	r.GET("/order", middleware.AuthRequired(), func(c *gin.Context) {
-		orderIDStr := c.Query("id")
+		orderIDStr := c.Query("orderID")
 		if orderIDStr == "" {
 			c.String(http.StatusBadRequest, "Отсутствует ID заказа")
 			return
