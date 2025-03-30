@@ -837,9 +837,12 @@
       };
   
       currentChatWS.onclose = () => {
-        console.log("WebSocket соединение закрыто, пытаемся переподключиться...");
-        attemptReconnect();
-      };
+  console.log("WebSocket соединение закрыто, пытаемся переподключиться...");
+  const lastOnline = new Date().toLocaleString("ru-RU");
+  updateExecutorStatus(`Оффлайн (был в сети: ${lastOnline})`);
+  attemptReconnect();
+};
+
   
       currentChatWS.onerror = (error) => {
         console.error("WebSocket ошибка:", error);

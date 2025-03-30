@@ -211,20 +211,24 @@
 
     // Фильтрация, поиск и сортировка
     function applyAllFilters() {
-      const activeFilter = document.querySelector(".filter-btn.active");
-      const filterValue = activeFilter ? activeFilter.getAttribute("data-filter").toLowerCase() : "all";
-      const query = document.getElementById("searchInput").value.trim().toLowerCase();
-      const sortOrder = document.getElementById("sortSelect").value;
+  const activeFilter = document.querySelector(".filter-btn.active");
+  const filterValue = activeFilter ? activeFilter.getAttribute("data-filter").toLowerCase() : "all";
+  const query = document.getElementById("searchInput").value.trim().toLowerCase();
+  const sortOrder = document.getElementById("sortSelect").value;
 
-      let filteredCards = Array.from(document.querySelectorAll(".order-card")).filter((card) => {
-        const cardStatus = (card.dataset.status || "new").toLowerCase();
-        const title = (card.dataset.title || "").toLowerCase();
-        const orderNumber = (card.dataset.orderNumber || "").toLowerCase();
-        const customer = (card.dataset.customer || "").toLowerCase();
-        const matchesFilter = filterValue === "all" || cardStatus === filterValue;
-        const matchesSearch = title.includes(query) || orderNumber.includes(query) || customer.includes(query);
-        return matchesFilter && matchesSearch;
-      });
+  let filteredCards = Array.from(document.querySelectorAll(".order-card")).filter((card) => {
+    const cardStatus = (card.dataset.status || "new").toLowerCase();
+    const title = (card.dataset.title || "").toLowerCase();
+    const orderNumber = (card.dataset.orderNumber || "").toLowerCase();
+    const customer = (card.dataset.customer || "").toLowerCase();
+    const deadline = (card.dataset.deadline || "").toLowerCase(); // Новый параметр
+    const matchesFilter = filterValue === "all" || cardStatus === filterValue;
+    const matchesSearch = title.includes(query) ||
+                          orderNumber.includes(query) ||
+                          customer.includes(query) ||
+                          deadline.includes(query); // Поиск по дедлайну
+    return matchesFilter && matchesSearch;
+  });
 
       filteredCards.sort((a, b) => {
         const aDate = new Date(a.dataset.created || "1970-01-01");

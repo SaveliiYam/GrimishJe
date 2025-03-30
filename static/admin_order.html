@@ -845,10 +845,11 @@ function connectChat() {
   };
 
   currentChatWS.onclose = (event) => {
-    console.log("WebSocket закрыт:", event.code, event.reason);
-    updateChatStatus("Оффлайн", false);
-    attemptReconnect();
-  };
+  console.log("WebSocket закрыт:", event.code, event.reason);
+  const lastOnline = new Date().toLocaleString("ru-RU");
+  updateChatStatus(`Оффлайн (был в сети: ${lastOnline})`, false);
+  attemptReconnect();
+};
 }
 
 function attemptReconnect() {
