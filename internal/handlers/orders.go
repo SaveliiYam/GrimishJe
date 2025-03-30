@@ -889,18 +889,18 @@ func UpdatePaymentStatus(db *gorm.DB) gin.HandlerFunc {
 }
 
 // UpdateLastOnline обновляет время последнего входа администратора.
-// UpdateLastOnline обновляет время последнего входа пользователя.
 func UpdateLastOnline(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userIDStr := c.PostForm("userID")
+		orderIDStr := c.PostForm("orderID")
 		lastOnlineStr := c.PostForm("lastOnline")
-		if userIDStr == "" || lastOnlineStr == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "userID и lastOnline обязательны"})
+		if orderIDStr == "" || lastOnlineStr == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "orderID и lastOnline обязательны"})
 			return
 		}
-		userID, err := strconv.ParseUint(userIDStr, 10, 64)
+		// orderID здесь используется для идентификации, но в данном примере мы обновляем первого администратора
+		_, err := strconv.ParseUint(orderIDStr, 10, 64)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный userID"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный orderID"})
 			return
 		}
 		lastOnline, err := time.Parse(time.RFC3339, lastOnlineStr)
@@ -909,17 +909,17 @@ func UpdateLastOnline(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		var user models.User
-		if err := db.First(&user, uint(userID)).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Пользователь не найден"})
+		// Обновляем администратора – здесь выбираем первого admin, у которого поле LastLogin обновляем
+		var admin models.User
+		if err := db.Where("is_admin = ?", true).First(&admin).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Администратор не найден"})
 			return
 		}
-
-		user.LastLogin = lastOnline
-		if err := db.Save(&user).Error; err != nil {
+		admin.LastLogin = lastOnline
+		if err := db.Save(&admin).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления статуса"})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"message": "Статус обновлён", "lastOnline": user.LastLogin.Format("02.01.2006 15:04")})
+		c.JSON(http.StatusOK, gin.H{"message": "Статус обновлён", "lastOnline": admin.LastLogin.Format("02.01.2006 15:04")})
 	}
 }
