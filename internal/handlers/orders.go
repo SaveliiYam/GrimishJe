@@ -892,34 +892,60 @@ func UpdatePaymentStatus(db *gorm.DB) gin.HandlerFunc {
 func UpdateLastOnline(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		orderIDStr := c.PostForm("orderID")
-		lastOnlineStr := c.PostForm("lastOnline")
-		if orderIDStr == "" || lastOnlineStr == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "orderID и lastOnline обязательны"})
+		if orderIDStr == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "orderID обязательны"})
 			return
 		}
+
 		// orderID здесь используется для идентификации, но в данном примере мы обновляем первого администратора
 		_, err := strconv.ParseUint(orderIDStr, 10, 64)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный orderID"})
 			return
 		}
-		lastOnline, err := time.Parse(time.RFC3339, lastOnlineStr)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат времени"})
+
+		session := sessions.Default(c)
+		uid := session.Get("user_id")
+		if uid == nil {
+			log.Println("Неавторизованный доступ при удалении файла")
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходимо авторизоваться"})
 			return
 		}
 
-		// Обновляем администратора – здесь выбираем первого admin, у которого поле LastLogin обновляем
-		var admin models.User
-		if err := db.Where("is_admin = ?", true).First(&admin).Error; err != nil {
+		var userID uint
+		switch v := uid.(type) {
+		case uint:
+			userID = v
+		case int:
+			userID = uint(v)
+		case int64:
+			userID = uint(v)
+		case string:
+			parsed, err := strconv.ParseUint(v, 10, 32)
+			if err != nil {
+				log.Printf("Ошибка преобразования user_id: %v", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Невалидный user_id"})
+				return
+			}
+			userID = uint(parsed)
+		default:
+			log.Println("Неподдерживаемый тип user_id в сессии")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Невалидный user_id"})
+			return
+		}
+
+		// Обновляем администратора – здесь выбираем первого user, у которого поле LastLogin обновляем
+		var user models.User
+		if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Администратор не найден"})
 			return
 		}
-		admin.LastLogin = lastOnline
-		if err := db.Save(&admin).Error; err != nil {
+
+		user.LastLogin = time.Now()
+		if err := db.Save(&user).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления статуса"})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"message": "Статус обновлён", "lastOnline": admin.LastLogin.Format("02.01.2006 15:04")})
+		c.JSON(http.StatusOK, gin.H{"message": "Статус обновлён", "lastOnline": user.LastLogin.Format("02.01.2006 15:04")})
 	}
 }
