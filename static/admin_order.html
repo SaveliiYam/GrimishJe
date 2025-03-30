@@ -599,6 +599,7 @@ let userFiles = [];
 let adminFiles = [];
 let finalFiles = [];
 let retryCount = 0;
+let customerId = {{.User.ID}};
 const maxRetries = 5;
 const retryDelay = 1000;
 
@@ -1430,6 +1431,22 @@ async function updatePayment(orderID, amount, paymentType) {
     showToast("Ошибка соединения", "error");
   } finally {
     showLoading(false);
+  }
+}
+
+async function loadCustomerStatus() {
+  try {
+    const response = await fetch(`/api/user/status?userID=${customerId}`, { credentials: "include" });
+    const data = await response.json();
+    const chatStatusElem = document.getElementById("chatStatus");
+    if (response.ok && data.status) {
+      chatStatusElem.innerHTML = `<span class="${data.status.startsWith("Онлайн") ? "online-indicator" : "offline-indicator"}"></span>Статус пользователя: ${data.status}`;
+    } else {
+      chatStatusElem.innerHTML = "Статус пользователя: Неизвестен";
+    }
+  } catch (err) {
+    console.error("Ошибка загрузки статуса заказчика:", err);
+    document.getElementById("chatStatus").innerHTML = "Статус пользователя: Неизвестен";
   }
 }
 
