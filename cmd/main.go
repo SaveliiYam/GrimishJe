@@ -304,6 +304,7 @@ func main() {
 	r.GET("/favicon.ico", func(c *gin.Context) {
 		c.Status(http.StatusNoContent)
 	})
+	r.POST("/api/update-last-online", handlers.UpdateLastOnline(db))
 
 	r.GET("/cdn-cgi/challenge-platform/scripts/jsd/main.js", func(c *gin.Context) {
 		c.Status(http.StatusNoContent)

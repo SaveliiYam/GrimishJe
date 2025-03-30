@@ -887,3 +887,37 @@ func UpdatePaymentStatus(db *gorm.DB) gin.HandlerFunc {
 		})
 	}
 }
+
+func UpdateLastOnline(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		orderIDStr := c.PostForm("orderID")
+		lastOnlineStr := c.PostForm("lastOnline")
+		if orderIDStr == "" || lastOnlineStr == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "orderID и lastOnline обязательны"})
+			return
+		}
+		orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный orderID"})
+			return
+		}
+		lastOnline, err := time.Parse(time.RFC3339, lastOnlineStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат времени"})
+			return
+		}
+		// Получаем заказ с предварительной загрузкой пользователя
+		var order models.Order
+		if err := db.Preload("User").First(&order, uint(orderID)).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Заказ не найден"})
+			return
+		}
+		// Обновляем поле LastLogin у пользователя
+		order.User.LastLogin = lastOnline
+		if err := db.Save(&order.User).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления статуса"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "Статус обновлён", "lastOnline": order.User.LastLogin})
+	}
+}
